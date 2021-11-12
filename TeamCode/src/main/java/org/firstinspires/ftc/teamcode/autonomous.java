@@ -71,13 +71,13 @@ public class autonomous extends LinearOpMode {
         //aimBot = new AimBot(H, drive, pool, this);
         //RingCounter         ring     = new RingCounter(aimBot.vuforia);
         
-        H.grabberServo.setPosition(H.GRABBER_SERVO_MIN);
+        //H.grabberServo.setPosition(H.GRABBER_SERVO_MIN);
         
         waitForStart();
-        while (opModeIsActive() && Math.abs(1.6 - H.armAngle.getVoltage()) > 0.08) {
-            H.armServo.setPosition(Range.clip(6 * (1.6 - H.armAngle.getVoltage()) + 0.5, 0, 1));
-        }
-        H.armServo.setPosition(0.5);
+        //while (opModeIsActive() && Math.abs(1.6 - H.armAngle.getVoltage()) > 0.08) {
+        //    H.armServo.setPosition(Range.clip(6 * (1.6 - H.armAngle.getVoltage()) + 0.5, 0, 1));
+        //}
+        //H.armServo.setPosition(0.5);
         
         //targetZone = ring.count();
         
@@ -104,7 +104,7 @@ public class autonomous extends LinearOpMode {
                     waitForMoveDone();
                 }
                 
-                dropGoal();
+                //dropGoal();
     
                 if (opModeIsActive()) {
                     drive.setMoveInches(0, 10, 0.8, -90);
@@ -139,7 +139,7 @@ public class autonomous extends LinearOpMode {
                     waitForMoveDone();
                 }
                 
-                dropGoal();
+                //dropGoal();
 
                 if (opModeIsActive()) {
                     drive.setMoveInches(0, 19, 0.8, 180);
@@ -161,7 +161,7 @@ public class autonomous extends LinearOpMode {
                     waitForMoveDone();
                 }
     
-                dropGoal();
+                //dropGoal();
     
                 if (opModeIsActive()) {
                     drive.setMoveInches(0, 40, 0.8, 180);
@@ -269,7 +269,7 @@ public class autonomous extends LinearOpMode {
         
     }
     
-    private void dropGoal() {
+    /*private void dropGoal() {
     
         while (opModeIsActive() && Math.abs(0.33 - H.armAngle.getVoltage()) > 0.03) {
             H.armServo.setPosition(Range.clip(6 * (0.343 - H.armAngle.getVoltage()) + 0.5, 0, 1));
@@ -281,7 +281,7 @@ public class autonomous extends LinearOpMode {
             sleep(500);
         }
         
-    }
+    }*/
     
     private void waitForMoveDone() {
         

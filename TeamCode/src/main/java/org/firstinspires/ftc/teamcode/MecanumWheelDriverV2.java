@@ -176,22 +176,21 @@ public class MecanumWheelDriverV2 implements Runnable{
                     }
         
                 } else {
-    
+                    //TODO: add ramp down
                     double offset = findDegOffset(H.heading, param[0]);
-                    param[1] = Math.signum(offset)* param[1] ;//Range.clip( Math.exp(0.1 * Math.abs(offset))-1, 0.15, param[1]);
-                    
+                    param[1] = Math.signum(offset) * param[1] ;
                     // remove from list if target has been reached
-                    if (Math.abs(offset) > 2.5) {
+                    if (Math.abs(offset) < 2.5) {
                         //actionsList.remove(action);
                         actionRemoveList.add(actionsList.indexOf(action));
                         break;
                     }
-                    
+    
                     // set all wheel powers
-                    for (int i = 0; i <= 1; i++) {
-                        wheelPower[2*i] += param[1];
-                        wheelPower[2*i+1] -= param[1];
-                    }
+                    wheelPower[0] -= param[1];
+                    wheelPower[1] += param[1];
+                    wheelPower[2] -= param[1];
+                    wheelPower[3] += param[1];
         
                 }
     
