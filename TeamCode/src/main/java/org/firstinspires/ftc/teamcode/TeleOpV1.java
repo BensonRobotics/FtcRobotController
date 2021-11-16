@@ -14,10 +14,10 @@ import java.util.concurrent.Executors;
 @TeleOp(name="TeleOp", group="Linear Opmode")
 public class TeleOpV1 extends LinearOpMode {
     
-    private boolean[] button = {false, false, false, false, false};
-    // 0 = half speed, 1 = compass, 2 = POV, 3 = front wheels, 4 = back wheels
-    private boolean[] toggle = {true, true, false, true, true, false};
-    // 0 = half speed, 1 = compass, 2 = POV, 3 = front wheels, 4 = back wheels
+    private boolean[] button = {false, false, false, false, false, false, false};
+    // 0 = half speed, 1 = compass, 2 = POV, 3 = front wheels, 4 = back wheels, 5 = duck on/off, 6 = duck switch directions
+    private boolean[] toggle = {true, true, false, true, true, false, false};
+    // 0 = half speed, 1 = compass, 2 = POV, 3 = front wheels, 4 = back wheels, 5 = duck on/off, 6 = duck switch directions
     
     
     RobotHardware H = new RobotHardware();
@@ -95,10 +95,10 @@ public class TeleOpV1 extends LinearOpMode {
             //if (allowStartHeadingLock) {
             //}
             
-            if (Math.abs(rotate) < 0.1) {
+            if (Math.abs(rotate) < 0.05) {
                 if (Math.abs(drive.findDegOffset(H.heading, headingLock)) > 2.5) {
                     if (allowStartHeadingLock) {
-                        //drive.HeadingRotate(headingLock, 0.1, 1);
+                        drive.HeadingRotate(headingLock, 0.3, 1);
                         allowStartHeadingLock = false;
                     }
                 } else {
@@ -203,19 +203,21 @@ public class TeleOpV1 extends LinearOpMode {
             
             //toggleButton(gamepad1.left_trigger > 0.25, 4);
             
-            //toggleButton(gamepad1.left_bumper, 5);
+            toggleButton(gamepad1.left_bumper, 5);
             
-            //toggleButton(gamepad1.x, 6);
+            toggleButton(gamepad1.right_bumper, 6);
             
-            if (toggle[4]) {
-                if (toggle[5]) {
+            if (toggle[5]) {
+                if (toggle[6]) {
                     //H.collectorMotor.setPower(-1);
+                    H.duckServo.setPosition(0);
                 } else {
                     //H.collectorMotor.setPower(1);
+                    H.duckServo.setPosition(1);
                 }
             } else {
+                H.duckServo.setPosition(0.5);
                 //H.collectorMotor.setPower(0);
-                toggle[5] = false;
             }
             
             if (gamepad1.start) {

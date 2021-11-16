@@ -1,29 +1,17 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.util.Log;
-
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
-import java.util.Base64;
-
 import static java.lang.Thread.sleep;
-import static org.firstinspires.ftc.robotcontroller.internal.FtcRobotControllerActivity.TAG;
 
 public class RobotHardware implements Runnable{
     /**
@@ -41,7 +29,7 @@ public class RobotHardware implements Runnable{
      */
     
     public HardwareMap hardwareMap;
-    LinearOpMode telOp;
+    LinearOpMode opMode;
 
     ////////////////////////////// Constants //////////////////////////////
 
@@ -56,6 +44,10 @@ public class RobotHardware implements Runnable{
     
     public final double GRABBER_SERVO_MAX = 0.69;
     public final double GRABBER_SERVO_MIN = 0.22;
+    
+    private final double COUNTS_PER_REVOLUTION = 560;
+    private final double WHEEL_DIAMETER_INCHES = 4.0;
+    public final double COUNTS_PER_INCH = COUNTS_PER_REVOLUTION / (WHEEL_DIAMETER_INCHES * Math.PI);
     
     public final double EXP_BASE = 20;
     public final double INITIAL_VALUE = 0.05;
@@ -95,11 +87,12 @@ public class RobotHardware implements Runnable{
     //public DcMotor        collectorMotor;
     public DcMotor[]      driveMotor = new DcMotor[4];
     public Servo[]        wheelLift = new Servo[4];
+    public Servo          duckServo;
 
     public void init(HardwareMap HM, LinearOpMode telOp) {
         
         hardwareMap = HM;
-        this.telOp = telOp;
+        this.opMode = telOp;
         
         ////////////////////////////// Hardware Map //////////////////////////////
 
@@ -114,6 +107,7 @@ public class RobotHardware implements Runnable{
         wheelLift[1] = HM.get(Servo.class, "FR_Servo");
         wheelLift[2] = HM.get(Servo.class, "RL_Servo");
         wheelLift[3] = HM.get(Servo.class, "RR_Servo");
+        duckServo = HM.get(Servo.class, "D_Servo");
     
         //webcam = HM.get(WebcamName.class, "Webcam 1");
         //leftRange = HM.get(DistanceSensor.class, "L_Range");
@@ -183,7 +177,7 @@ public class RobotHardware implements Runnable{
     }
     
     public boolean isStopRequested() {
-        return telOp.isStopRequested();
+        return opMode.isStopRequested();
     }
 
 }
