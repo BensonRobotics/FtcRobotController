@@ -10,14 +10,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @TeleOp(name="TeleOp", group="Linear Opmode")
 public class TeleOpV1 extends LinearOpMode {
     
-    private boolean[] button = {false, false, false, false, false, false, false};
-    // 0 = half speed, 1 = compass, 2 = POV, 3 = front wheels, 4 = back wheels, 5 = duck on/off, 6 = duck switch directions
-    private boolean[] toggle = {true, true, false, true, true, false, false};
-    // 0 = half speed, 1 = compass, 2 = POV, 3 = front wheels, 4 = back wheels, 5 = duck on/off, 6 = duck switch directions
+    private boolean[] button = {false, false, false, false, false, false, false, false};
+    // 0 = half speed, 1 = compass, 2 = POV, 3 = lift wheels, 4 = collector, 5 = duck left, 6 = duck right, 7 = collector switch
+    private boolean[] toggle = {true, true, false, true, false, false, false, true};
+    // 0 = half speed, 1 = compass, 2 = POV, 3 = lift wheels, 4 = collector, 5 = duck left, 6 = duck right, 7 = collector switch
     
     
     RobotHardware H = new RobotHardware();
@@ -39,7 +40,8 @@ public class TeleOpV1 extends LinearOpMode {
         
         double y;
         double x;
-        double rotate;
+        double rotate = 0;
+        double rotateScaled = 0;
         double radius = 0;
         double power = 0;
         double headingLock = H.heading;
@@ -49,6 +51,7 @@ public class TeleOpV1 extends LinearOpMode {
         boolean barrierMode = false;
         boolean traversingForwards = true;
         int traversalStep = 0;
+        long lastTurnTime = 0;
         
         double agl_frwd = 0;
         double heading = 0;
@@ -76,7 +79,7 @@ public class TeleOpV1 extends LinearOpMode {
         
             } else {
         
-                rotate = exponentialScaling(Range.clip(gamepad1.right_stick_x, -1, 1));
+                rotate += powerFollow(rotate, exponentialScaling(Range.clip(gamepad1.right_stick_x, -1, 1)));
         
             }
     
@@ -86,7 +89,7 @@ public class TeleOpV1 extends LinearOpMode {
     
             if (toggle[0]) {
                 drive.StrafePowerMove(angle, power*0.6, 1);
-                rotate *= 0.6;
+                rotateScaled = rotate * 0.6;
             } else {
                 drive.StrafePowerMove(angle, power, 1);
             }
@@ -96,17 +99,22 @@ public class TeleOpV1 extends LinearOpMode {
             //}
             
             if (Math.abs(rotate) < 0.05) {
-                if (Math.abs(drive.findDegOffset(H.heading, headingLock)) > 2.5) {
-                    if (allowStartHeadingLock) {
-                        drive.HeadingRotate(headingLock, 0.3, 1);
-                        allowStartHeadingLock = false;
+                if (lastTurnTime + 350 < runtime.now(TimeUnit.MILLISECONDS)) {
+                    if (Math.abs(drive.findDegOffset(H.heading, headingLock)) > 1.5) {
+                        if (allowStartHeadingLock) {
+                            drive.HeadingRotate(headingLock, 0.15, 1);
+                            allowStartHeadingLock = false;
+                        }
+                    } else {
+                        allowStartHeadingLock = true;
                     }
                 } else {
-                    allowStartHeadingLock = true;
+                    headingLock = H.heading;
                 }
             } else {
+                lastTurnTime = runtime.now(TimeUnit.MILLISECONDS);
                 headingLock = H.heading;
-                drive.PowerRotate(rotate, 1);
+                drive.PowerRotate(rotateScaled, 1);
             }
     
             drive.setWheelPower();
@@ -180,60 +188,74 @@ public class TeleOpV1 extends LinearOpMode {
             toggleButton(gamepad1.right_stick_button, 2); // POV
             
             toggleButton(gamepad1.a, 3);
-            
-            toggleButton(gamepad1.y, 4);
+            toggleButton(gamepad1.right_bumper, 4);
+            toggleButton(gamepad1.x, 5);
+            toggleButton(gamepad1.b, 6);
+            toggleButton(gamepad1.left_bumper, 7);
             
             if (toggle[3]) {
                 H.wheelLift[0].setPosition(0);
                 H.wheelLift[1].setPosition(1);
-            } else {
-                H.wheelLift[0].setPosition(1);
-                H.wheelLift[1].setPosition(0);
-            }
-            
-            if (toggle[4]) {
                 H.wheelLift[2].setPosition(1);
                 H.wheelLift[3].setPosition(0);
             } else {
+                H.wheelLift[0].setPosition(1);
+                H.wheelLift[1].setPosition(0);
                 H.wheelLift[2].setPosition(0);
                 H.wheelLift[3].setPosition(1);
+            }
+    
+            if (toggle[4]) {
+                if (toggle[7]) {
+                    H.collectorMotor.setPower(1);
+                } else {
+                    H.collectorMotor.setPower(-1);
+                }
+            } else {
+                toggle[7] = true;
+                H.collectorMotor.setPower(0);
             }
             
             //toggleButton(gamepad1.right_bumper || gamepad1.b, 3); // launcher
             
             //toggleButton(gamepad1.left_trigger > 0.25, 4);
             
-            toggleButton(gamepad1.left_bumper, 5);
+            //toggleButton(gamepad1.left_bumper, 5);
             
-            toggleButton(gamepad1.right_bumper, 6);
+            //toggleButton(gamepad1.right_bumper, 6);
             
             if (toggle[5]) {
-                if (toggle[6]) {
-                    //H.collectorMotor.setPower(-1);
-                    H.duckServo.setPosition(0);
-                } else {
-                    //H.collectorMotor.setPower(1);
-                    H.duckServo.setPosition(1);
-                }
-            } else {
+                toggle[6] = false;
+                H.duckServo.setPosition(0);
+            }
+            
+            if (toggle[6]) {
+                H.duckServo.setPosition(1);
+            }
+            
+            if (!toggle[5] && !toggle[6]) {
                 H.duckServo.setPosition(0.5);
-                //H.collectorMotor.setPower(0);
             }
             
             if (gamepad1.start) {
-                
                 agl_frwd = heading;
-                
             }
             
-            //telemetry.addData("wheelPower: ", H.driveMotor[0].getPower());
-            //telemetry.addData("wheelPower: ", H.driveMotor[1].getPower());
-            //telemetry.addData("wheelPower: ", H.driveMotor[2].getPower());
-            //telemetry.addData("wheelPower: ", H.driveMotor[3].getPower());
+            if (Math.abs(gamepad1.left_trigger) > 0.05 || Math.abs(gamepad1.right_trigger) > 0.05) {
+                H.liftMotor.setPower(exponentialScaling(gamepad1.left_trigger) - exponentialScaling(gamepad1.right_trigger));
+            } else {
+                H.liftMotor.setPower(0);
+            }
+            
+            telemetry.addData("wheelPower: ", H.driveMotor[0].getPower());
+            telemetry.addData("wheelPower: ", H.driveMotor[1].getPower());
+            telemetry.addData("wheelPower: ", H.driveMotor[2].getPower());
+            telemetry.addData("wheelPower: ", H.driveMotor[3].getPower());
+            telemetry.addData("max wheel power", drive.maxWheelPower);
             //telemetry.addData("barrier mode: ", barrierMode);
             //telemetry.addData("direction: ", traversingForwards);
             telemetry.addData("heading", H.heading);
-            telemetry.addData("heading lock", headingLock);
+            telemetry.addData("heading lock", drive.findDegOffset(H.heading, headingLock));
             telemetry.update();
             
         }

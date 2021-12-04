@@ -19,6 +19,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     double[] wheelPower = new double[4];
     int[] wheelTarget = new int[4];
     boolean runToPosition = false;
+    double maxWheelPower;
     
     MecanumWheelDriverV2(RobotHardware H) {
         
@@ -64,7 +65,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         actionRemoveList.clear();
         
         // find the max wheel power for scaling
-        double maxWheelPower = Math.max(Math.max(Math.abs(wheelPower[0]), Math.abs(wheelPower[1])), Math.max(Math.abs(wheelPower[2]), Math.abs(wheelPower[3])));
+        maxWheelPower = Math.max(Math.max(Math.abs(wheelPower[0]), Math.abs(wheelPower[1])), Math.max(Math.abs(wheelPower[2]), Math.abs(wheelPower[3])));
     
         // scale down the power if any of the wheels is over 1 power
         if (maxWheelPower > 1) {
@@ -316,7 +317,6 @@ public class MecanumWheelDriverV2 implements Runnable{
             cosAngle /= Math.abs(sinAngle);
             sinAngle = Math.signum(sinAngle);
         }
-    
         // set all wheel powers
         wheelPower[0] += cosAngle * param[1];
         wheelPower[1] += sinAngle * param[1];
@@ -373,7 +373,7 @@ public class MecanumWheelDriverV2 implements Runnable{
             // ramp down when near target heading
             double power = Math.signum(offset) * Range.clip( (Math.exp(0.1 * Math.abs(offset))-1)/(param[1] * Math.sqrt(Math.abs(param[2]))), 0.075, param[1]);
             // remove from list if target has been reached
-            if (Math.abs(offset) < 2.5) {
+            if (Math.abs(offset) < 1.5) {
                 actionRemoveList.add(actionsList.indexOf(action));
             }
         
