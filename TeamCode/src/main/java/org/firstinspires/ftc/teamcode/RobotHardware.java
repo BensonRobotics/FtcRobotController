@@ -54,8 +54,14 @@ public class RobotHardware implements Runnable{
     public final double INITIAL_VALUE = 0.05;
     public final double STICK_DEAD_ZONE = 0.1;
     public final double POWER_FOLLOW_INCREMENT = 0.03;
+    public final double ROOT_TWO = Math.sqrt(2);
     
     public final String VUFORIA_KEY = "AXfJetz/////AAABmfTftTQRKUq2u+iCzbuFm2wKhp5/qubTF+6xF9VBwMBiVi2lCwJbNrIAVofnUKke4/MjFtZROHGeelAgbQx6MjYX+qdX4vRB5z2PboepftoqvoZy3irQKQ2aKqNSbpN72hI/tI2wluN0xqC6KThtMURH0EuvUf8VcGDfmuXiA/uP00/2dsYhIMhxBJCmBq0AG5jMWi8MnHJDZwnoYLdcliKB7rvNTUDbf1fzxRzf9QHgB2u+invzPou7q8ncAsD5GdXFfA/CiYmR65JKXDOE0wHoc8FxvrzUIRCQ2geSypo7eY5q/STJvqPmjoj33CQFHl0hKMx05QwwsABdlIZvfLLbjA3VH2HO4dcv+OOoElws";
+    
+    ////////////////////////////// Toggles //////////////////////////////
+    
+    boolean XYEncoderEnable = false;
+    boolean cameraEnable = false;
     
     ////////////////////////////// Output variables //////////////////////////////
     
@@ -113,16 +119,25 @@ public class RobotHardware implements Runnable{
         wheelLift[3] = HM.get(Servo.class, "RR_Servo");
         duckServo = HM.get(Servo.class, "D_Servo");
     
-        //webcam = HM.get(WebcamName.class, "Webcam 1");
-        //monitorViewId = HM.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", HM.appContext.getPackageName());
+        if (cameraEnable) {
+            webcam = HM.get(WebcamName.class, "Webcam 1");
+            monitorViewId = HM.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", HM.appContext.getPackageName());
+        }
         //leftRange = HM.get(DistanceSensor.class, "L_Range");
         //rightRange = HM.get(DistanceSensor.class, "R_Range");
         //frontRange = HM.get(DistanceSensor.class, "F_Range");
         //imu = HM.get(BNO055IMU.class, "imu");
         imu1 = HM.get(BNO055IMU.class, "imu1");
     
-        //yEncoder = HM.get(DcMotor.class, "Y_Motor");
-        //xEncoder = HM.get(DcMotor.class, "X_Motor");
+        if (XYEncoderEnable) {
+            yEncoder = HM.get(DcMotor.class, "Y_Motor");
+            xEncoder = HM.get(DcMotor.class, "X_Motor");
+    
+            yEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            yEncoder.setDirection(DcMotor.Direction.REVERSE);
+            xEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            xEncoder.setDirection(DcMotor.Direction.REVERSE);
+        }
     
         //for (int i = 0; i < wheelTriggers.length; i++) {
         //    wheelTriggers[i] = HM.get(DigitalChannel.class, i+"_Digital");
@@ -139,10 +154,6 @@ public class RobotHardware implements Runnable{
         //leftTOF = (Rev2mDistanceSensor) leftRange;
         //rightTOF = (Rev2mDistanceSensor) rightRange;
     
-        //yEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //yEncoder.setDirection(DcMotorSimple.Direction.REVERSE);
-        //xEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //xEncoder.setDirection(DcMotorSimple.Direction.REVERSE);
         
         for (int i = 3; i >= 0; i--) {
             driveMotor[i].setDirection(MOTOR_DIRECTION[i]);
@@ -183,5 +194,15 @@ public class RobotHardware implements Runnable{
     public boolean isStopRequested() {
         return opMode.isStopRequested();
     }
-
+    
+    public void setCameraEnable(boolean cameraEnable) {
+        
+        this.cameraEnable = cameraEnable;
+    }
+    
+    public void setXYEncoderEnable(boolean XYEncoderEnable) {
+        
+        this.XYEncoderEnable = XYEncoderEnable;
+    }
+    
 }

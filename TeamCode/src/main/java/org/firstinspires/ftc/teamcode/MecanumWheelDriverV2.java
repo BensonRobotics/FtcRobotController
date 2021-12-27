@@ -1,10 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static android.content.ContentValues.TAG;
 
 enum Actions {
     StrafeDistanceMoveHDP,RotateDistanceMoveHDP,StrafePowerMoveAP,RotatePowerMoveHP,StrafePointMovePXY,RotatePointMovePXY,CurvePointMovePXY,AutoPointMovePXY,AngleRotateAP,HeadingRotateHP,PowerRotateP
@@ -16,8 +20,8 @@ public class MecanumWheelDriverV2 implements Runnable{
     List<ActionData> actionsList = new ArrayList<>();
     List<Integer> actionRemoveList = new ArrayList<>();
     int listPriority;
-    double[] wheelPower = new double[4];
-    int[] wheelTarget = new int[4];
+    double[] wheelPower = {0,0,0,0};
+    int[] wheelTarget = {0,0,0,0};
     boolean runToPosition = false;
     double maxWheelPower;
     
@@ -55,7 +59,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     
     public void setWheelPower() {
     
-        // create wheel power values by adding all of the actions in the action list
+        // create wheel power values by running all of the actions in the action list
         for (ActionData action : actionsList) {
         
             Action(action, action.param);
@@ -74,6 +78,8 @@ public class MecanumWheelDriverV2 implements Runnable{
             }
         }
         
+        //Log.d(TAG, "setPower 0: " + wheelPower[0] + " 1: " + wheelPower[1] + " 2: " + wheelPower[2] + " 3: " + wheelPower[3]);
+    
         for (int i = 0; i <= 3; i ++) {
             // assign all target positions to motors
             if (runToPosition) {
@@ -91,8 +97,10 @@ public class MecanumWheelDriverV2 implements Runnable{
     
     void waitForMoveDone(){
         
-        while ((H.driveMotor[0].isBusy() || H.driveMotor[1].isBusy() || H.driveMotor[2].isBusy() || H.driveMotor[3].isBusy()) && H.opMode.isStopRequested()) {
-            H.opMode.idle();
+        while ((H.driveMotor[0].isBusy() || H.driveMotor[1].isBusy() || H.driveMotor[2].isBusy() || H.driveMotor[3].isBusy()) && !H.opMode.isStopRequested()) {
+            //Log.d(TAG, "MotorPower 0: " + H.driveMotor[0].getPower() + " 1: " + H.driveMotor[1].getPower() + " 2: " + H.driveMotor[2].getPower() + " 3: " + H.driveMotor[3].getPower());
+            //Log.d(TAG, "MotorTarget 0: " + H.driveMotor[0].getTargetPosition() + " 1: " + H.driveMotor[1].getTargetPosition() + " 2: " + H.driveMotor[2].getTargetPosition() + " 3: " + H.driveMotor[3].getTargetPosition());
+            //Log.d(TAG, "MotorPos 0: " + H.driveMotor[0].getCurrentPosition() + " 1: " + H.driveMotor[1].getCurrentPosition() + " 2: " + H.driveMotor[2].getCurrentPosition() + " 3: " + H.driveMotor[3].getCurrentPosition());
         }
         if (H.opMode.isStopRequested()) {
             for (DcMotor motor : H.driveMotor) {
@@ -101,20 +109,22 @@ public class MecanumWheelDriverV2 implements Runnable{
             }
         }
         
-        H.driveMotor[0].  setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        H.driveMotor[1]. setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        H.driveMotor[2].   setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        H.driveMotor[3].  setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        for (int i = 0; i < 4; i++) {
+    
+            H.driveMotor[i].setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            H.driveMotor[i].setPower(0);
+            
+        }
     }
     
-    private boolean priorityCheck(int priority) {
+    private boolean isLowPriority(int priority) {
         
         // set priority to current if there are no items in action list
         if (actionsList.isEmpty()) listPriority = priority;
     
         // return false if the current actions are a higher priority
         if (priority > listPriority) {
-            return false;
+            return true;
         }
     
         // clear all lower priority actions if current action is higher priority
@@ -123,13 +133,13 @@ public class MecanumWheelDriverV2 implements Runnable{
             listPriority = priority; // set the new priority of actions on the action list
         }
         
-        return true;
+        return false;
         
     }
     
     double findDegOffset(double DegCurrent, double TargetDeg) {
         
-        /**DegCurrent, the current degree of the robot value between 0 and 360
+        /*DegCurrent, the current degree of the robot value between 0 and 360
          * TargetDeg, the degree with which to find the offset
          * Finds the angle between current degree and the target degree
          * returns a value between -180 and 180
@@ -264,6 +274,11 @@ public class MecanumWheelDriverV2 implements Runnable{
     private void StrafeDistanceMoveHDP(double[] param) {
         // assign variables
     
+        final double DISTANCE_MULTIPLIER_LOWER = 1.5;
+        final double DISTANCE_MULTIPLIER_UPPER = 1.825;
+        // Increase distance when moving sideways to counter mecanum wheel inconsistencies
+        double distanceMultiplier = (DISTANCE_MULTIPLIER_LOWER - DISTANCE_MULTIPLIER_UPPER)*(Math.abs(Math.abs(param[0]/90) - 1)) + DISTANCE_MULTIPLIER_UPPER;
+        
         param[0] = Math.toRadians(param[0] + 45);
         double cosAngle = Math.cos(param[0]);
         double sinAngle = Math.sin(param[0]);
@@ -274,6 +289,12 @@ public class MecanumWheelDriverV2 implements Runnable{
             initialPosition[i] = H.driveMotor[i].getCurrentPosition();
             H.driveMotor[i].setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }*/
+        
+        // set all wheel target positions
+        wheelTarget[0] += (int)(cosAngle * param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
+        wheelTarget[1] += (int)(sinAngle * param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
+        wheelTarget[2] += (int)(sinAngle * param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
+        wheelTarget[3] += (int)(cosAngle * param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
     
         // scale the motor's power so that at least one of them is equal to 1
         if (Math.abs(cosAngle) > Math.abs(sinAngle)) {
@@ -284,17 +305,13 @@ public class MecanumWheelDriverV2 implements Runnable{
             sinAngle = Math.signum(sinAngle);
         }
         
-        // set all wheel target positions
-        wheelTarget[0] += (int)(cosAngle * param[1] * H.COUNTS_PER_INCH);
-        wheelTarget[1] += (int)(sinAngle * param[1] * H.COUNTS_PER_INCH);
-        wheelTarget[2] += (int)(sinAngle * param[1] * H.COUNTS_PER_INCH);
-        wheelTarget[3] += (int)(cosAngle * param[1] * H.COUNTS_PER_INCH);
-    
         // set all wheel powers
-        wheelPower[0] += cosAngle * param[1];
-        wheelPower[1] += sinAngle * param[1];
-        wheelPower[2] += sinAngle * param[1];
-        wheelPower[3] += cosAngle * param[1];
+        wheelPower[0] += cosAngle * param[2];
+        wheelPower[1] += sinAngle * param[2];
+        wheelPower[2] += sinAngle * param[2];
+        wheelPower[3] += cosAngle * param[2];
+        //Log.d(TAG, "InitPower 0: " + wheelPower[0] + " 1: " + wheelPower[1] + " 2: " + wheelPower[2] + " 3: " + wheelPower[3]);
+        //Log.d(TAG, "sin: " + sinAngle + " cos: " + cosAngle);
     }
     
     private void RotateDistanceMoveHDP(double[] param) {
@@ -450,7 +467,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     boolean addAction(Actions actionName, double param1, double param2, double param3, int priority) {
         
         // don't execute action and return false if the current actions are a higher priority
-        if (!priorityCheck(priority)) return false;
+        if (isLowPriority(priority)) return false;
     
         // add the action to the action list
         actionsList.add(new ActionData(actionName, new double[]{param1, param2, param3}));
@@ -461,7 +478,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     boolean StrafeDistanceMove(double angle, double distance, double power, int priority) {
     
         // don't execute action and return false if the current actions are a higher priority
-        if (!priorityCheck(priority)) return false;
+        if (isLowPriority(priority)) return false;
     
         // add the action to the action list
         actionsList.add(new ActionData(Actions.StrafeDistanceMoveHDP, new double[]{angle, distance, power}));
@@ -472,7 +489,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     boolean RotateDistanceMove(double heading, double distance, double power, int priority) {
     
         // don't execute action and return false if the current actions are a higher priority
-        if (!priorityCheck(priority)) return false;
+        if (isLowPriority(priority)) return false;
     
         // add the action to the action list
         actionsList.add(new ActionData(Actions.RotateDistanceMoveHDP, new double[]{heading, power, distance}));
@@ -483,7 +500,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     boolean StrafePowerMove(double angle, double power, int priority) {
     
         // don't execute action and return false if the current actions are a higher priority
-        if (!priorityCheck(priority)) return false;
+        if (isLowPriority(priority)) return false;
     
         // add the action to the action list
         actionsList.add(new ActionData(Actions.StrafePowerMoveAP, new double[]{angle, power}));
@@ -494,7 +511,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     boolean RotatePowerMove(double heading, double power, int priority) {
     
         // don't execute action and return false if the current actions are a higher priority
-        if (!priorityCheck(priority)) return false;
+        if (isLowPriority(priority)) return false;
     
         // add the action to the action list
         actionsList.add(new ActionData(Actions.RotatePowerMoveHP, new double[]{heading, power}));
@@ -505,7 +522,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     boolean StrafePointMove(double power, double x, double y, int priority) {
     
         // don't execute action and return false if the current actions are a higher priority
-        if (!priorityCheck(priority)) return false;
+        if (isLowPriority(priority)) return false;
     
         // add the action to the action list
         actionsList.add(new ActionData(Actions.StrafePointMovePXY, new double[]{power, x, y}));
@@ -516,7 +533,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     boolean RotatePointMove(double power, double x, double y, int priority) {
     
         // don't execute action and return false if the current actions are a higher priority
-        if (!priorityCheck(priority)) return false;
+        if (isLowPriority(priority)) return false;
     
         // add the action to the action list
         actionsList.add(new ActionData(Actions.RotatePowerMoveHP, new double[]{power, x, y}));
@@ -527,7 +544,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     boolean CurvePointMove(double power, double x, double y, int priority) {
     
         // don't execute action and return false if the current actions are a higher priority
-        if (!priorityCheck(priority)) return false;
+        if (isLowPriority(priority)) return false;
     
         // add the action to the action list
         actionsList.add(new ActionData(Actions.CurvePointMovePXY, new double[]{power, x, y}));
@@ -538,7 +555,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     boolean AutoPointMove(double power, double x, double y, int priority) {
     
         // don't execute action and return false if the current actions are a higher priority
-        if (!priorityCheck(priority)) return false;
+        if (isLowPriority(priority)) return false;
     
         // add the action to the action list
         actionsList.add(new ActionData(Actions.AutoPointMovePXY, new double[]{power, x, y}));
@@ -549,7 +566,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     boolean AngleRotate(double angle, double power, int priority) {
     
         // don't execute action and return false if the current actions are a higher priority
-        if (!priorityCheck(priority)) return false;
+        if (isLowPriority(priority)) return false;
     
         // add the action to the action list
         actionsList.add(new ActionData(Actions.AngleRotateAP, new double[]{angle, power}));
@@ -560,7 +577,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     boolean HeadingRotate(double heading, double power, int priority) {
     
         // don't execute action and return false if the current actions are a higher priority
-        if (!priorityCheck(priority)) return false;
+        if (isLowPriority(priority)) return false;
     
         //find abs of initial offset value
         
@@ -573,7 +590,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     boolean PowerRotate(double power, int priority) {
     
         // don't execute action and return false if the current actions are a higher priority
-        if (!priorityCheck(priority)) return false;
+        if (isLowPriority(priority)) return false;
     
         // add the action to the action list
         actionsList.add(new ActionData(Actions.PowerRotateP, new double[]{power}));
