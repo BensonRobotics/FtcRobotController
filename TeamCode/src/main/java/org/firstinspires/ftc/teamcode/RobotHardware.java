@@ -1,16 +1,21 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.os.SystemClock;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+
+import java.util.Timer;
 
 import static java.lang.Thread.sleep;
 
@@ -88,6 +93,7 @@ public class RobotHardware implements Runnable{
     public int monitorViewId;
     public DcMotor yEncoder;
     public DcMotor xEncoder;
+    public ElapsedTime runtime = new ElapsedTime();
     //public DigitalChannel[] wheelTriggers = new DigitalChannel[8];
 
     ////////////////////////////// Motors //////////////////////////////
@@ -99,6 +105,8 @@ public class RobotHardware implements Runnable{
     public Servo          duckServo;
 
     public void init(HardwareMap HM, LinearOpMode telOp) {
+        
+        runtime.reset();
         
         hardwareMap = HM;
         this.opMode = telOp;

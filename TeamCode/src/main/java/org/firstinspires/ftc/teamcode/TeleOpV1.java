@@ -2,11 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DigitalChannelController;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
-
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -117,7 +114,7 @@ public class TeleOpV1 extends LinearOpMode {
                 drive.PowerRotate(rotateScaled, 1);
             }
     
-            drive.setWheelPower();
+            drive.startActions();
     
             /*if (!barrierMode && (H.wheelTriggers[0].getState() || H.wheelTriggers[1].getState() || H.wheelTriggers[2].getState() || H.wheelTriggers[3].getState())) {
                 //set up barrier traversal information

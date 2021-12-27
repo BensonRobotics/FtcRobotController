@@ -68,10 +68,10 @@ public class autonomous extends LinearOpMode {
         waitForStart();
         
         drive.StrafeDistanceMove(0,10,0.5,1);
-        drive.setWheelPower();
+        drive.startActions();
         drive.waitForMoveDone();
         drive.StrafeDistanceMove(90,5,0.5,1);
-        drive.setWheelPower();
+        drive.startActions();
         drive.waitForMoveDone();
     
     }
