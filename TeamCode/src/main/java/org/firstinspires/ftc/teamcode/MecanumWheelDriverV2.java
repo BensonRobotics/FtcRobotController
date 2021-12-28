@@ -231,7 +231,7 @@ public class MecanumWheelDriverV2 implements Runnable{
          * returns a value between -180 and 180
          * output will be negative if the target degree is right, positive if on the left
          *     x
-         * -90   90
+         *  90  -90
          *    180
          */
         
@@ -242,6 +242,12 @@ public class MecanumWheelDriverV2 implements Runnable{
             offset += 360;
         }
         return offset;
+    }
+    
+    private double adaptivePowerRamping(double offset, double power, double initialOffset) {
+        
+        return Range.clip((Math.exp(0.1 * Math.abs(offset))-1)/(power * Math.sqrt(Math.abs(initialOffset))), H.MINIMUM_MOTOR_POWER, power);
+    
     }
     
     private void Action(ActionData action) {
@@ -440,7 +446,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         double offset;
         offset = findDegOffset(H.heading - action.param[2], action.param[0]);
         // ramp down when near target heading
-        double power = Math.signum(offset) * -Range.clip( (Math.exp(0.1 * Math.abs(offset))-1)/(action.param[1] * Math.sqrt(Math.abs(findDegOffset(action.param[2], action.param[0])))), 0.075, action.param[1]);
+        double power = -Math.signum(offset) * adaptivePowerRamping(offset, action.param[1], findDegOffset(action.param[2], action.param[0]));
     
         // remove from list if target has been reached
         if (Math.abs(offset) < ROTATE_TOLERANCE) {
@@ -462,7 +468,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         double offset;
         offset = findDegOffset(H.heading, action.param[0]);
         // ramp down when near target heading
-        double power = Math.signum(offset) * -Range.clip( (Math.exp(0.1 * Math.abs(offset))-1)/(action.param[1] * Math.sqrt(Math.abs(action.param[2]))), 0.075, action.param[1]);
+        double power = -Math.signum(offset) * adaptivePowerRamping(offset, action.param[1], action.param[2]);
     
         // remove from list if target has been reached
         if (Math.abs(offset) < ROTATE_TOLERANCE) {
@@ -493,7 +499,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     
     ///// adjusts values while moving to stay on course /////
     
-    private void StrafeDistanceMoveMaintainHDP(ActionData action) { // TODO: add power ramp down
+    private void StrafeDistanceMoveMaintainHDP(ActionData action) {
         // assign variables
     
         // increase distance when moving sideways to counter mecanum wheel inconsistencies
@@ -530,6 +536,16 @@ public class MecanumWheelDriverV2 implements Runnable{
         action.wheelPower[1] = sinAngle * power;
         action.wheelPower[2] = sinAngle * power;
         action.wheelPower[3] = cosAngle * power;
+        
+        // ramp down power when near destination
+        double totalPower = 0;
+        for (int i = 0; i < 4; i ++) {
+            totalPower += action.wheelPower[i];
+        }
+        for (int i = 0; i < 4; i++) {
+            action.wheelPower[i] = 4/totalPower * adaptivePowerRamping(Math.abs(action.wheelTarget[i]/H.COUNTS_PER_INCH), action.wheelPower[i], action.initialWheelTarget[i]/H.COUNTS_PER_INCH);
+        }
+        
     }
     
     private void RotateDistanceMoveMaintainHDP(ActionData action) {

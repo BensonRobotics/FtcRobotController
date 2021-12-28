@@ -54,6 +54,7 @@ public class RobotHardware implements Runnable{
     private final double COUNTS_PER_REVOLUTION = 560;
     private final double WHEEL_DIAMETER_INCHES = 4.0;
     public final double COUNTS_PER_INCH = COUNTS_PER_REVOLUTION / (WHEEL_DIAMETER_INCHES * Math.PI);
+    public final double MINIMUM_MOTOR_POWER = 0.075;
     
     public final double EXP_BASE = 20;
     public final double INITIAL_VALUE = 0.05;
