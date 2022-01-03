@@ -1,11 +1,17 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
+
+import org.opencv.core.Mat;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static android.content.ContentValues.TAG;
 
 enum Actions {
     StrafeDistanceMoveHDP,RotateDistanceMoveHDP,StrafePowerMoveAP,RotatePowerMoveHP,StrafePointMovePXY,RotatePointMovePXY,CurvePointMovePXY,AutoPointMovePXY,AngleRotateAP,HeadingRotateHP,PowerRotateP
@@ -36,48 +42,52 @@ public class MecanumWheelDriverV2 implements Runnable{
     }
     
     public void run() {
+        
+        while (!H.opMode.isStopRequested()) {
     
-        // run maintain actions
-        for (ActionData action : maintainList) {
+            // run maintain actions
+            for (ActionData action : maintainList) {
+                Log.d(TAG, "action: " + action.action);
+                ActionMaintain(action);
         
-            ActionMaintain(action);
-            
-            // remove action if it has timed out
-            if (action.startTime + TIMEOUT > H.runtime.now(TimeUnit.MILLISECONDS)) {
-                maintainRemoveList.add(maintainList.indexOf(action));
+                // remove action if it has timed out
+                if (action.startTime + TIMEOUT < H.runtime.time(TimeUnit.MILLISECONDS)) {
+                    maintainRemoveList.add(maintainList.indexOf(action));
+                }
+        
             }
-        
-        }
-        
-        // remove all finished actions
-        for (int i = maintainRemoveList.size()-1; i >= 0; i--) maintainList.remove((int)maintainRemoveList.get(i));
-        maintainRemoveList.clear();
-        
-        // sum up all of the actions' wheel powers for averaging and figuring power portions
-        double[] wheelPower = {0,0,0,0};
-        double[] totalAbsPower = {0,0,0,0};
-        for (ActionData action : maintainList) {
+    
+            // remove all finished actions
+            for (int i = maintainRemoveList.size() - 1; i >= 0; i--)
+                maintainList.remove((int) maintainRemoveList.get(i));
+            maintainRemoveList.clear();
+    
+            // sum up all of the actions' wheel powers for averaging and figuring power portions
+            double[] wheelPower = {0, 0, 0, 0};
+            double[] totalAbsPower = {0, 0, 0, 0};
+            for (ActionData action : maintainList) {
+                for (int i = 0; i < 4; i++) {
+                    wheelPower[i] += action.wheelPower[i];
+                    totalAbsPower[i] += Math.abs(action.wheelPower[i]);
+                }
+            }
+    
+            // set the power for each wheel
+            setWheelPower(wheelPower);
+    
+            // find how much each action effects the power
+            calculatePowerPortions(totalAbsPower);
+    
+            // read how much each wheel has moved since last loop
+            int[] clickDelta = {0, 0, 0, 0};
             for (int i = 0; i < 4; i++) {
-                wheelPower[i] += action.wheelPower[i];
-                totalAbsPower[i] += Math.abs(action.wheelPower[i]);
+                clickDelta[i] = H.driveMotor[i].getCurrentPosition() - lastLoopPosition[i];
+                lastLoopPosition[i] = H.driveMotor[i].getCurrentPosition();
             }
+    
+            // using power portions, find how much farther each action needs to move to be finished
+            updateActionTarget(clickDelta);
         }
-        
-        // set the power for each wheel
-        setWheelPower(wheelPower);
-        
-        // find how much each action effects the power
-        calculatePowerPortions(totalAbsPower);
-        
-        // read how much each wheel has moved since last loop
-        int[] clickDelta = {0,0,0,0};
-        for (int i = 0; i < 4; i++) {
-            clickDelta[i] = H.driveMotor[i].getCurrentPosition() - lastLoopPosition[i];
-            lastLoopPosition[i] = H.driveMotor[i].getCurrentPosition();
-        }
-        
-        // using power portions, find how much farther each action needs to move to be finished
-        updateActionTarget(clickDelta);
     
     }
     
@@ -146,15 +156,15 @@ public class MecanumWheelDriverV2 implements Runnable{
     
     private void updateActionTarget(int[] clickDelta) {
         
-        int totalClicks = 0;
+        double totalClicks = 0;
         double totalPower = 0;
         
         for (ActionData action : maintainList) {
     
             // get the distance that the specified action is responsible for
             for (int i = 0; i < 4; i++) {
-                totalClicks += (int)action.powerPortion[i] * clickDelta[i];
-                totalPower += action.wheelPower[i];
+                totalClicks += Math.abs(action.powerPortion[i] * clickDelta[i]);
+                totalPower += Math.abs(action.wheelPower[i]);
             }
             
             // remove distance from wheel target after adjusting to be aligned with wheel powers
@@ -183,7 +193,8 @@ public class MecanumWheelDriverV2 implements Runnable{
     
     void waitForMoveDone(){
         
-        while ((H.driveMotor[0].isBusy() || H.driveMotor[1].isBusy() || H.driveMotor[2].isBusy() || H.driveMotor[3].isBusy()) && !H.opMode.isStopRequested()) {
+        while (!maintainList.isEmpty() && !H.opMode.isStopRequested()) {
+            H.opMode.idle();
             //Log.d(TAG, "MotorPower 0: " + H.driveMotor[0].getPower() + " 1: " + H.driveMotor[1].getPower() + " 2: " + H.driveMotor[2].getPower() + " 3: " + H.driveMotor[3].getPower());
             //Log.d(TAG, "MotorTarget 0: " + H.driveMotor[0].getTargetPosition() + " 1: " + H.driveMotor[1].getTargetPosition() + " 2: " + H.driveMotor[2].getTargetPosition() + " 3: " + H.driveMotor[3].getTargetPosition());
             //Log.d(TAG, "MotorPos 0: " + H.driveMotor[0].getCurrentPosition() + " 1: " + H.driveMotor[1].getCurrentPosition() + " 2: " + H.driveMotor[2].getCurrentPosition() + " 3: " + H.driveMotor[3].getCurrentPosition());
@@ -246,7 +257,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     
     private double adaptivePowerRamping(double offset, double power, double initialOffset) {
         
-        return Range.clip((Math.exp(0.1 * Math.abs(offset))-1)/(power * Math.sqrt(Math.abs(initialOffset))), H.MINIMUM_MOTOR_POWER, power);
+        return Range.clip((Math.exp(0.1 * Math.abs(offset))-1)/(Math.abs(power) * Math.sqrt(Math.abs(initialOffset))), H.MINIMUM_MOTOR_POWER, Math.abs(power));
     
     }
     
@@ -257,43 +268,33 @@ public class MecanumWheelDriverV2 implements Runnable{
         switch (action.action) {
             case StrafeDistanceMoveHDP:
                 StrafeDistanceMoveHDP(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case RotateDistanceMoveHDP:
                 RotateDistanceMoveHDP(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case StrafePowerMoveAP:
                 StrafePowerMoveAP(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case RotatePowerMoveHP:
                 RotatePowerMoveHP(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case StrafePointMovePXY:
                 StrafePointMovePXY(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case RotatePointMovePXY:
                 RotatePointMovePXY(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case CurvePointMovePXY:
                 CurvePointMovePXY(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case AutoPointMovePXY:
                 AutoPointMovePXY(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case AngleRotateAP:
                 AngleRotateAP(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case HeadingRotateHP:
                 HeadingRotateHP(action);
-    
                 break;
             case PowerRotateP:
                 PowerRotateP(action);
@@ -312,39 +313,30 @@ public class MecanumWheelDriverV2 implements Runnable{
         switch (action.action) {
             case StrafeDistanceMoveHDP:
                 StrafeDistanceMoveMaintainHDP(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case RotateDistanceMoveHDP:
                 RotateDistanceMoveMaintainHDP(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case StrafePowerMoveAP:
                 StrafePowerMoveMaintainAP(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case RotatePowerMoveHP:
                 RotatePowerMoveMaintainHP(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case StrafePointMovePXY:
                 StrafePointMoveMaintainPXY(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case RotatePointMovePXY:
                 RotatePointMoveMaintainPXY(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case CurvePointMovePXY:
                 CurvePointMoveMaintainPXY(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case AutoPointMovePXY:
                 AutoPointMoveMaintainPXY(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case AngleRotateAP:
                 AngleRotateAP(action);
-                initializationRemoveList.add(initializationList.indexOf(action));
                 break;
             case HeadingRotateHP:
                 HeadingRotateHP(action);
@@ -361,8 +353,8 @@ public class MecanumWheelDriverV2 implements Runnable{
         
         // increase distance when moving sideways to counter mecanum wheel inconsistencies
         double distanceMultiplier = (DISTANCE_MULTIPLIER_LOWER - DISTANCE_MULTIPLIER_UPPER)*(Math.abs(Math.abs(action.param[0]/90) - 1)) + DISTANCE_MULTIPLIER_UPPER;
-        
-        double angle = Math.toRadians(action.param[0] + 45);
+        Log.d(TAG, "dis multi" + distanceMultiplier);
+        double angle = Math.toRadians(action.param[0] + 45 - H.heading);
         double cosAngle = Math.cos(angle);
         double sinAngle = Math.sin(angle);
         double power = Range.clip(action.param[2], 0, 1);
@@ -372,6 +364,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         action.initialWheelTarget[1] = (int)(sinAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
         action.initialWheelTarget[2] = (int)(sinAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
         action.initialWheelTarget[3] = (int)(cosAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
+        Log.d(TAG, "init wheel target" + action.initialWheelTarget[0]);
     
         action.wheelTarget = action.initialWheelTarget.clone();
     
@@ -446,7 +439,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         double offset;
         offset = findDegOffset(H.heading - action.param[2], action.param[0]);
         // ramp down when near target heading
-        double power = -Math.signum(offset) * adaptivePowerRamping(offset, action.param[1], findDegOffset(action.param[2], action.param[0]));
+        double power =-Math.signum(offset) * adaptivePowerRamping(offset, action.param[1], findDegOffset(action.param[2], action.param[0]));
     
         // remove from list if target has been reached
         if (Math.abs(offset) < ROTATE_TOLERANCE) {
@@ -504,21 +497,33 @@ public class MecanumWheelDriverV2 implements Runnable{
     
         // increase distance when moving sideways to counter mecanum wheel inconsistencies
         double distanceMultiplier = (DISTANCE_MULTIPLIER_LOWER - DISTANCE_MULTIPLIER_UPPER)*(Math.abs(Math.abs(action.param[0]/90) - 1)) + DISTANCE_MULTIPLIER_UPPER;
-    
-        double angle = Math.toRadians(action.param[0] + 45);
+        //Log.d(TAG, "dis multi" + distanceMultiplier);
+        double angle = Math.toRadians(action.param[0] + 45 - H.heading);
         double cosAngle = Math.cos(angle);
         double sinAngle = Math.sin(angle);
         double power = Range.clip(action.param[2], 0, 1);
-    
+        
+        int cosDistance = (int)(cosAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
+        int sinDistance = (int)(sinAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
+        
         // set all wheel target positions
-        action.wheelTarget[0] += (int)(cosAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH) - action.initialWheelTarget[0];
-        action.wheelTarget[1] += (int)(sinAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH) - action.initialWheelTarget[1];
-        action.wheelTarget[2] += (int)(sinAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH) - action.initialWheelTarget[2];
-        action.wheelTarget[3] += (int)(cosAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH) - action.initialWheelTarget[3];
-    
+        action.wheelTarget[0] += cosDistance - action.initialWheelTarget[0];
+        action.wheelTarget[1] += sinDistance - action.initialWheelTarget[1];
+        action.wheelTarget[2] += sinDistance - action.initialWheelTarget[2];
+        action.wheelTarget[3] += cosDistance - action.initialWheelTarget[3];
+        
+        action.initialWheelTarget[0] = cosDistance;
+        action.initialWheelTarget[1] = sinDistance;
+        action.initialWheelTarget[2] = sinDistance;
+        action.initialWheelTarget[3] = cosDistance;
+        
+        Log.d(TAG, "initial target" + action.initialWheelTarget[0]);
+        Log.d(TAG, "calculated: " + (int)(cosAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH));
+        Log.d(TAG, "wheel target" + action.wheelTarget[0]);
+        
         // remove from list if target has been reached
         if (Math.abs(action.wheelTarget[0]) < MOVEMENT_TOLERANCE && Math.abs(action.wheelTarget[1]) < MOVEMENT_TOLERANCE && Math.abs(action.wheelTarget[2]) < MOVEMENT_TOLERANCE && Math.abs(action.wheelTarget[3]) < MOVEMENT_TOLERANCE) {
-            initializationRemoveList.add(initializationList.indexOf(action));
+            maintainRemoveList.add(maintainList.indexOf(action));
             return;
         }
     
@@ -540,11 +545,12 @@ public class MecanumWheelDriverV2 implements Runnable{
         // ramp down power when near destination
         double totalPower = 0;
         for (int i = 0; i < 4; i ++) {
-            totalPower += action.wheelPower[i];
+            totalPower += Math.abs(action.wheelPower[i]);
         }
         for (int i = 0; i < 4; i++) {
-            action.wheelPower[i] = 4/totalPower * adaptivePowerRamping(Math.abs(action.wheelTarget[i]/H.COUNTS_PER_INCH), action.wheelPower[i], action.initialWheelTarget[i]/H.COUNTS_PER_INCH);
+            action.wheelPower[i] = Math.signum(action.wheelTarget[i]) * Math.signum(action.initialWheelTarget[i]) * Math.signum(action.wheelPower[i]) * Range.clip(4/totalPower * adaptivePowerRamping(Math.abs(action.wheelTarget[i]/H.COUNTS_PER_INCH), action.wheelPower[i], action.initialWheelTarget[i]/H.COUNTS_PER_INCH), H.MINIMUM_MOTOR_POWER , Math.abs(action.wheelPower[i]));
         }
+        Log.d(TAG, "power" + action.wheelPower[0]);
         
     }
     
