@@ -506,12 +506,13 @@ public class MecanumWheelDriverV2 implements Runnable{
         int cosDistance = (int)(cosAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
         int sinDistance = (int)(sinAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
         
-        // set all wheel target positions
-        action.wheelTarget[0] += cosDistance - action.initialWheelTarget[0];
-        action.wheelTarget[1] += sinDistance - action.initialWheelTarget[1];
-        action.wheelTarget[2] += sinDistance - action.initialWheelTarget[2];
-        action.wheelTarget[3] += cosDistance - action.initialWheelTarget[3];
+        // recalculate the target with current heading
+        action.wheelTarget[0] *= (double)cosDistance / (double)action.initialWheelTarget[0];
+        action.wheelTarget[1] *= (double)sinDistance / (double)action.initialWheelTarget[1];
+        action.wheelTarget[2] *= (double)sinDistance / (double)action.initialWheelTarget[2];
+        action.wheelTarget[3] *= (double)cosDistance / (double)action.initialWheelTarget[3];
         
+        // assign the updated initial distances to the action
         action.initialWheelTarget[0] = cosDistance;
         action.initialWheelTarget[1] = sinDistance;
         action.initialWheelTarget[2] = sinDistance;
