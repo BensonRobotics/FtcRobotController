@@ -5,6 +5,8 @@ import android.os.SystemClock;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -95,6 +97,7 @@ public class RobotHardware implements Runnable{
     public DcMotor yEncoder;
     public DcMotor xEncoder;
     public ElapsedTime runtime = new ElapsedTime();
+    public DigitalChannel liftStop;
     //public DigitalChannel[] wheelTriggers = new DigitalChannel[8];
 
     ////////////////////////////// Motors //////////////////////////////
@@ -148,6 +151,8 @@ public class RobotHardware implements Runnable{
             xEncoder.setDirection(DcMotor.Direction.REVERSE);
         }
     
+        liftStop = HM.get(DigitalChannel.class, "Lift_Digital");
+        
         //for (int i = 0; i < wheelTriggers.length; i++) {
         //    wheelTriggers[i] = HM.get(DigitalChannel.class, i+"_Digital");
         //}
@@ -171,7 +176,7 @@ public class RobotHardware implements Runnable{
             driveMotor[i].setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
         
-        liftMotor.setDirection(DcMotor.Direction.FORWARD);
+        liftMotor.setDirection(DcMotor.Direction.REVERSE);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 

@@ -17,6 +17,12 @@ public class TeleOpV1 extends LinearOpMode {
     private boolean[] toggle = {true, true, false, true, false, false, false, true};
     // 0 = half speed, 1 = compass, 2 = POV, 3 = lift wheels, 4 = collector, 5 = duck left, 6 = duck right, 7 = collector switch
     
+    boolean calibrated = false;
+    int liftPos = 0;
+    int liftZero = 0;
+    int liftStart = 0;
+    final int LIFT_MAX = 380;
+    final int LIFT_MIN = -3;
     
     RobotHardware H = new RobotHardware();
     
@@ -49,6 +55,9 @@ public class TeleOpV1 extends LinearOpMode {
         boolean traversingForwards = true;
         int traversalStep = 0;
         long lastTurnTime = 0;
+        
+        double upPower = 0;
+        double downPower = 0;
         
         double agl_frwd = 0;
         double heading = 0;
@@ -115,6 +124,12 @@ public class TeleOpV1 extends LinearOpMode {
             }
     
             drive.startActions();
+            
+            upPower = gamepad1.right_trigger;
+            downPower += gamepad1.left_trigger;
+            
+            setLiftPower(upPower, downPower);
+            downPower = 0;
     
             /*if (!barrierMode && (H.wheelTriggers[0].getState() || H.wheelTriggers[1].getState() || H.wheelTriggers[2].getState() || H.wheelTriggers[3].getState())) {
                 //set up barrier traversal information
@@ -205,6 +220,7 @@ public class TeleOpV1 extends LinearOpMode {
             if (toggle[4]) {
                 if (toggle[7]) {
                     H.collectorMotor.setPower(1);
+                    downPower = 1;
                 } else {
                     H.collectorMotor.setPower(-1);
                 }
@@ -238,27 +254,52 @@ public class TeleOpV1 extends LinearOpMode {
                 agl_frwd = heading;
             }
             
-            if (Math.abs(gamepad1.left_trigger) > 0.05 || Math.abs(gamepad1.right_trigger) > 0.05) {
-                H.liftMotor.setPower(exponentialScaling(gamepad1.left_trigger) - exponentialScaling(gamepad1.right_trigger));
-            } else {
-                H.liftMotor.setPower(0);
-            }
-            
-            telemetry.addData("wheelPower: ", H.driveMotor[0].getPower());
-            telemetry.addData("wheelPower: ", H.driveMotor[1].getPower());
-            telemetry.addData("wheelPower: ", H.driveMotor[2].getPower());
-            telemetry.addData("wheelPower: ", H.driveMotor[3].getPower());
-            telemetry.addData("max wheel power", drive.maxWheelPower);
+            //telemetry.addData("wheelPower: ", H.driveMotor[0].getPower());
+            //telemetry.addData("wheelPower: ", H.driveMotor[1].getPower());
+            //telemetry.addData("wheelPower: ", H.driveMotor[2].getPower());
+            telemetry.addData("lift Power: ", H.liftMotor.getPower());
+            //telemetry.addData("max wheel power", drive.maxWheelPower);
             //telemetry.addData("barrier mode: ", barrierMode);
             //telemetry.addData("direction: ", traversingForwards);
-            telemetry.addData("heading", H.heading);
-            telemetry.addData("heading lock", drive.findDegOffset(H.heading, headingLock));
+            //telemetry.addData("heading", H.heading);
+            //telemetry.addData("heading lock", drive.findDegOffset(H.heading, headingLock));
             telemetry.update();
             
         }
         
         pool.shutdownNow();
         
+    }
+    
+    private void setLiftPower(double upPower, double downPower) {
+        
+        liftPos = H.liftMotor.getCurrentPosition() - liftZero;
+        telemetry.addData("lift pos: ", liftPos);
+    
+        if (Math.abs(downPower) < 0.05 && Math.abs(upPower) < 0.05) {
+            H.liftMotor.setPower(0);
+            liftStart = liftPos;
+            return;
+        }
+        
+        if (!H.liftStop.getState()) {
+            liftZero = H.liftMotor.getCurrentPosition();
+            H.liftMotor.setPower(exponentialScaling(upPower));
+            calibrated = true;
+            return;
+        }
+        
+        if (calibrated && liftPos >= LIFT_MAX) {
+            H.liftMotor.setPower( -exponentialScaling(downPower));
+            return;
+        }
+        
+        if (calibrated) {
+            H.liftMotor.setPower(adaptivePowerRamping(LIFT_MAX - liftPos, exponentialScaling(upPower), LIFT_MAX - liftStart) - adaptivePowerRamping(LIFT_MIN - liftPos, exponentialScaling(downPower), LIFT_MIN - liftStart));
+            return;
+        }
+        
+        H.liftMotor.setPower(exponentialScaling(upPower) - exponentialScaling(downPower));
     }
     
     private void toggleButton(boolean gamepadIn, int numb) {
@@ -294,6 +335,12 @@ public class TeleOpV1 extends LinearOpMode {
         } else {
             return goalPower - currentPower;
         }
+    }
+    
+    private double adaptivePowerRamping(double offset, double power, double initialOffset) {
+        
+        return Range.clip((Math.exp(0.1 * Math.abs(offset))-1)/(Math.abs(power) * Math.pow(Math.abs(initialOffset/12),3)), 0.1, Math.abs(power));
+        
     }
     
 }
