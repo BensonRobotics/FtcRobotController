@@ -13,17 +13,17 @@ import java.util.concurrent.TimeUnit;
 @TeleOp(name="TeleOp", group="Linear Opmode")
 public class TeleOpV1 extends LinearOpMode {
     
-    private boolean[] button = {false, false, false, false, false, false, false, false};
-    // 0 = compass, 1 = lift wheels, 2 = duck left, 3 = duck right
-    private boolean[] toggle = {true, true, false, true, false, false, false, true};
-    // 0 = half speed, 1 = compass, 2 = POV, 3 = lift wheels, 4 = collector, 5 = duck left, 6 = duck right, 7 = collector switch
+    private boolean[] button = {false, false, false, false, false};
+    // 0 = compass, 1 = lift wheels, 2 = duck left, 3 = duck right, 4 = collector toggle
+    private boolean[] toggle = {true, true, false, false, false};
+    // 0 = compass, 1 = lift wheels, 2 = duck left, 3 = duck right, 4 = collector toggle
     
     boolean calibrated = false;
     int liftPos = 0;
     int liftZero = 0;
     int liftStart = 0;
     final int LIFT_MAX = 380;
-    final int LIFT_MIN = -3;
+    final int LIFT_MIN = -5;
     
     RobotHardware H = new RobotHardware();
     
@@ -77,9 +77,10 @@ public class TeleOpV1 extends LinearOpMode {
             radius = exponentialScaling(Range.clip(Math.hypot(x, y), 0, 1));
             power += powerFollow(power, radius);
             if (radius > 0.05) angle = Math.toDegrees(Math.atan2(y, x)) + 90 + agl_frwd - heading;
-            
-            drive.StrafePowerMove(angle, power*0.6 + (gamepad1.right_trigger*0.4), 1);
-            rotateScaled = rotate * 0.6 + gamepad1.right_trigger*0.4;
+            //drive.StrafePowerMove(angle, power*0.6 + (gamepad1.right_trigger*0.4), 1);
+            //rotateScaled = rotate * 0.6 + gamepad1.right_trigger*0.4;
+            drive.StrafePowerMove(angle, power*0.75, 1);
+            rotateScaled = rotate * 0.75;
             
             if (Math.abs(rotate) < 0.05) {
                 if (lastTurnTime + 350 < runtime.now(TimeUnit.MILLISECONDS)) {
@@ -102,11 +103,13 @@ public class TeleOpV1 extends LinearOpMode {
     
             drive.startActions();
             
-            upPower = Range.clip(gamepad2.left_stick_y, 0, 1);
-            downPower += Range.clip(gamepad2.left_stick_y, -1, 0);
+            upPower = Range.clip(-gamepad2.left_stick_y, 0, 1);
+            downPower += Range.clip(gamepad2.left_stick_y, 0, 1);
             
             setLiftPower(upPower, downPower);
             downPower = 0;
+            
+            setRampPower(-gamepad2.right_stick_y);
             
             ////////////////////////////// Buttons //////////////////////////////
             
@@ -125,6 +128,7 @@ public class TeleOpV1 extends LinearOpMode {
             toggleButton(gamepad1.a || gamepad2.a, 1);
             toggleButton(gamepad1.x, 2);
             toggleButton(gamepad1.b, 3);
+            toggleButton(gamepad1.right_bumper, 4);
             
             if (toggle[1]) {
                 H.wheelLift[0].setPosition(0);
@@ -138,7 +142,7 @@ public class TeleOpV1 extends LinearOpMode {
                 H.wheelLift[3].setPosition(1);
             }
             
-            H.collectorMotor.setPower(gamepad2.right_trigger - gamepad2.left_trigger);
+            H.collectorMotor.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
             
             if (toggle[2]) {
                 toggle[3] = false;
@@ -151,6 +155,12 @@ public class TeleOpV1 extends LinearOpMode {
             
             if (!toggle[2] && !toggle[3]) {
                 H.duckServo.setPosition(0.5);
+            }
+            
+            if (toggle[4]) {
+                H.collectorServo.setPosition(1);
+            } else {
+                H.collectorServo.setPosition(0);
             }
             
             if (gamepad1.start) {
@@ -202,6 +212,27 @@ public class TeleOpV1 extends LinearOpMode {
         }
         
         H.liftMotor.setPower(exponentialScaling(upPower) - exponentialScaling(downPower));
+    }
+    
+    private void setRampPower(double power) {
+        
+        power = (power + 1) * 0.5;
+        
+        if (Math.abs(power - 0.5) < 0.025) {
+            H.rampServo.setPosition(0.5);
+            return;
+        }
+        if (!H.rampStop[0].getState()) {
+            H.rampServo.setPosition(Range.clip(power,0.5,1));
+            return;
+        }
+        
+        if (!H.rampStop[1].getState()) {
+            H.rampServo.setPosition(Range.clip(power,0,0.5));
+            return;
+        }
+        
+        H.rampServo.setPosition(power);
     }
     
     private void toggleButton(boolean gamepadIn, int numb) {

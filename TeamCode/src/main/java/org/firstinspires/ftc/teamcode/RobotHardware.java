@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -66,6 +67,8 @@ public class RobotHardware implements Runnable{
     
     public final String VUFORIA_KEY = "AXfJetz/////AAABmfTftTQRKUq2u+iCzbuFm2wKhp5/qubTF+6xF9VBwMBiVi2lCwJbNrIAVofnUKke4/MjFtZROHGeelAgbQx6MjYX+qdX4vRB5z2PboepftoqvoZy3irQKQ2aKqNSbpN72hI/tI2wluN0xqC6KThtMURH0EuvUf8VcGDfmuXiA/uP00/2dsYhIMhxBJCmBq0AG5jMWi8MnHJDZwnoYLdcliKB7rvNTUDbf1fzxRzf9QHgB2u+invzPou7q8ncAsD5GdXFfA/CiYmR65JKXDOE0wHoc8FxvrzUIRCQ2geSypo7eY5q/STJvqPmjoj33CQFHl0hKMx05QwwsABdlIZvfLLbjA3VH2HO4dcv+OOoElws";
     
+    public static double headingSave = 0;
+    
     ////////////////////////////// Toggles //////////////////////////////
     
     boolean XYEncoderEnable = false;
@@ -79,6 +82,7 @@ public class RobotHardware implements Runnable{
     public double frontDistance = 0;
     public int[] driveEncoder = {0, 0, 0, 0};
     public double armVoltage = 0;
+    public double rampPower = 0.5;
     
     ////////////////////////////// Sensors //////////////////////////////
 
@@ -98,6 +102,7 @@ public class RobotHardware implements Runnable{
     public DcMotor xEncoder;
     public ElapsedTime runtime = new ElapsedTime();
     public DigitalChannel liftStop;
+    public DigitalChannel[] rampStop = new DigitalChannel[2];
     //public DigitalChannel[] wheelTriggers = new DigitalChannel[8];
 
     ////////////////////////////// Motors //////////////////////////////
@@ -107,6 +112,8 @@ public class RobotHardware implements Runnable{
     public DcMotor[]      driveMotor = new DcMotor[4];
     public Servo[]        wheelLift = new Servo[4];
     public Servo          duckServo;
+    public Servo          rampServo;
+    public Servo          collectorServo;
 
     public void init(HardwareMap HM, LinearOpMode telOp) {
         
@@ -130,6 +137,8 @@ public class RobotHardware implements Runnable{
         wheelLift[2] = HM.get(Servo.class, "RL_Servo");
         wheelLift[3] = HM.get(Servo.class, "RR_Servo");
         duckServo = HM.get(Servo.class, "D_Servo");
+        rampServo = HM.get(Servo.class, "R_Servo");
+        collectorServo = HM.get(Servo.class, "C_Servo");
     
         if (cameraEnable) {
             webcam = HM.get(WebcamName.class, "Webcam 1");
@@ -152,6 +161,9 @@ public class RobotHardware implements Runnable{
         }
     
         liftStop = HM.get(DigitalChannel.class, "Lift_Digital");
+        
+        rampStop[0] = HM.get(DigitalChannel.class, "RampB_Digital");
+        rampStop[1] = HM.get(DigitalChannel.class, "RampT_Digital");
         
         //for (int i = 0; i < wheelTriggers.length; i++) {
         //    wheelTriggers[i] = HM.get(DigitalChannel.class, i+"_Digital");
@@ -187,6 +199,14 @@ public class RobotHardware implements Runnable{
         while (!isStopRequested()) {
     
             heading = getheading();
+    
+            if (!rampStop[0].getState()) {
+                rampServo.setPosition(Range.clip(rampServo.getPosition(),0.5,1));
+            }
+            if (!rampStop[1].getState()) {
+                rampServo.setPosition(Range.clip(rampServo.getPosition(),0,0.5));
+            }
+            
             //rightDistance = rightTOF.getDistance(DistanceUnit.INCH);
             //leftDistance = leftTOF.getDistance(DistanceUnit.INCH);
             //frontDistance = frontRange.getDistance(DistanceUnit.INCH);
@@ -202,7 +222,11 @@ public class RobotHardware implements Runnable{
         //angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         angles1 = imu1.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         //return (angles.firstAngle + angles1.firstAngle)/2;
-        return (AngleUnit.DEGREES.fromUnit(angles1.angleUnit, angles1.firstAngle));// + AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.firstAngle))/2;
+        return (AngleUnit.DEGREES.fromUnit(angles1.angleUnit, angles1.firstAngle) + headingSave);// + AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.firstAngle))/2;
+    }
+    
+    public void saveHeading() {
+        headingSave = getheading();
     }
     
     public boolean isStopRequested() {

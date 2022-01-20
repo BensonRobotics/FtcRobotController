@@ -120,7 +120,7 @@ public class QRdetector {
                 exposureControl = webcam.getExposureControl();
                 exposureControl.setMode(ExposureControl.Mode.AperturePriority);
                 //exposureControl.setExposure(1, TimeUnit.MILLISECONDS);
-                webcam.startStreaming(640,480, OpenCvCameraRotation.UPRIGHT);
+                webcam.startStreaming(640,360, OpenCvCameraRotation.UPRIGHT);
             
             }
         
@@ -132,6 +132,10 @@ public class QRdetector {
             }
         });
         
+    }
+    
+    public void shutDown() {
+        webcam.stopStreaming();
     }
     
     public double[] getCenterPoint() {

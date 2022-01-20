@@ -30,10 +30,10 @@ public class MecanumWheelDriverV2 implements Runnable{
     double maxWheelPower;
     
     final long TIMEOUT = 3500;
-    final double DISTANCE_MULTIPLIER_LOWER = 1.5;
-    final double DISTANCE_MULTIPLIER_UPPER = 1.825;
+    final double DISTANCE_MULTIPLIER_LOWER = 1.26;
+    final double DISTANCE_MULTIPLIER_UPPER = 1.538;
     final int MOVEMENT_TOLERANCE = 10;
-    final double ROTATE_TOLERANCE = 1;
+    final double ROTATE_TOLERANCE = 2.5;
     
     MecanumWheelDriverV2(RobotHardware H) {
         
@@ -317,12 +317,6 @@ public class MecanumWheelDriverV2 implements Runnable{
             case RotateDistanceMoveHDP:
                 RotateDistanceMoveMaintainHDP(action);
                 break;
-            case StrafePowerMoveAP:
-                StrafePowerMoveMaintainAP(action);
-                break;
-            case RotatePowerMoveHP:
-                RotatePowerMoveMaintainHP(action);
-                break;
             case StrafePointMovePXY:
                 StrafePointMoveMaintainPXY(action);
                 break;
@@ -353,8 +347,13 @@ public class MecanumWheelDriverV2 implements Runnable{
         
         // increase distance when moving sideways to counter mecanum wheel inconsistencies
         double distanceMultiplier = (DISTANCE_MULTIPLIER_LOWER - DISTANCE_MULTIPLIER_UPPER)*(Math.abs(Math.abs(action.param[0]/90) - 1)) + DISTANCE_MULTIPLIER_UPPER;
-        Log.d(TAG, "dis multi" + distanceMultiplier);
-        double angle = Math.toRadians(action.param[0] + 45 - H.heading);
+        double angle;
+        // if user wants angle move remove heading correction from move angle
+        if (action.param[3] == 1) {
+            angle = Math.toRadians(action.param[0] + 45);
+        } else {
+            angle = Math.toRadians(action.param[0] + 45 - H.heading);
+        }
         double cosAngle = Math.cos(angle);
         double sinAngle = Math.sin(angle);
         double power = Range.clip(action.param[2], 0, 1);
@@ -364,7 +363,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         action.initialWheelTarget[1] = (int)(sinAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
         action.initialWheelTarget[2] = (int)(sinAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
         action.initialWheelTarget[3] = (int)(cosAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
-        Log.d(TAG, "init wheel target" + action.initialWheelTarget[0]);
+        //Log.d(TAG, "init wheel target" + action.initialWheelTarget[0]);
     
         action.wheelTarget = action.initialWheelTarget.clone();
     
@@ -425,6 +424,9 @@ public class MecanumWheelDriverV2 implements Runnable{
     }
     
     private void CurvePointMovePXY(ActionData action) {
+    
+        // find the wheel powers and distances from target X and Y coordinates
+        
     
     }
     
@@ -497,8 +499,13 @@ public class MecanumWheelDriverV2 implements Runnable{
     
         // increase distance when moving sideways to counter mecanum wheel inconsistencies
         double distanceMultiplier = (DISTANCE_MULTIPLIER_LOWER - DISTANCE_MULTIPLIER_UPPER)*(Math.abs(Math.abs(action.param[0]/90) - 1)) + DISTANCE_MULTIPLIER_UPPER;
-        //Log.d(TAG, "dis multi" + distanceMultiplier);
-        double angle = Math.toRadians(action.param[0] + 45 - H.heading);
+        double angle;
+        // if user wants angle move remove heading correction from move angle
+        if (action.param[3] == 1) {
+            angle = Math.toRadians(action.param[0] + 45);
+        } else {
+            angle = Math.toRadians(action.param[0] + 45 - H.heading);
+        }
         double cosAngle = Math.cos(angle);
         double sinAngle = Math.sin(angle);
         double power = Range.clip(action.param[2], 0, 1);
@@ -518,9 +525,9 @@ public class MecanumWheelDriverV2 implements Runnable{
         action.initialWheelTarget[2] = sinDistance;
         action.initialWheelTarget[3] = cosDistance;
         
-        Log.d(TAG, "initial target" + action.initialWheelTarget[0]);
-        Log.d(TAG, "calculated: " + (int)(cosAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH));
-        Log.d(TAG, "wheel target" + action.wheelTarget[0]);
+        //Log.d(TAG, "initial target" + action.initialWheelTarget[0]);
+        //Log.d(TAG, "calculated: " + (int)(cosAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH));
+        //Log.d(TAG, "wheel target" + action.wheelTarget[0]);
         
         // remove from list if target has been reached
         if (Math.abs(action.wheelTarget[0]) < MOVEMENT_TOLERANCE && Math.abs(action.wheelTarget[1]) < MOVEMENT_TOLERANCE && Math.abs(action.wheelTarget[2]) < MOVEMENT_TOLERANCE && Math.abs(action.wheelTarget[3]) < MOVEMENT_TOLERANCE) {
@@ -551,19 +558,11 @@ public class MecanumWheelDriverV2 implements Runnable{
         for (int i = 0; i < 4; i++) {
             action.wheelPower[i] = Math.signum(action.wheelTarget[i]) * Math.signum(action.initialWheelTarget[i]) * Math.signum(action.wheelPower[i]) * Range.clip(4/totalPower * adaptivePowerRamping(Math.abs(action.wheelTarget[i]/H.COUNTS_PER_INCH), action.wheelPower[i], action.initialWheelTarget[i]/H.COUNTS_PER_INCH), H.MINIMUM_MOTOR_POWER , Math.abs(action.wheelPower[i]));
         }
-        Log.d(TAG, "power" + action.wheelPower[0]);
+        //Log.d(TAG, "power" + action.wheelPower[0]);
         
     }
     
     private void RotateDistanceMoveMaintainHDP(ActionData action) {
-    
-    }
-    
-    private void StrafePowerMoveMaintainAP(ActionData action) {
-    
-    }
-    
-    private void RotatePowerMoveMaintainHP(ActionData action) {
     
     }
     
@@ -596,15 +595,26 @@ public class MecanumWheelDriverV2 implements Runnable{
         
     }
     
-    boolean StrafeDistanceMove(double angle, double distance, double power, int priority) {
+    boolean StrafeDistanceMove(double heading, double distance, double power, int priority) {
     
         // don't execute action and return false if the current actions are a higher priority
         if (isLowPriority(priority)) return false;
     
         // add the action to the action list
-        initializationList.add(new ActionData(Actions.StrafeDistanceMoveHDP, new double[]{angle, distance, power}, H.runtime.time(TimeUnit.MILLISECONDS)));
+        initializationList.add(new ActionData(Actions.StrafeDistanceMoveHDP, new double[]{heading, distance, power, 0}, H.runtime.time(TimeUnit.MILLISECONDS)));
         return true; // action was added to list
     
+    }
+    
+    boolean StrafeDistanceAngleMove(double angle, double distance, double power, int priority) {
+        
+        // don't execute action and return false if the current actions are a higher priority
+        if (isLowPriority(priority)) return false;
+        
+        // add the action to the action list
+        initializationList.add(new ActionData(Actions.StrafeDistanceMoveHDP, new double[]{angle, distance, power, 1}, H.runtime.time(TimeUnit.MILLISECONDS)));
+        return true; // action was added to list
+        
     }
     
     boolean RotateDistanceMove(double heading, double distance, double power, int priority) {
