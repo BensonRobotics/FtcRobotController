@@ -29,15 +29,15 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import android.content.SharedPreferences;
-
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 @Autonomous(name="Autonomous", group="Linear Opmode", preselectTeleOp = "TeleOp")
 public class autonomous extends LinearOpMode {
@@ -51,7 +51,6 @@ public class autonomous extends LinearOpMode {
 
     //private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
     
-    private final String[][] menus = {{"Field Side:", "Red", "Blue"},{"Autonomous Path:","default","Park"}, {"Path Selected"}};
     int pathSide = 0; // 0 = red, 1 = blue;
     int pathSelected = 0;
     int selectState = 0;
@@ -59,16 +58,16 @@ public class autonomous extends LinearOpMode {
     private boolean[] button = {false, false, false, false};
     
 
-    private ElapsedTime         runtime  = new ElapsedTime();
-    private RobotHardware       H        = new RobotHardware();
-    private MecanumWheelDriverV2  drive    = new MecanumWheelDriverV2(H);;
-    private ExecutorService     pool     = Executors.newFixedThreadPool(2);
+    private ElapsedTime runtime = new ElapsedTime();
+    private RobotHardware H = new RobotHardware();
+    private MecanumWheelDriverV2 drive = new MecanumWheelDriverV2(H);;
+    private ExecutorService pool = Executors.newFixedThreadPool(2);
+    private AutonomousPaths paths = new AutonomousPaths(drive, H, this);
     
     boolean dropBottom = false;
-    long servoStartTime = 0;
+    boolean dropTop = false;
+    long duckServoStartTime = 0;
     double[] point;
-    
-    
 
     @Override
     public void runOpMode() {
@@ -82,6 +81,11 @@ public class autonomous extends LinearOpMode {
     
         H.rampServo.setPosition(1);
         H.rampServo.setPosition(0.5);
+        H.collectorServo.setPosition(0);
+        H.wheelLift[0].setPosition(1);
+        H.wheelLift[1].setPosition(0);
+        H.wheelLift[2].setPosition(0);
+        H.wheelLift[3].setPosition(1);
         
         while (!isStopRequested() && !isStarted()) {
             
@@ -94,7 +98,7 @@ public class autonomous extends LinearOpMode {
             else button[0] = false;
     
             if (gamepad1.dpad_down) {
-                if (!button[1] && selectObject < menus[selectState].length - 2) {
+                if (!button[1] && selectObject < paths.menus[selectState].length - 2) {
                     selectObject ++;
                     button[1] = true;
                 }
@@ -126,14 +130,14 @@ public class autonomous extends LinearOpMode {
             }
             else button[3] = false;
             
-            if (selectState != 2) telemetry.addLine(menus[selectState][0]);
-            else telemetry.addData(menus[selectState][0], menus[0][pathSide + 1] + " " + menus[1][pathSelected + 1]);
+            if (selectState != 2) telemetry.addLine(paths.menus[selectState][0]);
+            else telemetry.addData(paths.menus[selectState][0], paths.menus[0][pathSide + 1] + " " + paths.menus[1][pathSelected + 1]);
             
-            for (int i = 0; i < menus[selectState].length - 1; i ++) {
+            for (int i = 0; i < paths.menus[selectState].length - 1; i ++) {
                 if (i == selectObject) {
-                    telemetry.addLine( "- " + menus[selectState][i+1] + " -");
+                    telemetry.addLine( "- " + paths.menus[selectState][i+1] + " -");
                 } else {
-                    telemetry.addLine(menus[selectState][i+1]);
+                    telemetry.addLine(paths.menus[selectState][i+1]);
                 }
             }
             
@@ -151,30 +155,30 @@ public class autonomous extends LinearOpMode {
     
         waitForStart();
         
+        H.wheelLift[0].setPosition(0);
+        H.wheelLift[1].setPosition(1);
+        H.wheelLift[2].setPosition(1);
+        H.wheelLift[3].setPosition(0);
+        
         point = detector.getCenterPoint();
         
-        telemetry.addData(menus[selectState][0], menus[0][pathSide + 1] + " " + menus[1][pathSelected + 1]);
+        telemetry.addData(paths.menus[selectState][0], paths.menus[0][pathSide + 1] + " " + paths.menus[1][pathSelected + 1]);
         telemetry.addData("point x", point[0]);
         telemetry.update();
         
         detector.shutDown();
-    
-        drive.StrafeDistanceMove(53,30,0.5,1);
-        drive.startActions();
         
-        deployRamp();
+        paths.runPath(pathSide, pathSelected);
         
-        drive.waitForMoveDone();
-        drive.StrafeDistanceMove(-90,40,0.5,1);
-        drive.HeadingRotate(-90, 0.5, 1);
-        drive.startActions();
-        drive.waitForMoveDone();
-        
+        drive.stop();
         H.saveHeading();
+        pool.shutdownNow();
     
     }
     
-    private void deployRamp() {
+    void deployRamp() {
+        
+        long servoStartTime;
         
         H.rampServo.setPosition(1);
         servoStartTime = runtime.time(TimeUnit.MILLISECONDS);
@@ -185,6 +189,7 @@ public class autonomous extends LinearOpMode {
                 idle();
             }
         } else if (point[0] - 320 > 100) {
+            dropTop = true;
             while (runtime.time(TimeUnit.MILLISECONDS) < servoStartTime + 3350 && !isStopRequested()) {
                 idle();
             }
@@ -202,6 +207,44 @@ public class autonomous extends LinearOpMode {
             }
             H.rampServo.setPosition(0.5);
         }
+        
+    }
+    
+    void spinDuck() {
+    
+        duckServoStartTime = runtime.time(TimeUnit.MILLISECONDS);
+        H.duckServo.setPosition(-pathSide + 1);
+    
+        while (runtime.time(TimeUnit.MILLISECONDS) < duckServoStartTime + 3000 && !isStopRequested()) {
+            idle();
+        }
+        H.duckServo.setPosition(0.5);
+        
+    }
+    
+    void dropFreight() {
+    
+        if (dropBottom) {
+            drive.StrafeDistanceAngleMove(180,2,0.6,1);
+            drive.startActions();
+            drive.waitForMoveDone();
+        }
+        if (dropTop) {
+            drive.StrafeDistanceAngleMove(0,2,0.6,1);
+            drive.startActions();
+            drive.waitForMoveDone();
+        }
+        
+        H.liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        H.liftMotor.setTargetPosition(270);
+        H.liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        H.liftMotor.setPower(1);
+        while (H.liftMotor.isBusy()) {
+            idle();
+        }
+        H.liftMotor.setTargetPosition(0);
+        sleep(500);
+        H.rampServo.setPosition(1);
         
     }
 

@@ -28,12 +28,13 @@ public class MecanumWheelDriverV2 implements Runnable{
     boolean runToPosition = false;
     int[] lastLoopPosition = {0,0,0,0};
     double maxWheelPower;
+    boolean emptyMaintainList = false;
     
-    final long TIMEOUT = 3500;
+    final long TIMEOUT = 5000;
     final double DISTANCE_MULTIPLIER_LOWER = 1.26;
     final double DISTANCE_MULTIPLIER_UPPER = 1.538;
     final int MOVEMENT_TOLERANCE = 10;
-    final double ROTATE_TOLERANCE = 2.5;
+    final double ROTATE_TOLERANCE = 1.5;
     
     MecanumWheelDriverV2(RobotHardware H) {
         
@@ -57,10 +58,18 @@ public class MecanumWheelDriverV2 implements Runnable{
         
             }
     
+            Log.d(TAG, "action:------");
+    
             // remove all finished actions
             for (int i = maintainRemoveList.size() - 1; i >= 0; i--)
                 maintainList.remove((int) maintainRemoveList.get(i));
             maintainRemoveList.clear();
+            
+            // if stop requested, clear all actions
+            if (emptyMaintainList) {
+                maintainList.clear();
+                emptyMaintainList = false;
+            }
     
             // sum up all of the actions' wheel powers for averaging and figuring power portions
             double[] wheelPower = {0, 0, 0, 0};
@@ -134,10 +143,9 @@ public class MecanumWheelDriverV2 implements Runnable{
     
         for (int i = 0; i <= 3; i ++) {
         
-            // assign all of the power values to the motors and reset wheelPower
+            // assign all of the power values to the motors
             H.driveMotor[i].setPower(wheelPower[i]);
-            wheelPower[i] = 0;
-        
+            
         }
     }
     
@@ -214,23 +222,11 @@ public class MecanumWheelDriverV2 implements Runnable{
         }
     }
     
-    private boolean isLowPriority(int priority) {
-        
-        // set priority to current if there are no items in action list
-        if (initializationList.isEmpty()) listPriority = priority;
+    void stop() {
     
-        // return false if the current actions are a higher priority
-        if (priority > listPriority) {
-            return true;
-        }
-    
-        // clear all lower priority actions if current action is higher priority
-        if (priority < listPriority) {
-            initializationList.clear(); // remove all actions of lower priority
-            listPriority = priority; // set the new priority of actions on the action list
-        }
-        
-        return false;
+        initializationList.clear();
+        emptyMaintainList = true;
+        setWheelPower(new double[]{0,0,0,0});
         
     }
     
@@ -253,6 +249,27 @@ public class MecanumWheelDriverV2 implements Runnable{
             offset += 360;
         }
         return offset;
+    }
+    
+    private boolean isLowPriority(int priority) {
+        
+        // set priority to current if there are no items in action list
+        if (initializationList.isEmpty()) listPriority = priority;
+        
+        // return false if the current actions are a higher priority
+        if (priority > listPriority) {
+            return true;
+        }
+        
+        // clear all lower priority actions if current action is higher priority
+        if (priority < listPriority) {
+            initializationList.clear(); // remove all actions of lower priority
+            maintainList.clear();
+            listPriority = priority; // set the new priority of actions on the action list
+        }
+        
+        return false;
+        
     }
     
     private double adaptivePowerRamping(double offset, double power, double initialOffset) {
@@ -294,7 +311,7 @@ public class MecanumWheelDriverV2 implements Runnable{
                 AngleRotateAP(action);
                 break;
             case HeadingRotateHP:
-                HeadingRotateHP(action);
+                HeadingRotateHP(action, false);
                 break;
             case PowerRotateP:
                 PowerRotateP(action);
@@ -333,7 +350,7 @@ public class MecanumWheelDriverV2 implements Runnable{
                 AngleRotateAP(action);
                 break;
             case HeadingRotateHP:
-                HeadingRotateHP(action);
+                HeadingRotateHP(action, true);
                 break;
             default:
             
@@ -363,9 +380,10 @@ public class MecanumWheelDriverV2 implements Runnable{
         action.initialWheelTarget[1] = (int)(sinAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
         action.initialWheelTarget[2] = (int)(sinAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
         action.initialWheelTarget[3] = (int)(cosAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
-        //Log.d(TAG, "init wheel target" + action.initialWheelTarget[0]);
+        Log.d(TAG, "initWheelTarget" + action.initialWheelTarget[0]);
     
-        action.wheelTarget = action.initialWheelTarget.clone();
+        System.arraycopy(action.initialWheelTarget, 0, action.wheelTarget, 0, 4);
+        Log.d(TAG, "wheelTarget: " + action.wheelTarget[0]);
     
         // scale the motor's power so that at least one of them is equal to 1
         if (Math.abs(cosAngle) > Math.abs(sinAngle)) {
@@ -456,7 +474,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         action.wheelPower[3] = -power;
     }
     
-    private void HeadingRotateHP(ActionData action) {
+    private void HeadingRotateHP(ActionData action, boolean isMaintain) {
         // assign variables
         action.param[1] = Range.clip(action.param[1], 0, 1);
     
@@ -467,7 +485,8 @@ public class MecanumWheelDriverV2 implements Runnable{
     
         // remove from list if target has been reached
         if (Math.abs(offset) < ROTATE_TOLERANCE) {
-            initializationRemoveList.add(initializationList.indexOf(action));
+            if (isMaintain) maintainRemoveList.add(maintainList.indexOf(action));
+            else initializationRemoveList.add(initializationList.indexOf(action));
             return;
         }
     
@@ -497,8 +516,6 @@ public class MecanumWheelDriverV2 implements Runnable{
     private void StrafeDistanceMoveMaintainHDP(ActionData action) {
         // assign variables
     
-        // increase distance when moving sideways to counter mecanum wheel inconsistencies
-        double distanceMultiplier = (DISTANCE_MULTIPLIER_LOWER - DISTANCE_MULTIPLIER_UPPER)*(Math.abs(Math.abs(action.param[0]/90) - 1)) + DISTANCE_MULTIPLIER_UPPER;
         double angle;
         // if user wants angle move remove heading correction from move angle
         if (action.param[3] == 1) {
@@ -506,18 +523,33 @@ public class MecanumWheelDriverV2 implements Runnable{
         } else {
             angle = Math.toRadians(action.param[0] + 45 - H.heading);
         }
+        Log.d(TAG, "angle: " + angle);
+        // increase distance when moving sideways to counter mecanum wheel inconsistencies
+        double distanceMultiplier = (DISTANCE_MULTIPLIER_LOWER - DISTANCE_MULTIPLIER_UPPER)*(Math.abs(Math.abs(angle/90) - 1)) + DISTANCE_MULTIPLIER_UPPER;
         double cosAngle = Math.cos(angle);
         double sinAngle = Math.sin(angle);
         double power = Range.clip(action.param[2], 0, 1);
+        Log.d(TAG, "power: " + power);
         
         int cosDistance = (int)(cosAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
         int sinDistance = (int)(sinAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
+    
+        Log.d(TAG, "cosDis: " + cosDistance);
+        Log.d(TAG, "sinDis: " + sinDistance);
+        Log.d(TAG, "wheelTarget1: " + action.wheelTarget[0]);
+        
+        // Thrown together fix for movement problem
+        if (Math.abs(action.wheelTarget[0]) > 10000) {
+            System.arraycopy(action.initialWheelTarget, 0, action.wheelTarget, 0, 4);
+        }
         
         // recalculate the target with current heading
         action.wheelTarget[0] *= (double)cosDistance / (double)action.initialWheelTarget[0];
         action.wheelTarget[1] *= (double)sinDistance / (double)action.initialWheelTarget[1];
         action.wheelTarget[2] *= (double)sinDistance / (double)action.initialWheelTarget[2];
         action.wheelTarget[3] *= (double)cosDistance / (double)action.initialWheelTarget[3];
+        Log.d(TAG, "initWheelTarget: " + action.initialWheelTarget[0]);
+        Log.d(TAG, "wheelTarget2: " + action.wheelTarget[0]);
         
         // assign the updated initial distances to the action
         action.initialWheelTarget[0] = cosDistance;
@@ -549,6 +581,8 @@ public class MecanumWheelDriverV2 implements Runnable{
         action.wheelPower[1] = sinAngle * power;
         action.wheelPower[2] = sinAngle * power;
         action.wheelPower[3] = cosAngle * power;
+    
+        Log.d(TAG, "power1: " + action.wheelPower[0]);
         
         // ramp down power when near destination
         double totalPower = 0;
@@ -558,6 +592,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         for (int i = 0; i < 4; i++) {
             action.wheelPower[i] = Math.signum(action.wheelTarget[i]) * Math.signum(action.initialWheelTarget[i]) * Math.signum(action.wheelPower[i]) * Range.clip(4/totalPower * adaptivePowerRamping(Math.abs(action.wheelTarget[i]/H.COUNTS_PER_INCH), action.wheelPower[i], action.initialWheelTarget[i]/H.COUNTS_PER_INCH), H.MINIMUM_MOTOR_POWER , Math.abs(action.wheelPower[i]));
         }
+        Log.d(TAG, "power2: " + action.wheelPower[0]);
         //Log.d(TAG, "power" + action.wheelPower[0]);
         
     }
@@ -750,6 +785,7 @@ class ActionData {
         this.action = action;
         this.param = param;
         this.startTime = startTime;
+        wheelTarget = new int[] {0,0,0,0};
     
     }
     

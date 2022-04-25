@@ -3,10 +3,12 @@ package org.firstinspires.ftc.teamcode;
 import android.os.SystemClock;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -16,6 +18,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import java.util.Timer;
@@ -86,11 +89,11 @@ public class RobotHardware implements Runnable{
     
     ////////////////////////////// Sensors //////////////////////////////
 
-    //public DistanceSensor leftRange;
-    //public DistanceSensor rightRange;
-    //public DistanceSensor frontRange;
-    //public Rev2mDistanceSensor leftTOF;
-    //public Rev2mDistanceSensor rightTOF;
+    public DistanceSensor leftRange;
+    public DistanceSensor rightRange;
+    public DistanceSensor frontRange;
+    public Rev2mDistanceSensor leftTOF;
+    public Rev2mDistanceSensor rightTOF;
     //public AnalogInput armAngle;
     //public static BNO055IMU      imu;
     public static BNO055IMU      imu1;
@@ -144,9 +147,9 @@ public class RobotHardware implements Runnable{
             webcam = HM.get(WebcamName.class, "Webcam 1");
             monitorViewId = HM.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", HM.appContext.getPackageName());
         }
-        //leftRange = HM.get(DistanceSensor.class, "L_Range");
-        //rightRange = HM.get(DistanceSensor.class, "R_Range");
-        //frontRange = HM.get(DistanceSensor.class, "F_Range");
+        leftRange = HM.get(DistanceSensor.class, "L_Range");
+        rightRange = HM.get(DistanceSensor.class, "R_Range");
+        frontRange = HM.get(DistanceSensor.class, "F_Range");
         //imu = HM.get(BNO055IMU.class, "imu");
         imu1 = HM.get(BNO055IMU.class, "imu1");
     
@@ -177,8 +180,8 @@ public class RobotHardware implements Runnable{
         //imu.initialize(parameters);
         imu1.initialize(parameters);
 
-        //leftTOF = (Rev2mDistanceSensor) leftRange;
-        //rightTOF = (Rev2mDistanceSensor) rightRange;
+        leftTOF = (Rev2mDistanceSensor) leftRange;
+        rightTOF = (Rev2mDistanceSensor) rightRange;
     
         
         for (int i = 3; i >= 0; i--) {
@@ -207,9 +210,9 @@ public class RobotHardware implements Runnable{
                 rampServo.setPosition(Range.clip(rampServo.getPosition(),0,0.5));
             }
             
-            //rightDistance = rightTOF.getDistance(DistanceUnit.INCH);
-            //leftDistance = leftTOF.getDistance(DistanceUnit.INCH);
-            //frontDistance = frontRange.getDistance(DistanceUnit.INCH);
+            rightDistance = rightTOF.getDistance(DistanceUnit.INCH);
+            leftDistance = leftTOF.getDistance(DistanceUnit.INCH);
+            frontDistance = frontRange.getDistance(DistanceUnit.INCH);
             //for (int i = 3; i >= 0; i--) driveEncoder[0] = driveMotor[0].getCurrentPosition();
             //armVoltage = armAngle.getVoltage();
     

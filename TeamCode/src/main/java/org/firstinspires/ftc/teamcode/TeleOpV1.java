@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
@@ -38,6 +40,7 @@ public class TeleOpV1 extends LinearOpMode {
         ExecutorService pool = Executors.newFixedThreadPool(2);
         H.init(hardwareMap, this);
         pool.execute(H);
+        H.liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         ////////////////////////////// Init Variables //////////////////////////////
         
         
@@ -171,6 +174,9 @@ public class TeleOpV1 extends LinearOpMode {
             //telemetry.addData("wheelPower: ", H.driveMotor[1].getPower());
             //telemetry.addData("wheelPower: ", H.driveMotor[2].getPower());
             telemetry.addData("lift Power: ", H.liftMotor.getPower());
+            telemetry.addData("R_range", H.rightDistance);
+            telemetry.addData("L_range", H.leftDistance);
+            telemetry.addData("F_range", H.frontDistance);
             //telemetry.addData("max wheel power", drive.maxWheelPower);
             //telemetry.addData("barrier mode: ", barrierMode);
             //telemetry.addData("direction: ", traversingForwards);
