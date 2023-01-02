@@ -67,25 +67,25 @@ public class autonomous extends LinearOpMode {
     boolean dropBottom = false;
     boolean dropTop = false;
     long duckServoStartTime = 0;
-    double[] point;
+    //double[] point;
 
     @Override
     public void runOpMode() {
     
         RobotHardware.headingSave = 0;
-        H.setCameraEnable(true);
+        H.setCameraEnable(false);
         H.init(hardwareMap, this);
         pool.execute(H);
         pool.execute(drive);
-        QRdetector detector = new QRdetector(H);
+        //QRdetector detector = new QRdetector(H);
     
-        H.rampServo.setPosition(1);
+        /*H.rampServo.setPosition(1);
         H.rampServo.setPosition(0.5);
         H.collectorServo.setPosition(0);
         H.wheelLift[0].setPosition(1);
         H.wheelLift[1].setPosition(0);
         H.wheelLift[2].setPosition(0);
-        H.wheelLift[3].setPosition(1);
+        H.wheelLift[3].setPosition(1);*/
         
         while (!isStopRequested() && !isStarted()) {
             
@@ -141,10 +141,10 @@ public class autonomous extends LinearOpMode {
                 }
             }
             
-            point = detector.getCenterPoint();
+            //point = detector.getCenterPoint();
             
             //telemetry.addData("","");
-            telemetry.addData("\npoint x", point[0]);
+            //telemetry.addData("\npoint x", point[0]);
             telemetry.update();
         }
     
@@ -155,18 +155,18 @@ public class autonomous extends LinearOpMode {
     
         waitForStart();
         
-        H.wheelLift[0].setPosition(0);
+        /*H.wheelLift[0].setPosition(0);
         H.wheelLift[1].setPosition(1);
         H.wheelLift[2].setPosition(1);
-        H.wheelLift[3].setPosition(0);
+        H.wheelLift[3].setPosition(0);*/
         
-        point = detector.getCenterPoint();
+        //point = detector.getCenterPoint();
         
         telemetry.addData(paths.menus[selectState][0], paths.menus[0][pathSide + 1] + " " + paths.menus[1][pathSelected + 1]);
-        telemetry.addData("point x", point[0]);
+        //telemetry.addData("point x", point[0]);
         telemetry.update();
         
-        detector.shutDown();
+        //detector.shutDown();
         
         paths.runPath(pathSide, pathSelected);
         
@@ -183,7 +183,7 @@ public class autonomous extends LinearOpMode {
         H.rampServo.setPosition(1);
         servoStartTime = runtime.time(TimeUnit.MILLISECONDS);
     
-        if (point[0] - 320 < - 100) {
+        /*if (point[0] - 320 < - 100) {
             dropBottom = true;
             while (runtime.time(TimeUnit.MILLISECONDS) < servoStartTime + 1300 && !isStopRequested()) {
                 idle();
@@ -197,7 +197,7 @@ public class autonomous extends LinearOpMode {
             while (runtime.time(TimeUnit.MILLISECONDS) < servoStartTime + 1300 && !isStopRequested()) {
                 idle();
             }
-        }
+        }*/
         H.rampServo.setPosition(0.5);
         if (dropBottom) {
             H.rampServo.setPosition(0);

@@ -1,11 +1,16 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchDevice;
+import com.qualcomm.robotcore.hardware.I2cWaitControl;
 import com.qualcomm.robotcore.hardware.configuration.annotations.DeviceProperties;
 import com.qualcomm.robotcore.hardware.configuration.annotations.I2cDeviceType;
 import com.qualcomm.robotcore.util.TypeConversion;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @SuppressWarnings({"WeakerAccess", "unused"}) // Ignore access and unused warnings
 
@@ -20,7 +25,12 @@ public class QwiicLED extends I2cDeviceSynchDevice<I2cDeviceSynch> {
     }
     
     public short setSingleLEDColor(byte id, byte red, byte green, byte blue) {
-        writeByteArray(Register.WRITE_SINGLE_LED_COLOR,new byte[]{id,red,green,blue});
+        writeByteArray(Register.WRITE_SINGLE_LED_COLOR,new byte[]{(byte)(id+1),red,green,blue});
+        return 0;
+    }
+    
+    public short setSingleLEDColor(byte id, int color) {
+        writeByteArray(Register.WRITE_SINGLE_LED_COLOR,new byte[]{(byte)(id+1),(byte)((color & 0xFF0000)>>16),(byte)((color & 0xFF00)>>8),(byte)(color & 0xFF)});
         return 0;
     }
     
@@ -29,8 +39,13 @@ public class QwiicLED extends I2cDeviceSynchDevice<I2cDeviceSynch> {
         return 0;
     }
     
+    public short setAllLEDColor(byte[] red) {
+        writeByteArray(Register.WRITE_RED_ARRAY,red);
+        return 0;
+    }
+    
     public short setLEDBrightness(byte id, byte brightness) {
-        writeByteArray(Register.WRITE_SINGLE_LED_BRIGHTNESS, new byte[]{id, brightness});
+        writeByteArray(Register.WRITE_SINGLE_LED_BRIGHTNESS, new byte[]{(byte)(id+1), brightness});
         return 0;
     }
     
@@ -41,6 +56,10 @@ public class QwiicLED extends I2cDeviceSynchDevice<I2cDeviceSynch> {
     
     protected void writeByteArray(final Register reg, byte[] value)
     {
+        deviceClient.waitForWriteCompletions(I2cWaitControl.WRITTEN);
+        /*while() {
+            Log.d("LED", "Engaged");
+        }*/
         deviceClient.write(reg.bVal, value);
     }
     
@@ -61,6 +80,7 @@ public class QwiicLED extends I2cDeviceSynchDevice<I2cDeviceSynch> {
         this.deviceClient.setI2cAddress(ADDRESS_I2C_DEFAULT);
         
         super.registerArmingStateCallback(false);
+        this.deviceClient.enableWriteCoalescing(true);
         this.deviceClient.engage();
     }
     
@@ -68,11 +88,11 @@ public class QwiicLED extends I2cDeviceSynchDevice<I2cDeviceSynch> {
     {
         // Sensor registers are read repeatedly and stored in a register. This method specifies the
         // registers and repeat read mode
-        I2cDeviceSynch.ReadWindow readWindow = new I2cDeviceSynch.ReadWindow(
+        /*I2cDeviceSynch.ReadWindow readWindow = new I2cDeviceSynch.ReadWindow(
                 Register.FIRST.bVal,
                 Register.LAST.bVal - Register.FIRST.bVal + 1,
                 I2cDeviceSynch.ReadMode.REPEAT);
-        this.deviceClient.setReadWindow(readWindow);
+        this.deviceClient.setReadWindow(readWindow);*/
     }
     
     

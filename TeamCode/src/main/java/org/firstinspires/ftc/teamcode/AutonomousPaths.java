@@ -12,7 +12,7 @@ public class AutonomousPaths {
     RobotHardware H;
     autonomous auto;
     
-    final String[][] menus = {{"Field Side:", "Red", "Blue"},{"Autonomous Path:","Duck -A","Drop -B","Park -B","Park -A","Duck Only -A"}, {"Path Selected"}};
+    final String[][] menus = {{"Field Side:", "Red", "Blue"},{"Autonomous Path:","Duck -A","Drop -B","Park -B","Park -A","Duck Only -A", "Square"}, {"Path Selected"}};
     
     AutonomousPaths(MecanumWheelDriverV2 drive, RobotHardware H, autonomous auto) {
         
@@ -43,6 +43,9 @@ public class AutonomousPaths {
                 case 4:
                     RedDuckOnly();
                     break;
+                case 5:
+                    Square();
+                    break;
                 default:
                     break;
             }
@@ -65,11 +68,38 @@ public class AutonomousPaths {
                 case 4:
                     BlueDuckOnly();
                     break;
+                case 5:
+                    Square();
+                    break;
                 default:
                     break;
             }
             
         }
+        
+    }
+    
+    void Square() {
+    
+        drive.StrafeDistanceMove(0,40,0.5,1);
+        drive.HeadingRotate(-90, 0.5, 1);
+        drive.startActions();
+        drive.waitForMoveDone();
+    
+        drive.StrafeDistanceMove(-90,40,0.5,1);
+        drive.HeadingRotate(180, 0.5, 1);
+        drive.startActions();
+        drive.waitForMoveDone();
+    
+        drive.StrafeDistanceMove(180,40,0.5,1);
+        drive.HeadingRotate(90, 0.5, 1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        drive.StrafeDistanceMove(90,40,0.5,1);
+        drive.HeadingRotate(0, 0.5, 1);
+        drive.startActions();
+        drive.waitForMoveDone();
         
     }
     
@@ -246,7 +276,7 @@ public class AutonomousPaths {
     
     void BlueParkA() {
     
-        drive.StrafeDistanceMove(-45,38,0.5,1);
+        drive.StrafeDistanceMove(0,40,0.5,1);
         drive.startActions();
         drive.waitForMoveDone();
     
@@ -254,7 +284,7 @@ public class AutonomousPaths {
     
     void RedParkA() {
         
-        drive.StrafeDistanceMove(45,38,0.5,1);
+        drive.StrafeDistanceMove(0,40,0.5,1);
         drive.startActions();
         drive.waitForMoveDone();
         

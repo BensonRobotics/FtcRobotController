@@ -15,10 +15,10 @@ import java.util.concurrent.TimeUnit;
 @TeleOp(name="TeleOp", group="Linear Opmode")
 public class TeleOpV1 extends LinearOpMode {
     
-    private boolean[] button = {false, false, false, false, false};
-    // 0 = compass, 1 = lift wheels, 2 = duck left, 3 = duck right, 4 = collector toggle
-    private boolean[] toggle = {true, true, false, false, false};
-    // 0 = compass, 1 = lift wheels, 2 = duck left, 3 = duck right, 4 = collector toggle
+    private boolean[] button = {false, false, false, false};
+    // 0 = compass, 1 = angle lock, 2 = constrain lift, 3 = claw toggle
+    private boolean[] toggle = {true, false, true, false};
+    // 0 = compass, 1 = angle lock, 2 = constrain lift, 3 = claw toggle
     
     boolean calibrated = false;
     int liftPos = 0;
@@ -40,7 +40,6 @@ public class TeleOpV1 extends LinearOpMode {
         ExecutorService pool = Executors.newFixedThreadPool(2);
         H.init(hardwareMap, this);
         pool.execute(H);
-        H.liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         ////////////////////////////// Init Variables //////////////////////////////
         
         
@@ -54,9 +53,6 @@ public class TeleOpV1 extends LinearOpMode {
         boolean allowStartHeadingLock = true;
         double angle = 0;
         double rotateRadius;
-        boolean barrierMode = false;
-        boolean traversingForwards = true;
-        int traversalStep = 0;
         long lastTurnTime = 0;
         
         double upPower = 0;
@@ -75,19 +71,20 @@ public class TeleOpV1 extends LinearOpMode {
             y = gamepad1.left_stick_y;
             x = -gamepad1.left_stick_x;
     
-            rotate += powerFollow(rotate, exponentialScaling(Range.clip(gamepad1.right_stick_x, -1, 1)));
-    
+            //rotate += powerFollow(rotate, exponentialScaling(Range.clip(gamepad1.right_stick_x, -1, 1)));
+            rotate = exponentialScaling(Range.clip(gamepad1.right_stick_x, -1, 1));
             radius = exponentialScaling(Range.clip(Math.hypot(x, y), 0, 1));
             power += powerFollow(power, radius);
+            //power = radius;
             if (radius > 0.05) angle = Math.toDegrees(Math.atan2(y, x)) + 90 + agl_frwd - heading;
             //drive.StrafePowerMove(angle, power*0.6 + (gamepad1.right_trigger*0.4), 1);
             //rotateScaled = rotate * 0.6 + gamepad1.right_trigger*0.4;
-            drive.StrafePowerMove(angle, power*0.75, 1);
-            rotateScaled = rotate * 0.75;
+            drive.StrafePowerMove(angle, power, 1);
+            rotateScaled = rotate;
             
             if (Math.abs(rotate) < 0.05) {
                 if (lastTurnTime + 350 < runtime.now(TimeUnit.MILLISECONDS)) {
-                    if (Math.abs(drive.findDegOffset(H.heading, headingLock)) > 1.5) {
+                    if (toggle[1] && Math.abs(drive.findDegOffset(H.heading, headingLock)) > 1.5) {
                         if (allowStartHeadingLock) {
                             drive.HeadingRotate(headingLock, 0.15, 1);
                             allowStartHeadingLock = false;
@@ -106,13 +103,11 @@ public class TeleOpV1 extends LinearOpMode {
     
             drive.startActions();
             
-            upPower = Range.clip(-gamepad2.left_stick_y, 0, 1);
-            downPower += Range.clip(gamepad2.left_stick_y, 0, 1);
+            upPower = Range.clip(-gamepad2.left_stick_y + gamepad1.right_trigger + gamepad2.right_trigger, 0, 1);
+            downPower += Range.clip(gamepad2.left_stick_y + gamepad1.left_trigger + gamepad2.left_trigger, 0, 1);
             
             setLiftPower(upPower, downPower);
             downPower = 0;
-            
-            setRampPower(-gamepad2.right_stick_y);
             
             ////////////////////////////// Buttons //////////////////////////////
             
@@ -127,62 +122,29 @@ public class TeleOpV1 extends LinearOpMode {
                 heading = agl_frwd;
                 
             }
-            
-            toggleButton(gamepad1.a || gamepad2.a, 1);
-            toggleButton(gamepad1.x, 2);
-            toggleButton(gamepad1.b, 3);
-            toggleButton(gamepad1.right_bumper, 4);
-            
-            if (toggle[1]) {
-                H.wheelLift[0].setPosition(0);
-                H.wheelLift[1].setPosition(1);
-                H.wheelLift[2].setPosition(1);
-                H.wheelLift[3].setPosition(0);
-            } else {
-                H.wheelLift[0].setPosition(1);
-                H.wheelLift[1].setPosition(0);
-                H.wheelLift[2].setPosition(0);
-                H.wheelLift[3].setPosition(1);
-            }
-            
-            H.collectorMotor.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
-            
-            if (toggle[2]) {
-                toggle[3] = false;
-                H.duckServo.setPosition(0);
-            }
+    
+            toggleButton(gamepad1.y, 1);
+            toggleButton(gamepad1.b, 2);
+            toggleButton(gamepad1.a || gamepad1.x || gamepad1.right_bumper || gamepad2.a || gamepad2.right_bumper || gamepad2.x, 3);
             
             if (toggle[3]) {
-                H.duckServo.setPosition(1);
-            }
-            
-            if (!toggle[2] && !toggle[3]) {
-                H.duckServo.setPosition(0.5);
-            }
-            
-            if (toggle[4]) {
-                H.collectorServo.setPosition(1);
+                H.clawServo.setPosition(0.64);
             } else {
-                H.collectorServo.setPosition(0);
+                H.clawServo.setPosition(0.47);
             }
             
             if (gamepad1.start) {
                 agl_frwd = heading;
             }
-            
-            //telemetry.addData("wheelPower: ", H.driveMotor[0].getPower());
-            //telemetry.addData("wheelPower: ", H.driveMotor[1].getPower());
-            //telemetry.addData("wheelPower: ", H.driveMotor[2].getPower());
-            telemetry.addData("lift Power: ", H.liftMotor.getPower());
-            telemetry.addData("R_range", H.rightDistance);
-            telemetry.addData("L_range", H.leftDistance);
-            telemetry.addData("F_range", H.frontDistance);
-            //telemetry.addData("max wheel power", drive.maxWheelPower);
-            //telemetry.addData("barrier mode: ", barrierMode);
-            //telemetry.addData("direction: ", traversingForwards);
-            //telemetry.addData("heading", H.heading);
-            //telemetry.addData("heading lock", drive.findDegOffset(H.heading, headingLock));
-            telemetry.update();
+    
+            /*telemetry.addData("heading", H.heading);
+            telemetry.addData("heading lock", drive.findDegOffset(H.heading, headingLock));
+            telemetry.addData("claw", H.clawServo.getPosition());
+            telemetry.addData("wheel FL", H.driveMotor[0].getCurrentPosition());
+            telemetry.addData("wheel FR", H.driveMotor[1].getCurrentPosition());
+            telemetry.addData("wheel RL", H.driveMotor[2].getCurrentPosition());
+            telemetry.addData("wheel RR", H.driveMotor[3].getCurrentPosition());
+            telemetry.update();*/
             
         }
         
@@ -191,7 +153,10 @@ public class TeleOpV1 extends LinearOpMode {
     }
     
     private void setLiftPower(double upPower, double downPower) {
-        
+    
+        double expUpPower = exponentialScaling(upPower);
+        double expDownPower = exponentialScaling(downPower);
+    
         liftPos = H.liftMotor.getCurrentPosition() - liftZero;
         telemetry.addData("lift pos: ", liftPos);
     
@@ -200,45 +165,24 @@ public class TeleOpV1 extends LinearOpMode {
             liftStart = liftPos;
             return;
         }
-        if (!H.liftStop.getState()) {
+        /*if (toggle[2] && !H.liftStop.getState()) {
             liftZero = H.liftMotor.getCurrentPosition();
-            H.liftMotor.setPower(exponentialScaling(upPower));
+            H.liftMotor.setPower(expUpPower);
             calibrated = true;
             return;
         }
         
-        if (calibrated && liftPos >= LIFT_MAX) {
-            H.liftMotor.setPower( -exponentialScaling(downPower));
+        if (toggle[2] && calibrated && liftPos >= LIFT_MAX) {
+            H.liftMotor.setPower( -expDownPower);
             return;
         }
         
-        if (calibrated) {
-            H.liftMotor.setPower(adaptivePowerRamping(LIFT_MAX - liftPos, exponentialScaling(upPower), LIFT_MAX - liftStart) - adaptivePowerRamping(LIFT_MIN - liftPos, exponentialScaling(downPower), LIFT_MIN - liftStart));
+        if (toggle[2] && calibrated) {
+            H.liftMotor.setPower(adaptivePowerRamping(LIFT_MAX - liftPos, expUpPower, LIFT_MAX - liftStart) - adaptivePowerRamping(LIFT_MIN - liftPos, expDownPower, LIFT_MIN - liftStart));
             return;
-        }
+        }*/
         
-        H.liftMotor.setPower(exponentialScaling(upPower) - exponentialScaling(downPower));
-    }
-    
-    private void setRampPower(double power) {
-        
-        power = (power + 1) * 0.5;
-        
-        if (Math.abs(power - 0.5) < 0.025) {
-            H.rampServo.setPosition(0.5);
-            return;
-        }
-        if (!H.rampStop[0].getState()) {
-            H.rampServo.setPosition(Range.clip(power,0.5,1));
-            return;
-        }
-        
-        if (!H.rampStop[1].getState()) {
-            H.rampServo.setPosition(Range.clip(power,0,0.5));
-            return;
-        }
-        
-        H.rampServo.setPosition(power);
+        H.liftMotor.setPower(expUpPower - expDownPower);
     }
     
     private void toggleButton(boolean gamepadIn, int numb) {
