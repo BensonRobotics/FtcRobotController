@@ -37,7 +37,9 @@ public class TeleOpV1 extends LinearOpMode {
         
         MecanumWheelDriverV2 drive = new MecanumWheelDriverV2(H);
         ElapsedTime runtime = new ElapsedTime();
-        ExecutorService pool = Executors.newFixedThreadPool(2);
+        ExecutorService pool = Executors.newFixedThreadPool(3);
+        //RobotTracker tracker = new RobotTracker(H, this);
+        //H.setXYEncoderEnable(true);
         H.init(hardwareMap, this);
         pool.execute(H);
         ////////////////////////////// Init Variables //////////////////////////////
@@ -64,6 +66,8 @@ public class TeleOpV1 extends LinearOpMode {
         waitForStart();
         runtime.reset();
         
+        //pool.execute(tracker);
+        
         while (opModeIsActive()) {
     
             ////////////////////////////// Set Variables //////////////////////////////
@@ -74,8 +78,8 @@ public class TeleOpV1 extends LinearOpMode {
             //rotate += powerFollow(rotate, exponentialScaling(Range.clip(gamepad1.right_stick_x, -1, 1)));
             rotate = exponentialScaling(Range.clip(gamepad1.right_stick_x, -1, 1));
             radius = exponentialScaling(Range.clip(Math.hypot(x, y), 0, 1));
-            power += powerFollow(power, radius);
-            //power = radius;
+            //power += powerFollow(power, radius);
+            power = radius;
             if (radius > 0.05) angle = Math.toDegrees(Math.atan2(y, x)) + 90 + agl_frwd - heading;
             //drive.StrafePowerMove(angle, power*0.6 + (gamepad1.right_trigger*0.4), 1);
             //rotateScaled = rotate * 0.6 + gamepad1.right_trigger*0.4;
@@ -148,7 +152,7 @@ public class TeleOpV1 extends LinearOpMode {
             
         }
         
-        pool.shutdownNow();
+        pool.shutdown();
         
     }
     
@@ -158,7 +162,7 @@ public class TeleOpV1 extends LinearOpMode {
         double expDownPower = exponentialScaling(downPower);
     
         liftPos = H.liftMotor.getCurrentPosition() - liftZero;
-        telemetry.addData("lift pos: ", liftPos);
+        //telemetry.addData("lift pos: ", liftPos);
     
         if (Math.abs(downPower) < 0.05 && Math.abs(upPower) < 0.05) {
             H.liftMotor.setPower(0);

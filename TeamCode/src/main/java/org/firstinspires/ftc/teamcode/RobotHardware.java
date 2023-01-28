@@ -60,12 +60,12 @@ public class RobotHardware implements Runnable{
     private final double COUNTS_PER_REVOLUTION = 560;
     private final double WHEEL_DIAMETER_INCHES = 4.0;
     public final double COUNTS_PER_INCH = COUNTS_PER_REVOLUTION / (WHEEL_DIAMETER_INCHES * Math.PI);
-    public final double MINIMUM_MOTOR_POWER = 0.075;
+    public final double MINIMUM_MOTOR_POWER = 0.1;
     
     public final double EXP_BASE = 20;
     public final double INITIAL_VALUE = 0.05;
     public final double STICK_DEAD_ZONE = 0.1;
-    public final double POWER_FOLLOW_INCREMENT = 0.04;
+    public final double POWER_FOLLOW_INCREMENT = 0.05;
     public final double ROOT_TWO = Math.sqrt(2);
     
     final long TARGET_LOOP_DURATION = 100;
@@ -97,7 +97,7 @@ public class RobotHardware implements Runnable{
     public DistanceSensor rightRange;
     public DistanceSensor frontRange;
     public Rev2mDistanceSensor leftTOF;
-    public Rev2mDistanceSensor rightTOF;
+    public Rev2mDistanceSensor frontTOF;
     //public AnalogInput armAngle;
     public static BNO055IMU      imu;
     public static BNO055IMU      imu1;
@@ -110,7 +110,9 @@ public class RobotHardware implements Runnable{
     public ElapsedTime runtime = new ElapsedTime();
     public DigitalChannel liftStop;
     public DigitalChannel[] rampStop = new DigitalChannel[2];
-    public MB1242Ultrasonic[] MB1242 = new MB1242Ultrasonic[3];
+    public MB1242Ultrasonic[] MB1242 = new MB1242Ultrasonic[4];
+    final int[] MB1242_SENSOR_OFFSET = {6,-1,6,1};
+    public boolean newRangeDataFlag = false;
     public DigitalChannel[] wheelTriggers = new DigitalChannel[8];
 
     ////////////////////////////// Motors //////////////////////////////
@@ -138,7 +140,6 @@ public class RobotHardware implements Runnable{
         driveMotor[1] = HM.get(DcMotor.class, "FR_Motor");
         driveMotor[2] = HM.get(DcMotor.class, "RL_Motor");
         driveMotor[3] = HM.get(DcMotor.class, "RR_Motor");
-        //collectorMotor   = HM.get(DcMotor.class, "Collector_Motor");
         liftMotor   = HM.get(DcMotor.class, "Lift_Motor");
     
     
@@ -156,13 +157,14 @@ public class RobotHardware implements Runnable{
             webcam = HM.get(WebcamName.class, "Webcam 1");
             monitorViewId = HM.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", HM.appContext.getPackageName());
         }
-        //MB1242[0] = HM.get(MB1242Ultrasonic.class, "MB0");
-        //MB1242[1] = HM.get(MB1242Ultrasonic.class, "MB1");
-        //MB1242[2] = HM.get(MB1242Ultrasonic.class, "MB2");
-        //MB1242[3] = HM.get(MB1242Ultrasonic.class, "MB3");
+        
+        MB1242[0] = HM.get(MB1242Ultrasonic.class, "MB0");
+        MB1242[1] = HM.get(MB1242Ultrasonic.class, "MB1");
+        MB1242[2] = HM.get(MB1242Ultrasonic.class, "MB2");
+        MB1242[3] = HM.get(MB1242Ultrasonic.class, "MB3");
         //leftRange = HM.get(DistanceSensor.class, "L_Range");
         //rightRange = HM.get(DistanceSensor.class, "R_Range");
-        //frontRange = HM.get(DistanceSensor.class, "F_Range");
+        frontRange = HM.get(DistanceSensor.class, "F_Range");
         imu = HM.get(BNO055IMU.class, "imu");
         //imu1 = HM.get(BNO055IMU.class, "imu1");
     
@@ -171,7 +173,7 @@ public class RobotHardware implements Runnable{
             xEncoder = HM.get(DcMotor.class, "X_Motor");
     
             yEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            yEncoder.setDirection(DcMotor.Direction.REVERSE);
+            yEncoder.setDirection(DcMotor.Direction.FORWARD);
             xEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             xEncoder.setDirection(DcMotor.Direction.REVERSE);
         }
@@ -194,7 +196,7 @@ public class RobotHardware implements Runnable{
         //imu1.initialize(parameters);
 
         //leftTOF = (Rev2mDistanceSensor) leftRange;
-        //rightTOF = (Rev2mDistanceSensor) rightRange;
+        frontTOF = (Rev2mDistanceSensor) frontRange;
     
         
         for (int i = 3; i >= 0; i--) {
@@ -214,7 +216,7 @@ public class RobotHardware implements Runnable{
         
         while (!isStopRequested()) {
             
-            //loopStart = runtime.time(TimeUnit.MILLISECONDS);
+            loopStart = runtime.time(TimeUnit.MILLISECONDS);
     
             //for (MB1242Ultrasonic mb1242Ultrasonic : MB1242) mb1242Ultrasonic.range();
     
@@ -222,9 +224,9 @@ public class RobotHardware implements Runnable{
             
             //rightDistance = rightTOF.getDistance(DistanceUnit.INCH);
             //leftDistance = leftTOF.getDistance(DistanceUnit.INCH);
-            //frontDistance = frontRange.getDistance(DistanceUnit.INCH);
+            frontDistance = frontTOF.getDistance(DistanceUnit.INCH);
             
-            /*if ((loopStart + TARGET_LOOP_DURATION-5) > runtime.time(TimeUnit.MILLISECONDS)) {
+            if ((loopStart + TARGET_LOOP_DURATION-5) > runtime.time(TimeUnit.MILLISECONDS)) {
                 Log.d("SensLoop","" + (runtime.time(TimeUnit.MILLISECONDS)-loopStart));
                 try {
                     Thread.sleep(TARGET_LOOP_DURATION - 5 - (runtime.time(TimeUnit.MILLISECONDS)-loopStart));
@@ -237,12 +239,15 @@ public class RobotHardware implements Runnable{
             } else {
                 Log.w("SensLoop", "loop duration exceeds target time frame");
             }
-            //for (int i = 0; i < MB1242.length; i++) range[i] = MB1242[i].inches();
-            try {
-                Thread.sleep(5);
-            } catch (Exception e) {
-                Log.e("SensLoop", e.getMessage());
-            }*/
+//            for (int i = 0; i < MB1242.length; i++) {
+//                range[i] = MB1242[i].inches() + MB1242_SENSOR_OFFSET[i];
+//                newRangeDataFlag = true;
+//            }
+//            try {
+//                Thread.sleep(5);
+//            } catch (Exception e) {
+//                Log.e("SensLoop", e.getMessage());
+//            }
             //for (int i = 3; i >= 0; i--) driveEncoder[0] = driveMotor[0].getCurrentPosition();
             //armVoltage = armAngle.getVoltage();
     
@@ -251,7 +256,7 @@ public class RobotHardware implements Runnable{
     }
 
     public double getheading() {
-        // returns a value between
+        // returns a value between -180 and 180, forwards is 0 when initialised
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         //angles1 = imu1.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         //return (angles.firstAngle + angles1.firstAngle)/2;

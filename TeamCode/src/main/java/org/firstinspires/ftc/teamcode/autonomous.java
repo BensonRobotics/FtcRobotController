@@ -34,6 +34,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -42,14 +45,14 @@ import java.util.function.Function;
 @Autonomous(name="Autonomous", group="Linear Opmode", preselectTeleOp = "TeleOp")
 public class autonomous extends LinearOpMode {
 
-    //private static final String VUFORIA_KEY = "AXfJetz/////AAABmfTftTQRKUq2u+iCzbuFm2wKhp5/qubTF+6xF9VBwMBiVi2lCwJbNrIAVofnUKke4/MjFtZROHGeelAgbQx6MjYX+qdX4vRB5z2PboepftoqvoZy3irQKQ2aKqNSbpN72hI/tI2wluN0xqC6KThtMURH0EuvUf8VcGDfmuXiA/uP00/2dsYhIMhxBJCmBq0AG5jMWi8MnHJDZwnoYLdcliKB7rvNTUDbf1fzxRzf9QHgB2u+invzPou7q8ncAsD5GdXFfA/CiYmR65JKXDOE0wHoc8FxvrzUIRCQ2geSypo7eY5q/STJvqPmjoj33CQFHl0hKMx05QwwsABdlIZvfLLbjA3VH2HO4dcv+OOoElws";
+    private static final String VUFORIA_KEY = "AXfJetz/////AAABmfTftTQRKUq2u+iCzbuFm2wKhp5/qubTF+6xF9VBwMBiVi2lCwJbNrIAVofnUKke4/MjFtZROHGeelAgbQx6MjYX+qdX4vRB5z2PboepftoqvoZy3irQKQ2aKqNSbpN72hI/tI2wluN0xqC6KThtMURH0EuvUf8VcGDfmuXiA/uP00/2dsYhIMhxBJCmBq0AG5jMWi8MnHJDZwnoYLdcliKB7rvNTUDbf1fzxRzf9QHgB2u+invzPou7q8ncAsD5GdXFfA/CiYmR65JKXDOE0wHoc8FxvrzUIRCQ2geSypo7eY5q/STJvqPmjoj33CQFHl0hKMx05QwwsABdlIZvfLLbjA3VH2HO4dcv+OOoElws";
     //private static final String TFOD_MODEL_ASSET = "Skystone.tflite";
     //private static final String LABEL_FIRST_ELEMENT = "Skystone";
 
-    //private VuforiaLocalizer vuforia;
+    private VuforiaLocalizer vuforia;
     //private TFObjectDetector tfod;
 
-    //private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
+    private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = VuforiaLocalizer.CameraDirection.BACK;
     
     int pathSide = 0; // 0 = red, 1 = blue;
     int pathSelected = 0;
@@ -68,15 +71,18 @@ public class autonomous extends LinearOpMode {
     boolean dropTop = false;
     long duckServoStartTime = 0;
     //double[] point;
+    int color;
 
     @Override
     public void runOpMode() {
     
         RobotHardware.headingSave = 0;
-        H.setCameraEnable(false);
+        H.setCameraEnable(true);
         H.init(hardwareMap, this);
         pool.execute(H);
         pool.execute(drive);
+        initVuforia();
+        ColorReader detector = new ColorReader(vuforia);
         //QRdetector detector = new QRdetector(H);
     
         /*H.rampServo.setPosition(1);
@@ -86,6 +92,10 @@ public class autonomous extends LinearOpMode {
         H.wheelLift[1].setPosition(0);
         H.wheelLift[2].setPosition(0);
         H.wheelLift[3].setPosition(1);*/
+        /*while (!isStopRequested() && !isStarted()) {
+            telemetry.addData("cone", detector.count() + 1);
+            telemetry.update();
+        }*/
         
         while (!isStopRequested() && !isStarted()) {
             
@@ -155,6 +165,9 @@ public class autonomous extends LinearOpMode {
     
         waitForStart();
         
+        color = detector.count();
+        vuforia.close();
+        
         /*H.wheelLift[0].setPosition(0);
         H.wheelLift[1].setPosition(1);
         H.wheelLift[2].setPosition(1);
@@ -162,7 +175,7 @@ public class autonomous extends LinearOpMode {
         
         //point = detector.getCenterPoint();
         
-        telemetry.addData(paths.menus[selectState][0], paths.menus[0][pathSide + 1] + " " + paths.menus[1][pathSelected + 1]);
+        telemetry.addData(paths.menus[2][0], paths.menus[0][pathSide + 1] + " " + paths.menus[1][pathSelected + 1]);
         //telemetry.addData("point x", point[0]);
         telemetry.update();
         
@@ -172,8 +185,7 @@ public class autonomous extends LinearOpMode {
         
         drive.stop();
         H.saveHeading();
-        pool.shutdownNow();
-    
+        pool.shutdown();
     }
     
     void deployRamp() {
@@ -246,6 +258,19 @@ public class autonomous extends LinearOpMode {
         sleep(500);
         H.rampServo.setPosition(1);
         
+    }
+    
+    void initVuforia() {
+    
+        int cameraMonitorViewId = H.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", H.hardwareMap.appContext.getPackageName());
+        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
+    
+        parameters.vuforiaLicenseKey = H.VUFORIA_KEY;
+        parameters.cameraName = H.webcam;
+        //parameters.cameraDirection   = CAMERA_CHOICE;
+        parameters.useExtendedTracking = false;
+    
+        vuforia = ClassFactory.getInstance().createVuforia(parameters);
     }
 
 }

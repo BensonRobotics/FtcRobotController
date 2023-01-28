@@ -12,7 +12,7 @@ public class AutonomousPaths {
     RobotHardware H;
     autonomous auto;
     
-    final String[][] menus = {{"Field Side:", "Red", "Blue"},{"Autonomous Path:","Duck -A","Drop -B","Park -B","Park -A","Duck Only -A", "Square"}, {"Path Selected"}};
+    final String[][] menus = {{"Field Side:", "Red", "Blue"},{"Autonomous Path:","Park"}, {"Path Selected"}};
     
     AutonomousPaths(MecanumWheelDriverV2 drive, RobotHardware H, autonomous auto) {
         
@@ -29,7 +29,7 @@ public class AutonomousPaths {
             
             switch (path) {
                 case 0:
-                    RedDuckA();
+                    Park();
                     break;
                 case 1:
                     RedDropB();
@@ -54,7 +54,7 @@ public class AutonomousPaths {
     
             switch (path) {
                 case 0:
-                    BlueDuckA();
+                    Park();
                     break;
                 case 1:
                     BlueDropB();
@@ -77,6 +77,29 @@ public class AutonomousPaths {
             
         }
         
+    }
+    
+    void Park() {
+        drive.StrafeDistanceMove(0,30,0.5,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        switch (auto.color) {
+            case 0:
+                drive.StrafeDistanceMove(90,30,0.5,1);
+                drive.startActions();
+                drive.waitForMoveDone();
+                break;
+            case 1:
+                break;
+            case 2:
+                drive.StrafeDistanceMove(-90,30,0.5,1);
+                drive.startActions();
+                drive.waitForMoveDone();
+                break;
+            default:
+                break;
+        }
     }
     
     void Square() {

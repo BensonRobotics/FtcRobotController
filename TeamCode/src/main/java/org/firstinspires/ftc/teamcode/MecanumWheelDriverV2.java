@@ -33,7 +33,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     final long TIMEOUT = 5000;
     final double DISTANCE_MULTIPLIER_LOWER = 1.26;
     final double DISTANCE_MULTIPLIER_UPPER = 1.538;
-    final int MOVEMENT_TOLERANCE = 10;
+    final int MOVEMENT_TOLERANCE = 20;
     final double ROTATE_TOLERANCE = 1.5;
     
     MecanumWheelDriverV2(RobotHardware H) {
@@ -58,7 +58,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         
             }
     
-            Log.d(TAG, "action:------");
+            //Log.d(TAG, "action:------");
     
             // remove all finished actions
             for (int i = maintainRemoveList.size() - 1; i >= 0; i--)
@@ -144,7 +144,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         for (int i = 0; i <= 3; i ++) {
         
             // assign all of the power values to the motors
-            H.driveMotor[i].setPower(wheelPower[i]);
+            H.driveMotor[i].setPower(powerFollow(H.driveMotor[i].getPower(), wheelPower[i]));
             
         }
     }
@@ -177,7 +177,7 @@ public class MecanumWheelDriverV2 implements Runnable{
             
             // remove distance from wheel target after adjusting to be aligned with wheel powers
             for (int i = 0; i < 4; i++) {
-                action.wheelTarget[i] -= (int)(totalClicks * action.wheelPower[i]/totalPower);
+                action.wheelTarget[i] -= (int)Math.round(totalClicks * action.wheelPower[i]/totalPower);
             }
             
         }
@@ -562,7 +562,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         //Log.d(TAG, "wheel target" + action.wheelTarget[0]);
         
         // remove from list if target has been reached
-        if (Math.abs(action.wheelTarget[0]) < MOVEMENT_TOLERANCE && Math.abs(action.wheelTarget[1]) < MOVEMENT_TOLERANCE && Math.abs(action.wheelTarget[2]) < MOVEMENT_TOLERANCE && Math.abs(action.wheelTarget[3]) < MOVEMENT_TOLERANCE) {
+        if (Math.abs(action.wheelTarget[0]) < MOVEMENT_TOLERANCE || Math.abs(action.wheelTarget[1]) < MOVEMENT_TOLERANCE || Math.abs(action.wheelTarget[2]) < MOVEMENT_TOLERANCE || Math.abs(action.wheelTarget[3]) < MOVEMENT_TOLERANCE) {
             maintainRemoveList.add(maintainList.indexOf(action));
             return;
         }
@@ -764,6 +764,14 @@ public class MecanumWheelDriverV2 implements Runnable{
     
     }
     
+    double powerFollow(double currentPower, double goalPower) {
+        if (Math.abs(goalPower - currentPower) >= H.POWER_FOLLOW_INCREMENT) {
+            return currentPower + Math.signum(goalPower - currentPower) * H.POWER_FOLLOW_INCREMENT;
+        } else {
+            return goalPower;
+        }
+    }
+    
 }
 
 class ActionData {
@@ -785,7 +793,7 @@ class ActionData {
         this.action = action;
         this.param = param;
         this.startTime = startTime;
-        wheelTarget = new int[] {0,0,0,0};
+        //wheelTarget = new int[] {0,0,0,0};
     
     }
     
