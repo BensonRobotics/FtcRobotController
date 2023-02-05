@@ -1,105 +1,167 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.util.Log;
+import android.graphics.Color;
+import androidx.annotation.ColorInt;
 
 import com.qualcomm.robotcore.hardware.I2cAddr;
-import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchDevice;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynchSimple;
 import com.qualcomm.robotcore.hardware.I2cWaitControl;
 import com.qualcomm.robotcore.hardware.configuration.annotations.DeviceProperties;
 import com.qualcomm.robotcore.hardware.configuration.annotations.I2cDeviceType;
-import com.qualcomm.robotcore.util.TypeConversion;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-
-@SuppressWarnings({"WeakerAccess", "unused"}) // Ignore access and unused warnings
-
-@I2cDeviceType
-@DeviceProperties(name = "Qwiic LED", description = "SparkFun Qwiic LED Stick for APA102C LEDs", xmlTag = "QwiicLED")
-
-public class QwiicLED extends I2cDeviceSynchDevice<I2cDeviceSynch> {
+@I2cDeviceType()
+@DeviceProperties(name = "QWIIC LED Stick", description = "Sparkfun QWIIC LED Stick", xmlTag = "QWIIC_LED_STICK")
+public class QwiicLED extends I2cDeviceSynchDevice<I2cDeviceSynchSimple> {
     
-    public short changeLEDLength(short length) {
-        writeShort(Register.CHANGE_LED_LENGTH,length);
-        return 0;
-    }
-    
-    public short setSingleLEDColor(byte id, byte red, byte green, byte blue) {
-        writeByteArray(Register.WRITE_SINGLE_LED_COLOR,new byte[]{(byte)(id+1),red,green,blue});
-        return 0;
-    }
-    
-    public short setSingleLEDColor(byte id, int color) {
-        writeByteArray(Register.WRITE_SINGLE_LED_COLOR,new byte[]{(byte)(id+1),(byte)((color & 0xFF0000)>>16),(byte)((color & 0xFF00)>>8),(byte)(color & 0xFF)});
-        return 0;
-    }
-    
-    public short setLEDColor(byte red, byte green, byte blue) {
-        writeByteArray(Register.WRITE_ALL_LED_COLOR,new byte[]{red,green,blue});
-        return 0;
-    }
-    
-    public short setAllLEDColor(byte[] red) {
-        writeByteArray(Register.WRITE_RED_ARRAY,red);
-        return 0;
-    }
-    
-    public short setLEDBrightness(byte id, byte brightness) {
-        writeByteArray(Register.WRITE_SINGLE_LED_BRIGHTNESS, new byte[]{(byte)(id+1), brightness});
-        return 0;
-    }
-    
-    protected void writeShort(final Register reg, short value)
-    {
-        deviceClient.write(reg.bVal, TypeConversion.shortToByteArray(value));
-    }
-    
-    protected void writeByteArray(final Register reg, byte[] value)
-    {
-        deviceClient.waitForWriteCompletions(I2cWaitControl.WRITTEN);
-        /*while() {
-            Log.d("LED", "Engaged");
-        }*/
-        deviceClient.write(reg.bVal, value);
-    }
-    
-    protected short readShort(Register reg)
-    {
-        return TypeConversion.byteArrayToShort(deviceClient.read(reg.bVal, 2));
-    }
-    
-    ///////////////////////////// Config ///////////////////////////////
-    
-    public final static I2cAddr ADDRESS_I2C_DEFAULT = I2cAddr.create7bit(0x23);
-    
-    public QwiicLED(I2cDeviceSynch deviceClient) {
+    private enum Commands {
+        CHANGE_LED_LENGTH(0x70),
+        WRITE_SINGLE_LED_COLOR(0x71),
+        WRITE_ALL_LED_COLOR(0x72),
+        WRITE_RED_ARRAY(0x73),
+        WRITE_GREEN_ARRAY(0x74),
+        WRITE_BLUE_ARRAY(0x75),
+        WRITE_SINGLE_LED_BRIGHTNESS(0x76),
+        WRITE_ALL_LED_BRIGHTNESS(0x77),
+        WRITE_ALL_LED_OFF(0x78);
+        int bVal;
         
-        super(deviceClient, true);
+        Commands(int bVal) {
+            this.bVal = bVal;
+        }
+    }
     
-        this.setOptimalReadWindow();
-        this.deviceClient.setI2cAddress(ADDRESS_I2C_DEFAULT);
+    /**
+     * Change the color of a specific LED
+     *
+     * @param position which LED to change (1 - 255)
+     * @param color    what color to set it to
+     */
+    public void setColor(int position, @ColorInt int color) {
+        byte[] data = new byte[4];
+        data[0] = (byte) position;
+        data[1] = (byte) Color.red(color);
+        data[2] = (byte) Color.green(color);
+        data[3] = (byte) Color.blue(color);
+        writeI2C(Commands.WRITE_SINGLE_LED_COLOR, data);
+    }
+    
+    /**
+     * Change the color of all LEDs to a single color
+     *
+     * @param color what the color should be
+     */
+    public void setColor(@ColorInt int color) {
+        byte[] data = new byte[3];
+        data[0] = (byte) Color.red(color);
+        data[1] = (byte) Color.green(color);
+        data[2] = (byte) Color.blue(color);
+        writeI2C(Commands.WRITE_ALL_LED_COLOR, data);
+    }
+    
+    /**
+     * Send a segment of the LED array
+     *
+     * @param cmd    command to send
+     * @param array  the values (limited from 0..255)
+     * @param offset the starting value (LED only, array starts at 0)
+     * @param length the length to send
+     */
+    private void sendSegment(Commands cmd, int[] array, int offset, int length) {
+        byte[] data = new byte[length + 2];
+        data[0] = (byte) length;
+        data[1] = (byte) offset;
         
-        super.registerArmingStateCallback(false);
-        this.deviceClient.enableWriteCoalescing(true);
-        this.deviceClient.engage();
+        for (int i = 0; i < length; i++) {
+            data[2 + i] = (byte) array[i];
+        }
+        writeI2C(cmd, data);
     }
     
-    protected void setOptimalReadWindow()
-    {
-        // Sensor registers are read repeatedly and stored in a register. This method specifies the
-        // registers and repeat read mode
-        /*I2cDeviceSynch.ReadWindow readWindow = new I2cDeviceSynch.ReadWindow(
-                Register.FIRST.bVal,
-                Register.LAST.bVal - Register.FIRST.bVal + 1,
-                I2cDeviceSynch.ReadMode.REPEAT);
-        this.deviceClient.setReadWindow(readWindow);*/
+    /**
+     * Change the color of an LED color segment
+     *
+     * @param colors what the colors should be
+     * @param offset where in the array to start
+     * @param length length to send (limited to 12)
+     */
+    private void setLEDColorSegment(@ColorInt int[] colors, int offset, int length) {
+        int[] redArray = new int[length];
+        int[] greenArray = new int[length];
+        int[] blueArray = new int[length];
+        
+        for (int i = 0; i < colors.length; i++) {
+            redArray[i] = Color.red(colors[i + offset]);
+            greenArray[i] = Color.green(colors[i + offset]);
+            blueArray[i] = Color.blue(colors[i + offset]);
+        }
+        sendSegment(Commands.WRITE_RED_ARRAY, redArray, offset, length);
+        sendSegment(Commands.WRITE_GREEN_ARRAY, greenArray, offset, length);
+        sendSegment(Commands.WRITE_BLUE_ARRAY, blueArray, offset, length);
     }
     
-    
-    @Override
-    protected synchronized boolean doInitialize() {
-        return true;
+    /**
+     * Change the color of all LEDs using arrays
+     *
+     * @param colors array of colors to set lights to
+     */
+    public void setColors(@ColorInt int[] colors) {
+        int length = colors.length;
+        
+        int numInLastSegment = length % 12;
+        int numSegments = length / 12;
+        for (int i = 0; i < numSegments; i++) {
+            setLEDColorSegment(colors, i * 12, 12);
+        }
+        setLEDColorSegment(colors, numSegments * 12, numInLastSegment);
     }
+    
+    /**
+     * Set the brightness of an individual LED
+     *
+     * @param number     which LED to change (1-255)
+     * @param brightness brightness level (0-31)
+     */
+    public void setBrightness(int number, int brightness) {
+        byte[] data = new byte[2];
+        data[0] = (byte) number;
+        data[1] = (byte) brightness;
+        writeI2C(Commands.WRITE_SINGLE_LED_BRIGHTNESS, data);
+    }
+    
+    /**
+     * Set the brightness of all LEDs
+     *
+     * @param brightness brightness level (0-31)
+     */
+    public void setBrightness(int brightness) {
+        byte[] data = new byte[1];
+        data[0] = (byte) brightness;
+        writeI2C(Commands.WRITE_ALL_LED_BRIGHTNESS, data);
+    }
+    
+    /**
+     * Turn all LEDS off...
+     */
+    public void turnAllOff() {
+        setColor(0);
+    }
+    
+    /**
+     * Change the length of the LED strip
+     *
+     * @param newLength 1 to 100 (longer than 100 not supported)
+     */
+    public void changeLength(int newLength) {
+        byte[] data = new byte[1];
+        data[0] = (byte) newLength;
+        writeI2C(Commands.CHANGE_LED_LENGTH, data);
+    }
+    
+    private void writeI2C(Commands cmd, byte[] data) {
+        deviceClient.write(cmd.bVal, data, I2cWaitControl.WRITTEN);
+    }
+    
     
     @Override
     public Manufacturer getManufacturer() {
@@ -107,30 +169,22 @@ public class QwiicLED extends I2cDeviceSynchDevice<I2cDeviceSynch> {
     }
     
     @Override
-    public String getDeviceName() {
-        return "SparkFun Qwiic LED Stick - APA102C";
+    protected synchronized boolean doInitialize() {
+        return true;
     }
     
-    public enum Register {
-        FIRST(0x6F),
-        CHANGE_LED_LENGTH (0x70),
-        WRITE_SINGLE_LED_COLOR (0x71),
-        WRITE_ALL_LED_COLOR (0x72),
-        WRITE_RED_ARRAY (0x73),
-        WRITE_GREEN_ARRAY (0x74),
-        WRITE_BLUE_ARRAY (0x75),
-        WRITE_SINGLE_LED_BRIGHTNESS (0x76),
-        WRITE_ALL_LED_BRIGHTNESS (0x77),
-        WRITE_ALL_LED_OFF (0x78),
-        LAST(WRITE_ALL_LED_OFF.bVal),
-        CHANGE_ADDRESS (0xC7);
-        
-        public int bVal;
-        
-        Register(int bVal) {
-            
-            this.bVal = bVal;
-        }
+    @Override
+    public String getDeviceName() {
+        return "Qwiic LED Strip";
     }
+    
+    private final static I2cAddr ADDRESS_I2C_DEFAULT = I2cAddr.create7bit(0x23);
+    
+    public QwiicLED(I2cDeviceSynchSimple deviceClient) {
+        super(deviceClient, true);
+        
+        this.deviceClient.setI2cAddress(ADDRESS_I2C_DEFAULT);
+        super.registerArmingStateCallback(false);
+    }
+    
 }
-
