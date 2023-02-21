@@ -6,13 +6,15 @@ import java.util.concurrent.TimeUnit;
 
 import static android.content.ContentValues.TAG;
 
+import com.qualcomm.robotcore.hardware.DcMotor;
+
 public class AutonomousPaths {
     
     MecanumWheelDriverV2 drive;
     RobotHardware H;
     autonomous auto;
     
-    final String[][] menus = {{"Field Side:", "Red", "Blue"},{"Autonomous Path:","Park"}, {"Path Selected"}};
+    final String[][] menus = {{"Field Side:", "Red", "Blue"},{"Autonomous Path:","Park", "One Cone Right", "One Cone Left"}, {"Path Selected"}};
     
     AutonomousPaths(MecanumWheelDriverV2 drive, RobotHardware H, autonomous auto) {
         
@@ -32,16 +34,16 @@ public class AutonomousPaths {
                     Park();
                     break;
                 case 1:
-                    RedDropB();
+                    OneConeRight();
                     break;
                 case 2:
-                    RedParkB();
+                    OneConeLeft();
                     break;
                 case 3:
-                    RedParkA();
+                    TwoConeRight();
                     break;
                 case 4:
-                    RedDuckOnly();
+                    TwoConeLeft();
                     break;
                 case 5:
                     Square();
@@ -57,16 +59,16 @@ public class AutonomousPaths {
                     Park();
                     break;
                 case 1:
-                    BlueDropB();
+                    OneConeRight();
                     break;
                 case 2:
-                    BlueParkB();
+                    OneConeLeft();
                     break;
                 case 3:
-                    BlueParkA();
+                    TwoConeRight();
                     break;
                 case 4:
-                    BlueDuckOnly();
+                    TwoConeLeft();
                     break;
                 case 5:
                     Square();
@@ -79,6 +81,206 @@ public class AutonomousPaths {
         
     }
     
+    void OneConeRight() {
+        
+        H.tracker.setInitialPosition(108,6);
+        
+        H.setLiftPos((int)H.MAX_LIFT_POS);
+    
+        drive.StrafeDistanceMove(0,63,0.8,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        drive.StrafeDistanceMove(180,5,0.5,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+    
+        drive.StrafeDistanceMove(90,12,0.7,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        drive.HeadingRotate(0, 0.2, 1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        drive.StrafePointMove(0.35, 96, 65.5, 1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        H.setGrabber(true);
+    
+        drive.StrafeDistanceMove(180, 6,0.5,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        H.setLiftPos(0);
+    
+        switch (auto.color) {
+            case 0:
+                drive.StrafeDistanceMove(90,12,0.5,1);
+                break;
+            case 1:
+                drive.StrafeDistanceMove(-90,12,0.5,1);
+                break;
+            case 2:
+                drive.StrafeDistanceMove(-90,36,0.5,1);
+                break;
+            default:
+                break;
+        }
+        drive.startActions();
+        drive.waitForMoveDone();
+    }
+    
+    void OneConeLeft() {
+        
+        H.tracker.setInitialPosition(36,6);
+        
+        H.setLiftPos((int)H.MAX_LIFT_POS);
+        
+        drive.StrafeDistanceMove(0,63,0.8,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        drive.StrafeDistanceMove(180,5,0.5,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        drive.StrafeDistanceMove(-90,12,0.7,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        drive.HeadingRotate(0, 0.2, 1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        drive.StrafePointMove(0.35, 48, 65.5, 1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        H.setGrabber(true);
+        
+        drive.StrafeDistanceMove(180, 6,0.5,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        H.setLiftPos(0);
+        
+        switch (auto.color) {
+            case 0:
+                drive.StrafeDistanceMove(90,36,0.5,1);
+                break;
+            case 1:
+                drive.StrafeDistanceMove(90,12,0.5,1);
+                break;
+            case 2:
+                drive.StrafeDistanceMove(-90,12,0.5,1);
+                break;
+            default:
+                break;
+        }
+        drive.startActions();
+        drive.waitForMoveDone();
+    }
+    
+    void TwoConeRight() {
+        
+        H.tracker.setInitialPosition(108,6);
+        
+        H.setLiftPos((int)H.MAX_LIFT_POS);
+        
+        drive.StrafeDistanceMove(0,63,0.8,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        drive.StrafeDistanceMove(180,5,0.5,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        drive.StrafeDistanceMove(90,12,0.7,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        drive.HeadingRotate(0, 0.2, 1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        drive.StrafePointMove(0.35, 96, 65.5, 1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        H.setGrabber(true);
+        
+        drive.StrafeDistanceMove(180, 6,0.5,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        H.setLiftPos(0);
+        
+        switch (auto.color) {
+            case 0:
+                drive.StrafeDistanceMove(90,12,0.5,1);
+                break;
+            case 1:
+                drive.StrafeDistanceMove(-90,12,0.5,1);
+                break;
+            case 2:
+                drive.StrafeDistanceMove(-90,36,0.5,1);
+                break;
+            default:
+                break;
+        }
+        drive.startActions();
+        drive.waitForMoveDone();
+    }
+    
+    void TwoConeLeft() {
+        
+        H.tracker.setInitialPosition(36,6);
+        
+        H.setLiftPos((int)H.MAX_LIFT_POS);
+        
+        drive.StrafeDistanceMove(0,63,0.8,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        drive.StrafeDistanceMove(180,5,0.5,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        drive.StrafeDistanceMove(-90,12,0.7,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        drive.HeadingRotate(0, 0.2, 1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        drive.StrafePointMove(0.35, 48, 65.5, 1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        H.setGrabber(true);
+        
+        drive.StrafeDistanceMove(180, 6,0.5,1);
+        drive.startActions();
+        drive.waitForMoveDone();
+        
+        H.setLiftPos(0);
+        
+        switch (auto.color) {
+            case 0:
+                drive.StrafeDistanceMove(90,36,0.5,1);
+                break;
+            case 1:
+                drive.StrafeDistanceMove(90,12,0.5,1);
+                break;
+            case 2:
+                drive.StrafeDistanceMove(-90,12,0.5,1);
+                break;
+            default:
+                break;
+        }
+        drive.startActions();
+        drive.waitForMoveDone();
+    }
+    
     void Park() {
         drive.StrafeDistanceMove(0,30,0.5,1);
         drive.startActions();
@@ -86,14 +288,14 @@ public class AutonomousPaths {
         
         switch (auto.color) {
             case 0:
-                drive.StrafeDistanceMove(90,30,0.5,1);
+                drive.StrafeDistanceMove(90,24,0.5,1);
                 drive.startActions();
                 drive.waitForMoveDone();
                 break;
             case 1:
                 break;
             case 2:
-                drive.StrafeDistanceMove(-90,30,0.5,1);
+                drive.StrafeDistanceMove(-90,24,0.5,1);
                 drive.startActions();
                 drive.waitForMoveDone();
                 break;

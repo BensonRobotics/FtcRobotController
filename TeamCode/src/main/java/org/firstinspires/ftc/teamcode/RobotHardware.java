@@ -1,12 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.graphics.Color;
 import android.util.Log;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -42,20 +43,14 @@ public class RobotHardware implements Runnable{
     
     public HardwareMap hardwareMap;
     LinearOpMode opMode;
+    RobotTracker tracker;
 
     ////////////////////////////// Constants //////////////////////////////
 
-    public final double COUNTS_PER_REVOLUTION_CORE = 288;
     public final DcMotor.Direction[] MOTOR_DIRECTION = {DcMotor.Direction.FORWARD, DcMotor.Direction.REVERSE, DcMotor.Direction.REVERSE, DcMotor.Direction.FORWARD};
     
-    public final double LAUNCH_SERVO_MAX = 0.17;
-    public final double LAUNCH_SERVO_MIN = 0.02;
-    public final int LAUNCH_SERVO_DELAY = 100;
-    public final double LAUNCH_REPEAT_DELAY = 0.25;
-    public final double LAUNCH_MAX_SPEED = 0.88;
-    
-    public final double GRABBER_SERVO_MAX = 0.69;
-    public final double GRABBER_SERVO_MIN = 0.22;
+    public final double GRABBER_SERVO_OPEN = 0.67;
+    public final double GRABBER_SERVO_CLOSED = 0.5;
     
     private final double COUNTS_PER_REVOLUTION = 560;
     private final double WHEEL_DIAMETER_INCHES = 4.0;
@@ -64,9 +59,17 @@ public class RobotHardware implements Runnable{
     
     public final double EXP_BASE = 20;
     public final double INITIAL_VALUE = 0.05;
-    public final double STICK_DEAD_ZONE = 0.1;
+    public final double STICK_DEAD_ZONE = 0.05;
     public final double POWER_FOLLOW_INCREMENT = 0.05;
+    public final double MAX_ACCELERATION_TALL = 6;
+    public final double MAX_ACCELERATION_SHORT = 17;
+    public final double MAX_LIFT_POS = 2100;
+    public final double MAX_VELOCITY = 2.5;
     public final double ROOT_TWO = Math.sqrt(2);
+    
+    public final int[] nerd = {1,1,1,0,1,0,0,0,1,0,0,0,1,0,1,1,1,0,1,0,0,0,1,1,1,0,1,0,1,0,0,0,0,0,0,0};
+    
+    final int[] MB1242_SENSOR_OFFSET = {6,-1,6,1};
     
     final long TARGET_LOOP_DURATION = 100;
     
@@ -79,26 +82,21 @@ public class RobotHardware implements Runnable{
     
     boolean XYEncoderEnable = false;
     boolean cameraEnable = false;
+    boolean LEDEnable = true;
     
     ////////////////////////////// Output variables //////////////////////////////
     
     public double heading = 0;
     public double rightDistance = 0;
-    public double leftDistance = 0;
     public double frontDistance = 0;
-    public int[] driveEncoder = {0, 0, 0, 0};
-    public double armVoltage = 0;
-    public double rampPower = 0.5;
     public double[] range = {0,0,0,0};
+    public long liftPos = 0;
+    public long liftZero = 0;
     
     ////////////////////////////// Sensors //////////////////////////////
 
-    public DistanceSensor leftRange;
-    public DistanceSensor rightRange;
     public DistanceSensor frontRange;
-    public Rev2mDistanceSensor leftTOF;
     public Rev2mDistanceSensor frontTOF;
-    //public AnalogInput armAngle;
     public static BNO055IMU      imu;
     public static BNO055IMU      imu1;
     public Orientation    angles;
@@ -109,17 +107,21 @@ public class RobotHardware implements Runnable{
     public DcMotor xEncoder;
     public ElapsedTime runtime = new ElapsedTime();
     public DigitalChannel liftStop;
-    public DigitalChannel[] rampStop = new DigitalChannel[2];
     public MB1242Ultrasonic[] MB1242 = new MB1242Ultrasonic[4];
-    final int[] MB1242_SENSOR_OFFSET = {6,-1,6,1};
     public boolean newRangeDataFlag = false;
-    public DigitalChannel[] wheelTriggers = new DigitalChannel[8];
+    
+    ////////////////////////////// LEDs //////////////////////////////
+    public QwiicLED LED;
+    int LEDMode = 2;
+    int LEDCycle = 0;
+    int LiftLEDs = 0;
+    int TeamColor = Color.RED;
 
     ////////////////////////////// Motors //////////////////////////////
     
     public DcMotor        collectorMotor;
     public DcMotor        liftMotor;
-    public DcMotor[]      driveMotor = new DcMotor[4];
+    public DcMotorEx[]      driveMotor = new DcMotorEx[4];
     public Servo[]        wheelLift = new Servo[4];
     public Servo          duckServo;
     public Servo          rampServo;
@@ -133,25 +135,18 @@ public class RobotHardware implements Runnable{
         
         hardwareMap = HM;
         this.opMode = telOp;
+
+        TeamColor = Color.rgb(255*(1-autonomous.pathSide),0,255*autonomous.pathSide);
         
         ////////////////////////////// Hardware Map //////////////////////////////
 
-        driveMotor[0] = HM.get(DcMotor.class, "FL_Motor");
-        driveMotor[1] = HM.get(DcMotor.class, "FR_Motor");
-        driveMotor[2] = HM.get(DcMotor.class, "RL_Motor");
-        driveMotor[3] = HM.get(DcMotor.class, "RR_Motor");
+        driveMotor[0] = HM.get(DcMotorEx.class, "FL_Motor");
+        driveMotor[1] = HM.get(DcMotorEx.class, "FR_Motor");
+        driveMotor[2] = HM.get(DcMotorEx.class, "RL_Motor");
+        driveMotor[3] = HM.get(DcMotorEx.class, "RR_Motor");
         liftMotor   = HM.get(DcMotor.class, "Lift_Motor");
-    
-    
-        //wheelLift[0] = HM.get(Servo.class, "FL_Servo");
-        //wheelLift[1] = HM.get(Servo.class, "FR_Servo");
-        //wheelLift[2] = HM.get(Servo.class, "RL_Servo");
-        //wheelLift[3] = HM.get(Servo.class, "RR_Servo");
-        //duckServo = HM.get(Servo.class, "D_Servo");
-        //rampServo = HM.get(Servo.class, "R_Servo");
+        
         clawServo = HM.get(Servo.class, "C_Servo");
-        //collectorServo = HM.get(Servo.class, "C_Servo");
-        //distancePlatform = HM.get(Servo.class, "Distance_Servo");
     
         if (cameraEnable) {
             webcam = HM.get(WebcamName.class, "Webcam 1");
@@ -162,8 +157,6 @@ public class RobotHardware implements Runnable{
         MB1242[1] = HM.get(MB1242Ultrasonic.class, "MB1");
         MB1242[2] = HM.get(MB1242Ultrasonic.class, "MB2");
         MB1242[3] = HM.get(MB1242Ultrasonic.class, "MB3");
-        //leftRange = HM.get(DistanceSensor.class, "L_Range");
-        //rightRange = HM.get(DistanceSensor.class, "R_Range");
         frontRange = HM.get(DistanceSensor.class, "F_Range");
         imu = HM.get(BNO055IMU.class, "imu");
         //imu1 = HM.get(BNO055IMU.class, "imu1");
@@ -176,16 +169,16 @@ public class RobotHardware implements Runnable{
             yEncoder.setDirection(DcMotor.Direction.FORWARD);
             xEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             xEncoder.setDirection(DcMotor.Direction.REVERSE);
+            
+            tracker = new RobotTracker(this);
         }
     
-        //liftStop = HM.get(DigitalChannel.class, "Lift_Digital");
+        liftStop = HM.get(DigitalChannel.class, "Lift_Digital");
         
-        //rampStop[0] = HM.get(DigitalChannel.class, "RampB_Digital");
-        //rampStop[1] = HM.get(DigitalChannel.class, "RampT_Digital");
-        
-        //for (int i = 0; i < wheelTriggers.length; i++) {
-        //    wheelTriggers[i] = HM.get(DigitalChannel.class, i+"_Digital");
-        //}
+        LED = HM.get(QwiicLED.class, "LED");
+        LED.changeWriteDelay(200);
+        LED.changeLength(70);
+        LED.setBrightness(2);
 
         ////////////////////////////// Parameters //////////////////////////////
 
@@ -194,8 +187,7 @@ public class RobotHardware implements Runnable{
         parameters.calibrationDataFile  = "BNO055IMUCalibration.json";
         imu.initialize(parameters);
         //imu1.initialize(parameters);
-
-        //leftTOF = (Rev2mDistanceSensor) leftRange;
+        
         frontTOF = (Rev2mDistanceSensor) frontRange;
     
         
@@ -203,7 +195,7 @@ public class RobotHardware implements Runnable{
             driveMotor[i].setDirection(MOTOR_DIRECTION[i]);
             driveMotor[i].setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             driveMotor[i].setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            driveMotor[i].setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            driveMotor[i].setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
         
         liftMotor.setDirection(DcMotor.Direction.FORWARD);
@@ -212,22 +204,80 @@ public class RobotHardware implements Runnable{
 
     }
     
+    void updateLEDs() {
+        switch (LEDMode) {
+            case 0: // rainbow
+                LED.setWalkingColor(Color.HSVToColor(new float[]{LEDCycle * 5, 1, 1}), 2, 10, 30, false);
+                LED.setWalkingColor(Color.HSVToColor(new float[]{LEDCycle * 5, 1, 1}), 2, 40, 30, true);
+                break;
+            case 1: // nerd morse code
+                LED.setWalkingColor(Color.red(nerd[LEDCycle % 36]), 2, 10, 60, false);
+                break;
+            case 2: // Lift indicator
+                int NumLEDs = Range.clip(Range.clip((int)(liftPos/MAX_LIFT_POS * 30),0,30) - LiftLEDs, -12, 12);
+                if (NumLEDs == 0) return;
+                if (NumLEDs > 0) {
+                    LED.setLEDColorSegment(TeamColor, (40 - LiftLEDs - NumLEDs), NumLEDs);
+                    LED.setLEDColorSegment(TeamColor, (40 + LiftLEDs), NumLEDs);
+                } else {
+                    LED.setLEDColorSegment(Color.BLACK, (40 - LiftLEDs), -NumLEDs);
+                    LED.setLEDColorSegment(Color.BLACK, (40 + LiftLEDs + NumLEDs), -NumLEDs);
+                }
+                LiftLEDs += NumLEDs;
+                break;
+            case 3: // Cone detection
+                LED.turnAllOff();
+                switch (autonomous.color) {
+                    case 0:
+                        LED.setLEDColorSegment(Color.MAGENTA, 31, 6);
+                        break;
+                    case 1:
+                        LED.setLEDColorSegment(Color.CYAN, 37, 6);
+                        break;
+                    case 2:
+                        LED.setLEDColorSegment(Color.YELLOW, 43, 6);
+                        break;
+                }
+                break;
+            case 4:
+                LED.turnAllOff();
+        }
+        
+        LEDCycle += 1;
+        if (LEDCycle >  72) {
+            LEDCycle = 0;
+        }
+    }
+    
     public void run() {
         
         while (!isStopRequested()) {
             
             loopStart = runtime.time(TimeUnit.MILLISECONDS);
     
-            //for (MB1242Ultrasonic mb1242Ultrasonic : MB1242) mb1242Ultrasonic.range();
+            for (MB1242Ultrasonic mb1242Ultrasonic : MB1242) mb1242Ultrasonic.range();
     
             heading = getheading();
             
-            //rightDistance = rightTOF.getDistance(DistanceUnit.INCH);
-            //leftDistance = leftTOF.getDistance(DistanceUnit.INCH);
             frontDistance = frontTOF.getDistance(DistanceUnit.INCH);
+    
+            if (!liftStop.getState()) {
+                liftZero = liftMotor.getCurrentPosition();
+            }
+            liftPos = liftMotor.getCurrentPosition() - liftZero;
             
-            if ((loopStart + TARGET_LOOP_DURATION-5) > runtime.time(TimeUnit.MILLISECONDS)) {
-                Log.d("SensLoop","" + (runtime.time(TimeUnit.MILLISECONDS)-loopStart));
+            if (LEDEnable) {
+                updateLEDs();
+            } else {
+                LED.turnAllOff();
+            }
+            
+            if (XYEncoderEnable) {
+                tracker.Iterate();
+            }
+            
+            if (runtime.time(TimeUnit.MILLISECONDS) - loopStart < TARGET_LOOP_DURATION-5) {
+                //Log.d("SensLoop","" + (runtime.time(TimeUnit.MILLISECONDS)-loopStart));
                 try {
                     Thread.sleep(TARGET_LOOP_DURATION - 5 - (runtime.time(TimeUnit.MILLISECONDS)-loopStart));
                 } catch (Exception e) {
@@ -237,22 +287,36 @@ public class RobotHardware implements Runnable{
                 //    opMode.idle();
                 //}
             } else {
-                Log.w("SensLoop", "loop duration exceeds target time frame");
+                Log.w("SensLoop", "loop duration exceeds target time frame: " + (runtime.time(TimeUnit.MILLISECONDS)-loopStart));
             }
-//            for (int i = 0; i < MB1242.length; i++) {
-//                range[i] = MB1242[i].inches() + MB1242_SENSOR_OFFSET[i];
-//                newRangeDataFlag = true;
-//            }
-//            try {
-//                Thread.sleep(5);
-//            } catch (Exception e) {
-//                Log.e("SensLoop", e.getMessage());
-//            }
+            for (int i = 0; i < MB1242.length; i++) {
+                range[i] = MB1242[i].inches() + MB1242_SENSOR_OFFSET[i];
+                newRangeDataFlag = true;
+            }
+            try {
+                Thread.sleep(5);
+            } catch (Exception e) {
+                Log.e("SensLoop", e.getMessage());
+            }
             //for (int i = 3; i >= 0; i--) driveEncoder[0] = driveMotor[0].getCurrentPosition();
             //armVoltage = armAngle.getVoltage();
     
         }
         
+    }
+    
+    public void setLiftPos(int pos) {
+        liftMotor.setTargetPosition((int)(pos + liftZero));
+        liftMotor.setPower(0.7);
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+    
+    public void setGrabber(boolean open) {
+        if (open) {
+            clawServo.setPosition(GRABBER_SERVO_OPEN);
+        } else {
+            clawServo.setPosition(GRABBER_SERVO_CLOSED);
+        }
     }
 
     public double getheading() {

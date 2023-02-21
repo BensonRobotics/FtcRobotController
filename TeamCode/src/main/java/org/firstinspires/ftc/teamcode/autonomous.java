@@ -54,7 +54,7 @@ public class autonomous extends LinearOpMode {
 
     private static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = VuforiaLocalizer.CameraDirection.BACK;
     
-    int pathSide = 0; // 0 = red, 1 = blue;
+    static int pathSide = 0; // 0 = red, 1 = blue;
     int pathSelected = 0;
     int selectState = 0;
     int selectObject = 0;
@@ -71,18 +71,22 @@ public class autonomous extends LinearOpMode {
     boolean dropTop = false;
     long duckServoStartTime = 0;
     //double[] point;
-    int color;
+    static int color;
 
     @Override
     public void runOpMode() {
     
         RobotHardware.headingSave = 0;
         H.setCameraEnable(true);
+        H.setXYEncoderEnable(true);
         H.init(hardwareMap, this);
         pool.execute(H);
         pool.execute(drive);
         initVuforia();
         ColorReader detector = new ColorReader(vuforia);
+        
+        H.setGrabber(false);
+        H.LEDMode = 3;
         //QRdetector detector = new QRdetector(H);
     
         /*H.rampServo.setPosition(1);
@@ -155,6 +159,7 @@ public class autonomous extends LinearOpMode {
             
             //telemetry.addData("","");
             //telemetry.addData("\npoint x", point[0]);
+            color = detector.count();
             telemetry.update();
         }
     
@@ -167,6 +172,8 @@ public class autonomous extends LinearOpMode {
         
         color = detector.count();
         vuforia.close();
+        H.LED.turnAllOff();
+        H.LEDMode = 0;
         
         /*H.wheelLift[0].setPosition(0);
         H.wheelLift[1].setPosition(1);
@@ -183,6 +190,10 @@ public class autonomous extends LinearOpMode {
         
         paths.runPath(pathSide, pathSelected);
         
+        while (opModeIsActive()) {
+            idle();
+        }
+        H.LED.turnAllOff();
         drive.stop();
         H.saveHeading();
         pool.shutdown();

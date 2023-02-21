@@ -1,9 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
+import static java.lang.Thread.sleep;
+
 import android.graphics.Color;
 import androidx.annotation.ColorInt;
 
 import com.qualcomm.robotcore.hardware.I2cAddr;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchDevice;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchSimple;
 import com.qualcomm.robotcore.hardware.I2cWaitControl;
@@ -23,7 +26,10 @@ public class QwiicLED extends I2cDeviceSynchDevice<I2cDeviceSynchSimple> {
         WRITE_BLUE_ARRAY(0x75),
         WRITE_SINGLE_LED_BRIGHTNESS(0x76),
         WRITE_ALL_LED_BRIGHTNESS(0x77),
-        WRITE_ALL_LED_OFF(0x78);
+        WRITE_ALL_LED_OFF(0x78),
+        WRITE_WALKING_LED (0x79),
+        CHANGE_WRITE_DELAY (0x7a);
+        
         int bVal;
         
         Commands(int bVal) {
@@ -85,15 +91,37 @@ public class QwiicLED extends I2cDeviceSynchDevice<I2cDeviceSynchSimple> {
      * @param offset where in the array to start
      * @param length length to send (limited to 12)
      */
-    private void setLEDColorSegment(@ColorInt int[] colors, int offset, int length) {
+    public void setLEDColorSegment(@ColorInt int[] colors, int offset, int length) {
         int[] redArray = new int[length];
         int[] greenArray = new int[length];
         int[] blueArray = new int[length];
         
-        for (int i = 0; i < colors.length; i++) {
+        for (int i = 0; i < length; i++) {
             redArray[i] = Color.red(colors[i + offset]);
             greenArray[i] = Color.green(colors[i + offset]);
             blueArray[i] = Color.blue(colors[i + offset]);
+        }
+        sendSegment(Commands.WRITE_RED_ARRAY, redArray, offset, length);
+        sendSegment(Commands.WRITE_GREEN_ARRAY, greenArray, offset, length);
+        sendSegment(Commands.WRITE_BLUE_ARRAY, blueArray, offset, length);
+    }
+    
+    /**
+     * Change the color of an LED color segment
+     *
+     * @param color what the colors should be
+     * @param offset where in the array to start
+     * @param length length to send (limited to 12)
+     */
+    public void setLEDColorSegment(@ColorInt int color, int offset, int length) {
+        int[] redArray = new int[length];
+        int[] greenArray = new int[length];
+        int[] blueArray = new int[length];
+        
+        for (int i = 0; i < length; i++) {
+            redArray[i] = Color.red(color);
+            greenArray[i] = Color.green(color);
+            blueArray[i] = Color.blue(color);
         }
         sendSegment(Commands.WRITE_RED_ARRAY, redArray, offset, length);
         sendSegment(Commands.WRITE_GREEN_ARRAY, greenArray, offset, length);
@@ -114,6 +142,26 @@ public class QwiicLED extends I2cDeviceSynchDevice<I2cDeviceSynchSimple> {
             setLEDColorSegment(colors, i * 12, 12);
         }
         setLEDColorSegment(colors, numSegments * 12, numInLastSegment);
+    }
+    
+    /**
+     * Shifts colors over once and inserts a new color
+     *
+     * @param color array of colors to set lights to
+     * @param offset where in LED strip the walking lights should start
+     * @param length length to shift over
+     * @param direction the direction to shift colors (true = forwards)
+     */
+    public void setWalkingColor(@ColorInt int color, int brightness, int offset, int length, boolean direction) {
+        byte[] data = new byte[7];
+        data[0] = (byte) length;
+        data[1] = (byte) offset;
+        data[2] = (byte) (direction ? 1 : 0);
+        data[3] = (byte) Color.red(color);
+        data[4] = (byte) Color.green(color);
+        data[5] = (byte) Color.blue(color);
+        data[6] = (byte) brightness;
+        writeI2C(Commands.WRITE_WALKING_LED, data);
     }
     
     /**
@@ -156,6 +204,17 @@ public class QwiicLED extends I2cDeviceSynchDevice<I2cDeviceSynchSimple> {
         byte[] data = new byte[1];
         data[0] = (byte) newLength;
         writeI2C(Commands.CHANGE_LED_LENGTH, data);
+    }
+    
+    /**
+     * Change the delay after receiving i2c data when the Qwiic writes to the LEDs
+     *
+     * @param delay 1 to 255 (in tenths of a millisecond)
+     */
+    public void changeWriteDelay(int delay) {
+        byte[] data = new byte[1];
+        data[0] = (byte) delay;
+        writeI2C(Commands.CHANGE_WRITE_DELAY, data);
     }
     
     private void writeI2C(Commands cmd, byte[] data) {

@@ -2,10 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.Range;
-
-import org.opencv.core.Mat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,9 +29,9 @@ public class MecanumWheelDriverV2 implements Runnable{
     boolean emptyMaintainList = false;
     
     final long TIMEOUT = 5000;
-    final double DISTANCE_MULTIPLIER_LOWER = 1.26;
-    final double DISTANCE_MULTIPLIER_UPPER = 1.538;
-    final int MOVEMENT_TOLERANCE = 20;
+    final double DISTANCE_MULTIPLIER_FORWARDS = 1.3;
+    final double DISTANCE_MULTIPLIER_SIDEWAYS = 1.573;
+    final int MOVEMENT_TOLERANCE = 5;
     final double ROTATE_TOLERANCE = 1.5;
     
     MecanumWheelDriverV2(RobotHardware H) {
@@ -48,7 +46,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     
             // run maintain actions
             for (ActionData action : maintainList) {
-                Log.d(TAG, "action: " + action.action);
+                //Log.d(TAG, "action: " + action.action);
                 ActionMaintain(action);
         
                 // remove action if it has timed out
@@ -144,7 +142,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         for (int i = 0; i <= 3; i ++) {
         
             // assign all of the power values to the motors
-            H.driveMotor[i].setPower(powerFollow(H.driveMotor[i].getPower(), wheelPower[i]));
+            H.driveMotor[i].setPower(wheelPower[i]); // setPower(wheelPower[i]);
             
         }
     }
@@ -189,9 +187,9 @@ public class MecanumWheelDriverV2 implements Runnable{
         for (int i = 0; i < 4; i++) {
             H.driveMotor[i].setPower(0);
             if (use) {
-                H.driveMotor[i].setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                H.driveMotor[i].setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
             } else {
-                H.driveMotor[i].setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                H.driveMotor[i].setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             }
         }
         
@@ -208,7 +206,7 @@ public class MecanumWheelDriverV2 implements Runnable{
             //Log.d(TAG, "MotorPos 0: " + H.driveMotor[0].getCurrentPosition() + " 1: " + H.driveMotor[1].getCurrentPosition() + " 2: " + H.driveMotor[2].getCurrentPosition() + " 3: " + H.driveMotor[3].getCurrentPosition());
         }
         if (H.opMode.isStopRequested()) {
-            for (DcMotor motor : H.driveMotor) {
+            for (DcMotorEx motor : H.driveMotor) {
                 motor.setTargetPosition(motor.getCurrentPosition());
                 motor.setPower(0);
             }
@@ -216,7 +214,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         
         for (int i = 0; i < 4; i++) {
     
-            H.driveMotor[i].setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            H.driveMotor[i].setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             H.driveMotor[i].setPower(0);
             
         }
@@ -363,7 +361,6 @@ public class MecanumWheelDriverV2 implements Runnable{
         // assign variables
         
         // increase distance when moving sideways to counter mecanum wheel inconsistencies
-        double distanceMultiplier = (DISTANCE_MULTIPLIER_LOWER - DISTANCE_MULTIPLIER_UPPER)*(Math.abs(Math.abs(action.param[0]/90) - 1)) + DISTANCE_MULTIPLIER_UPPER;
         double angle;
         // if user wants angle move remove heading correction from move angle
         if (action.param[3] == 1) {
@@ -371,6 +368,8 @@ public class MecanumWheelDriverV2 implements Runnable{
         } else {
             angle = Math.toRadians(action.param[0] + 45 - H.heading);
         }
+        double distanceMultiplier = (DISTANCE_MULTIPLIER_SIDEWAYS - DISTANCE_MULTIPLIER_FORWARDS)*(Math.abs(Math.sin(angle - Math.PI/4))) + DISTANCE_MULTIPLIER_FORWARDS;
+        Log.d(TAG,"distance Multiplier" + distanceMultiplier);
         double cosAngle = Math.cos(angle);
         double sinAngle = Math.sin(angle);
         double power = Range.clip(action.param[2], 0, 1);
@@ -434,7 +433,18 @@ public class MecanumWheelDriverV2 implements Runnable{
     }
     
     private void StrafePointMovePXY(ActionData action) {
+        
+        double deltaX = action.param[1] - RobotTracker.output[0];
+        double deltaY = action.param[2] - RobotTracker.output[1];
     
+        Log.d("auto: ", "deltaX: " + deltaX + ", deltaY: " + deltaY);
+    
+        double moveAngle = Math.toDegrees(Math.atan2(deltaY, deltaX)) - 90;
+        double moveDistance = Math.hypot(deltaX, deltaY);
+        
+        Log.d("auto: ", "angle: " + moveAngle + ", hypot: " + moveDistance);
+    
+        StrafeDistanceMove(moveAngle,moveDistance,action.param[0],1);
     }
     
     private void RotatePointMovePXY(ActionData action) {
@@ -523,20 +533,20 @@ public class MecanumWheelDriverV2 implements Runnable{
         } else {
             angle = Math.toRadians(action.param[0] + 45 - H.heading);
         }
-        Log.d(TAG, "angle: " + angle);
+        //Log.d(TAG, "angle: " + angle);
         // increase distance when moving sideways to counter mecanum wheel inconsistencies
-        double distanceMultiplier = (DISTANCE_MULTIPLIER_LOWER - DISTANCE_MULTIPLIER_UPPER)*(Math.abs(Math.abs(angle/90) - 1)) + DISTANCE_MULTIPLIER_UPPER;
+        double distanceMultiplier = (DISTANCE_MULTIPLIER_SIDEWAYS - DISTANCE_MULTIPLIER_FORWARDS)*(Math.abs(Math.sin(angle - Math.PI/4))) + DISTANCE_MULTIPLIER_FORWARDS;
         double cosAngle = Math.cos(angle);
         double sinAngle = Math.sin(angle);
         double power = Range.clip(action.param[2], 0, 1);
-        Log.d(TAG, "power: " + power);
+        //Log.d(TAG, "power: " + power);
         
         int cosDistance = (int)(cosAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
         int sinDistance = (int)(sinAngle * action.param[1] * distanceMultiplier * H.COUNTS_PER_INCH);
     
-        Log.d(TAG, "cosDis: " + cosDistance);
-        Log.d(TAG, "sinDis: " + sinDistance);
-        Log.d(TAG, "wheelTarget1: " + action.wheelTarget[0]);
+        //Log.d(TAG, "cosDis: " + cosDistance);
+        //Log.d(TAG, "sinDis: " + sinDistance);
+        //Log.d(TAG, "wheelTarget1: " + action.wheelTarget[0]);
         
         // Thrown together fix for movement problem
         if (Math.abs(action.wheelTarget[0]) > 10000) {
@@ -548,8 +558,8 @@ public class MecanumWheelDriverV2 implements Runnable{
         action.wheelTarget[1] *= (double)sinDistance / (double)action.initialWheelTarget[1];
         action.wheelTarget[2] *= (double)sinDistance / (double)action.initialWheelTarget[2];
         action.wheelTarget[3] *= (double)cosDistance / (double)action.initialWheelTarget[3];
-        Log.d(TAG, "initWheelTarget: " + action.initialWheelTarget[0]);
-        Log.d(TAG, "wheelTarget2: " + action.wheelTarget[0]);
+        //Log.d(TAG, "initWheelTarget: " + action.initialWheelTarget[0]);
+        //Log.d(TAG, "wheelTarget2: " + action.wheelTarget[0]);
         
         // assign the updated initial distances to the action
         action.initialWheelTarget[0] = cosDistance;
@@ -582,7 +592,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         action.wheelPower[2] = sinAngle * power;
         action.wheelPower[3] = cosAngle * power;
     
-        Log.d(TAG, "power1: " + action.wheelPower[0]);
+        //Log.d(TAG, "power1: " + action.wheelPower[0]);
         
         // ramp down power when near destination
         double totalPower = 0;
@@ -592,7 +602,7 @@ public class MecanumWheelDriverV2 implements Runnable{
         for (int i = 0; i < 4; i++) {
             action.wheelPower[i] = Math.signum(action.wheelTarget[i]) * Math.signum(action.initialWheelTarget[i]) * Math.signum(action.wheelPower[i]) * Range.clip(4/totalPower * adaptivePowerRamping(Math.abs(action.wheelTarget[i]/H.COUNTS_PER_INCH), action.wheelPower[i], action.initialWheelTarget[i]/H.COUNTS_PER_INCH), H.MINIMUM_MOTOR_POWER , Math.abs(action.wheelPower[i]));
         }
-        Log.d(TAG, "power2: " + action.wheelPower[0]);
+        //Log.d(TAG, "power2: " + action.wheelPower[0]);
         //Log.d(TAG, "power" + action.wheelPower[0]);
         
     }
@@ -689,9 +699,20 @@ public class MecanumWheelDriverV2 implements Runnable{
     
         // don't execute action and return false if the current actions are a higher priority
         if (isLowPriority(priority)) return false;
+        
+        double deltaX = x - RobotTracker.output[0];
+        double deltaY = y - RobotTracker.output[1];
+    
+        Log.d("auto: ", "deltaX: " + deltaX + ", deltaY: " + deltaY);
+    
+        double angle = Math.toDegrees(Math.atan2(deltaY, deltaX)) - 90;
+        double distance = Math.hypot(deltaX, deltaY);
+    
+        Log.d("auto: ", "angle: " + angle + ", hypot: " + distance);
     
         // add the action to the action list
-        initializationList.add(new ActionData(Actions.StrafePointMovePXY, new double[]{power, x, y}, H.runtime.time(TimeUnit.MILLISECONDS)));
+        initializationList.add(new ActionData(Actions.StrafeDistanceMoveHDP, new double[]{angle, distance, power, 1}, H.runtime.time(TimeUnit.MILLISECONDS)));
+        //initializationList.add(new ActionData(Actions.StrafePointMovePXY, new double[]{power, x, y}, H.runtime.time(TimeUnit.MILLISECONDS)));
         return true; // action was added to list
         
     }
@@ -762,14 +783,6 @@ public class MecanumWheelDriverV2 implements Runnable{
         initializationList.add(new ActionData(Actions.PowerRotateP, new double[]{power}, H.runtime.time(TimeUnit.MILLISECONDS)));
         return true; // action was added to list
     
-    }
-    
-    double powerFollow(double currentPower, double goalPower) {
-        if (Math.abs(goalPower - currentPower) >= H.POWER_FOLLOW_INCREMENT) {
-            return currentPower + Math.signum(goalPower - currentPower) * H.POWER_FOLLOW_INCREMENT;
-        } else {
-            return goalPower;
-        }
     }
     
 }

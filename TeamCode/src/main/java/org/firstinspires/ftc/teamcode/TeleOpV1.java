@@ -21,7 +21,7 @@ public class TeleOpV1 extends LinearOpMode {
     // 0 = compass, 1 = angle lock, 2 = constrain lift, 3 = claw toggle
     
     boolean calibrated = false;
-    int liftPos = 0;
+    //int liftPos = 0;
     int liftZero = 0;
     int liftStart = 0;
     final int LIFT_MAX = 380;
@@ -37,16 +37,19 @@ public class TeleOpV1 extends LinearOpMode {
         
         MecanumWheelDriverV2 drive = new MecanumWheelDriverV2(H);
         ElapsedTime runtime = new ElapsedTime();
-        ExecutorService pool = Executors.newFixedThreadPool(3);
-        //RobotTracker tracker = new RobotTracker(H, this);
-        //H.setXYEncoderEnable(true);
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        H.setXYEncoderEnable(true);
         H.init(hardwareMap, this);
+        //H.tracker.setInitialPosition(108,6);
         pool.execute(H);
+        //pool.execute(tracker);
         ////////////////////////////// Init Variables //////////////////////////////
         
+        long loopStart = 0;
+        long loopTime;
         
-        double y;
-        double x;
+        double y = 0;
+        double x = 0;
         double rotate = 0;
         double rotateScaled = 0;
         double radius = 0;
@@ -63,31 +66,38 @@ public class TeleOpV1 extends LinearOpMode {
         double agl_frwd = 0;
         double heading = 0;
         
+        H.LEDMode = 0;
+        
         waitForStart();
         runtime.reset();
+    
+        H.LED.turnAllOff();
+        H.LEDMode = 2;
         
         //pool.execute(tracker);
         
         while (opModeIsActive()) {
     
             ////////////////////////////// Set Variables //////////////////////////////
+            loopTime = runtime.time(TimeUnit.MILLISECONDS) - loopStart;
+            loopStart = runtime.time(TimeUnit.MILLISECONDS);
     
-            y = gamepad1.left_stick_y;
-            x = -gamepad1.left_stick_x;
+            y = powerFollow(y, gamepad1.left_stick_y, (double) loopTime / 1000);
+            x = powerFollow(x, -gamepad1.left_stick_x, (double) loopTime / 1000);
     
             //rotate += powerFollow(rotate, exponentialScaling(Range.clip(gamepad1.right_stick_x, -1, 1)));
             rotate = exponentialScaling(Range.clip(gamepad1.right_stick_x, -1, 1));
-            radius = exponentialScaling(Range.clip(Math.hypot(x, y), 0, 1));
-            //power += powerFollow(power, radius);
-            power = radius;
-            if (radius > 0.05) angle = Math.toDegrees(Math.atan2(y, x)) + 90 + agl_frwd - heading;
-            //drive.StrafePowerMove(angle, power*0.6 + (gamepad1.right_trigger*0.4), 1);
-            //rotateScaled = rotate * 0.6 + gamepad1.right_trigger*0.4;
+            power = exponentialScaling(Range.clip(Math.hypot(x, y), 0, 1));
+            if (gamepad1.left_bumper) {
+                rotate /= 2;
+                power /= 2;
+            }
+            
+            if (power > 0.05) angle = Math.toDegrees(Math.atan2(y, x)) + 90 + agl_frwd - heading;
             drive.StrafePowerMove(angle, power, 1);
-            rotateScaled = rotate;
             
             if (Math.abs(rotate) < 0.05) {
-                if (lastTurnTime + 350 < runtime.now(TimeUnit.MILLISECONDS)) {
+                if (lastTurnTime + 350 < runtime.time(TimeUnit.MILLISECONDS)) {
                     if (toggle[1] && Math.abs(drive.findDegOffset(H.heading, headingLock)) > 1.5) {
                         if (allowStartHeadingLock) {
                             drive.HeadingRotate(headingLock, 0.15, 1);
@@ -100,9 +110,9 @@ public class TeleOpV1 extends LinearOpMode {
                     headingLock = H.heading;
                 }
             } else {
-                lastTurnTime = runtime.now(TimeUnit.MILLISECONDS);
+                lastTurnTime = runtime.time(TimeUnit.MILLISECONDS);
                 headingLock = H.heading;
-                drive.PowerRotate(rotateScaled, 1);
+                drive.PowerRotate(rotate, 1);
             }
     
             drive.startActions();
@@ -131,24 +141,34 @@ public class TeleOpV1 extends LinearOpMode {
             toggleButton(gamepad1.b, 2);
             toggleButton(gamepad1.a || gamepad1.x || gamepad1.right_bumper || gamepad2.a || gamepad2.right_bumper || gamepad2.x, 3);
             
-            if (toggle[3]) {
-                H.clawServo.setPosition(0.64);
-            } else {
-                H.clawServo.setPosition(0.47);
-            }
+            H.setGrabber(toggle[3]);
+//            if (toggle[3]) { // open
+//                H.clawServo.setPosition(H.GRABBER_SERVO_OPEN);
+//            } else { // closed
+//                H.clawServo.setPosition(H.GRABBER_SERVO_CLOSED);
+//            }
             
             if (gamepad1.start) {
                 agl_frwd = heading;
             }
+            
+            if (gamepad1.dpad_down) {
+                H.LEDEnable = false;
+            } else if (gamepad1.dpad_up) {
+                H.LEDEnable = true;
+            }
     
-            /*telemetry.addData("heading", H.heading);
-            telemetry.addData("heading lock", drive.findDegOffset(H.heading, headingLock));
+            telemetry.addData("heading", H.heading);
+            //telemetry.addData("heading lock", drive.findDegOffset(H.heading, headingLock));
             telemetry.addData("claw", H.clawServo.getPosition());
-            telemetry.addData("wheel FL", H.driveMotor[0].getCurrentPosition());
-            telemetry.addData("wheel FR", H.driveMotor[1].getCurrentPosition());
-            telemetry.addData("wheel RL", H.driveMotor[2].getCurrentPosition());
-            telemetry.addData("wheel RR", H.driveMotor[3].getCurrentPosition());
-            telemetry.update();*/
+            telemetry.addData("pos","x: (%2f), y: (%2f)", RobotTracker.output[0], RobotTracker.output[1]);
+            telemetry.addData("MB","0: (%2f), 1: (%2f), 2: (%2f), 3: (%2f)", H.range[0], H.range[1], H.range[2], H.range[3]);
+            telemetry.addData("UP","right: (%2f), forward: (%2f), left: (%2f), back: (%2f)", H.tracker.ultrasonicPosition[0], H.tracker.ultrasonicPosition[1], H.tracker.ultrasonicPosition[2], H.tracker.ultrasonicPosition[3]);
+            //telemetry.addData("wheel FL", H.driveMotor[0].getCurrentPosition());
+            //telemetry.addData("wheel FR", H.driveMotor[1].getCurrentPosition());
+            //telemetry.addData("wheel RL", H.driveMotor[2].getCurrentPosition());
+            //telemetry.addData("wheel RR", H.driveMotor[3].getCurrentPosition());
+            telemetry.update();
             
         }
         
@@ -161,12 +181,11 @@ public class TeleOpV1 extends LinearOpMode {
         double expUpPower = exponentialScaling(upPower);
         double expDownPower = exponentialScaling(downPower);
     
-        liftPos = H.liftMotor.getCurrentPosition() - liftZero;
-        //telemetry.addData("lift pos: ", liftPos);
+        telemetry.addData("lift pos: ", H.liftPos);
     
         if (Math.abs(downPower) < 0.05 && Math.abs(upPower) < 0.05) {
             H.liftMotor.setPower(0);
-            liftStart = liftPos;
+            //liftStart = liftPos;
             return;
         }
         /*if (toggle[2] && !H.liftStop.getState()) {
@@ -216,11 +235,16 @@ public class TeleOpV1 extends LinearOpMode {
         }
     }
     
-    double powerFollow(double currentPower, double goalPower) {
-        if (Math.abs(goalPower - currentPower) >= H.POWER_FOLLOW_INCREMENT) {
-            return Math.signum(goalPower - currentPower) * H.POWER_FOLLOW_INCREMENT;
+    double powerFollow(double currentPower, double goalPower, double deltaTime) {
+        final double maxAcceleration = ((1 - (double) H.liftPos/H.MAX_LIFT_POS) * (H.MAX_ACCELERATION_SHORT - H.MAX_ACCELERATION_TALL)) + H.MAX_ACCELERATION_TALL;
+        double deltaPower = maxAcceleration * deltaTime / H.MAX_VELOCITY;
+        
+        //telemetry.addData("max acceleration", maxAcceleration);
+        
+        if (Math.abs(goalPower - currentPower) >= deltaPower) {
+            return currentPower + Math.signum(goalPower - currentPower) * deltaPower;
         } else {
-            return goalPower - currentPower;
+            return goalPower;
         }
     }
     
