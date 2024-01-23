@@ -216,6 +216,7 @@ public class MecanumWheelDriverV2 implements Runnable{
     
             H.driveMotor[i].setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             H.driveMotor[i].setPower(0);
+
             
         }
     }
