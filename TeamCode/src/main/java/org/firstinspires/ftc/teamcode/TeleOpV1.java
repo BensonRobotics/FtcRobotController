@@ -96,8 +96,9 @@ public class TeleOpV1 extends LinearOpMode {
                 rotate /= 2;
                 power /= 2;
             }
-            
-            if (power > 0.05) angle = Math.toDegrees(Math.atan2(y, x)) - 90 + agl_frwd - heading;
+
+            // weird. even when adding offsets here and in gavin's code, it has no effect; pressing sideways makes it move forwards and backwards.
+            if (power > 0.05) angle = Math.toDegrees(Math.atan2(y, x)) + agl_frwd - heading;
             drive.StrafePowerMove(angle, power, 1);
             
             if (Math.abs(rotate) < 0.05) {
