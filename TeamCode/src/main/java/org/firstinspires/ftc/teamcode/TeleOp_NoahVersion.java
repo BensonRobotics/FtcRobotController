@@ -97,7 +97,12 @@ public class TeleOp_NoahVersion extends LinearOpMode {
                 power /= 2;
             }
 
+            if (power < 0.05) {
 
+            } else if (Math.abs(Math.toDegrees(Math.atan2(x, y))) < 45) {
+                // manually define motor directions
+
+            }
 
 //            if (power > 0.05) angle = Math.toDegrees(Math.atan2(y, x)) + 90 + agl_frwd - heading;
 //            drive.StrafePowerMove(angle, power, 1);

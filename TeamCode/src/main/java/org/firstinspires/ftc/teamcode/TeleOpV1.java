@@ -12,7 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-@TeleOp(name="2024-01-22", group="Linear Opmode")
+@TeleOp(name="2024-01-23", group="Linear Opmode")
 public class TeleOpV1 extends LinearOpMode {
     
     private boolean[] button = {false, false, false, false};
@@ -97,7 +97,7 @@ public class TeleOpV1 extends LinearOpMode {
                 power /= 2;
             }
             
-            if (power > 0.05) angle = Math.toDegrees(Math.atan2(y, x)) + 90 + agl_frwd - heading;
+            if (power > 0.05) angle = Math.toDegrees(Math.atan2(y, x)) - 90 + agl_frwd - heading;
             drive.StrafePowerMove(angle, power, 1);
             
             if (Math.abs(rotate) < 0.05) {
@@ -204,20 +204,7 @@ public class TeleOpV1 extends LinearOpMode {
             H.liftMotor.setPower(0);
             return;
         }
-        if (toggle[2]) {
-            H.liftMotor.setPower(expUpPower);
-            return;
-        }
-        
-        if (toggle[2]) {
-            H.liftMotor.setPower( -expDownPower);
-            return;
-        }
-        
-        if (toggle[2]) {
-            H.liftMotor.setPower(adaptivePowerRamping(LIFT_MAX - H.liftPos, expUpPower, LIFT_MAX - liftStart) - adaptivePowerRamping(LIFT_MIN - H.liftPos, expDownPower, LIFT_MIN - liftStart));
-            return;
-        }
+
         
         H.liftMotor.setPower(expUpPower - expDownPower);
     }
