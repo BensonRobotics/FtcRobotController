@@ -1,26 +1,26 @@
 package org.firstinspires.ftc.teamcode;
 
 public class Vector2 {
-    public float x;
-    public float y;
+    public double x;
+    public double y;
 
-    public Vector2(float x1, float y1) {
-        x = x1;
-        y = y1;
+    public Vector2(double x, double y) {
+        this.x = x;
+        this.y = y;
     }
 
     // rotate a vector about it's origin using an angle (double) in radians (copy pasted from stack overflow)
-    public Vector2 rotate(double angle) {
+    public Vector2 Rotate(double angle) {
 
-        float x1 = (float) (x * Math.cos(angle) - y * Math.sin(angle));
+        double x1 = (x * Math.cos(angle) - y * Math.sin(angle));
 
-        float y1 = (float) (x * Math.sin(angle) + y * Math.cos(angle));
+        double y1 = (x * Math.sin(angle) + y * Math.cos(angle));
 
         return new Vector2(x1, y1);
     }
 
     // return the magnitude of a Vector2 using the pythagorean theorem
-    public float magnitude() {
-        return (float) Math.sqrt((x * x) + ((y * y)));
+    public double Magnitude() {
+        return  Math.sqrt((x * x) + ((y * y)));
     }
 }
