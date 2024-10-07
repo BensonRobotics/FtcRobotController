@@ -90,10 +90,12 @@ public class TeleOP extends LinearOpMode {
     }
 
     private void moveRobotWithMotorPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
-        frontLeftDrive.setVelocity(frontLeft);
-        frontRightDrive.setVelocity(frontRight);
-        backLeftDrive.setVelocity(backLeft);
-        backRightDrive.setVelocity(backRight);
+        double TPS312 = (312/60) * 537.7;
+
+        frontLeftDrive.setVelocity(frontLeft * TPS312);
+        frontRightDrive.setVelocity(frontRight * TPS312);
+        backLeftDrive.setVelocity(backLeft * TPS312);
+        backRightDrive.setVelocity(backRight * TPS312);
     }
 
     // Update the robotAngleToField variable using the latest data from the gyro
