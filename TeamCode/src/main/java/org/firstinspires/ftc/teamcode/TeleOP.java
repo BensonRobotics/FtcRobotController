@@ -38,10 +38,10 @@ public class TeleOP extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        frontLeftDrive = hardwareMap.get(DcMotorEx.class, "left_drive");
-        frontRightDrive = hardwareMap.get(DcMotorEx.class, "right_drive");
-        backLeftDrive = hardwareMap.get(DcMotorEx.class, "left_drive");
-        backRightDrive = hardwareMap.get(DcMotorEx.class, "right_drive");
+        frontLeftDrive = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
+        frontRightDrive = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
+        backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
+        backRightDrive = hardwareMap.get(DcMotorEx.class, "backRightMotor");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -64,7 +64,7 @@ public class TeleOP extends LinearOpMode {
 
         // Define the mounting direction of the control hub
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+        RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
 
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 
