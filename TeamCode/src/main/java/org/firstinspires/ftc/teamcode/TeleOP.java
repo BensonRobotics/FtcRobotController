@@ -69,7 +69,7 @@ public class TeleOP extends LinearOpMode {
         /* Orientation Variables */
         double robotAngleToField = 0;
 
-        // Define the mounting direction of the control hub
+        // Defines the mounting direction of the control hub
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
 
