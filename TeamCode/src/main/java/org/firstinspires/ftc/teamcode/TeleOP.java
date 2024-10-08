@@ -2,7 +2,9 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -46,10 +48,15 @@ public class TeleOP extends LinearOpMode {
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
-        frontLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
-        frontRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
-        backLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
-        backRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
+        frontLeftDrive.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotorSimple.Direction.FORWARD);
+        backLeftDrive.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRightDrive.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // Get needed gamepad joystick values
         double leftStickY = scaleStickValue(-gamepad1.left_stick_y);  // Note: pushing stick forward gives negative value
@@ -90,7 +97,7 @@ public class TeleOP extends LinearOpMode {
     }
 
     private void moveRobotWithMotorPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
-        double TPS312 = (312/60) * 537.7;
+        double TPS312 = (312.0/60.0) * 537.7;
 
         frontLeftDrive.setVelocity(frontLeft * TPS312);
         frontRightDrive.setVelocity(frontRight * TPS312);
