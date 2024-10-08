@@ -90,7 +90,7 @@ public class TeleOP extends LinearOpMode {
     }
 
     private void moveRobotWithMotorPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
-        double TPS312 = (312/60) * 537.7;
+        double TPS312 = (312.0/60.0) * 537.7;
 
         frontLeftDrive.setVelocity(frontLeft * TPS312);
         frontRightDrive.setVelocity(frontRight * TPS312);
