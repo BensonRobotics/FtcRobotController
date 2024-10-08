@@ -108,9 +108,8 @@ public class TeleOP extends LinearOpMode {
     // Update the robotAngleToField variable using the latest data from the gyro
     public double updateRobotAngleToField(IMU imu) {
         // If the driver presses the reset orientation button, reset the Z axis on the IMU
-        //I would set the gamepad button to something harder to hit, like the option button. Delete this comment when fixed
-        //Oh hey, I found a gamepad map from GM0, I'll post it in programming-general
-        if (gamepad1.y) {
+        //Used back button instead as reset
+        if (gamepad1.back) {
             telemetry.addData("Yaw", "Resetting\n");
             imu.resetYaw();
         }
