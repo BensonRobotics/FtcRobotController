@@ -25,10 +25,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 public class TeleOP extends LinearOpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotorEx frontLeftDrive = null;
-    private DcMotorEx frontRightDrive = null;
-    private DcMotorEx backLeftDrive = null;
-    private DcMotorEx backRightDrive = null;
+    private DcMotorEx frontLeftMotor = null;
+    private DcMotorEx frontRightMotor = null;
+    private DcMotorEx backLeftMotor = null;
+    private DcMotorEx backRightMotor = null;
 
     // IMU sensor object
     IMU imu;
@@ -40,23 +40,23 @@ public class TeleOP extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        frontLeftDrive = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
-        frontRightDrive = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
-        backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
-        backRightDrive = hardwareMap.get(DcMotorEx.class, "backRightMotor");
+        frontLeftMotor = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
+        frontRightMotor = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
+        backLeftMotor = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
+        backRightMotor = hardwareMap.get(DcMotorEx.class, "backRightMotor");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
-        frontLeftDrive.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontRightDrive.setDirection(DcMotorSimple.Direction.FORWARD);
-        backLeftDrive.setDirection(DcMotorSimple.Direction.REVERSE);
-        backRightDrive.setDirection(DcMotorSimple.Direction.FORWARD);
+        frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // Get needed gamepad joystick values
         double leftStickY = scaleStickValue(-gamepad1.left_stick_y);  // Note: pushing stick forward gives negative value
@@ -99,10 +99,10 @@ public class TeleOP extends LinearOpMode {
     private void moveRobotWithMotorPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
         double TPS312 = (312.0/60.0) * 537.7;
     //This is the stupidest way to do this, on my part
-        frontLeftDrive.setVelocity(frontLeft * TPS312);
-        frontRightDrive.setVelocity(frontRight * TPS312);
-        backLeftDrive.setVelocity(backLeft * TPS312);
-        backRightDrive.setVelocity(backRight * TPS312);
+        frontLeftMotor.setVelocity(frontLeft * TPS312);
+        frontRightMotor.setVelocity(frontRight * TPS312);
+        backLeftMotor.setVelocity(backLeft * TPS312);
+        backRightMotor.setVelocity(backRight * TPS312);
     }
 
     // Update the robotAngleToField variable using the latest data from the gyro
