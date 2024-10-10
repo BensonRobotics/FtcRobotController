@@ -141,9 +141,10 @@ public class openCV extends LinearOpMode {
         }
     }
 
-    class SampleDetectionPipeline extends OpenCvPipeline
-    {
+    class SampleDetectionPipeline extends OpenCvPipeline {
         boolean viewportPaused;
+
+        public Vector2 lastResult = new Vector2(0, 0);
 
         /*
          * NOTE: if you wish to use additional Mat objects in your processing pipeline, it is
@@ -178,12 +179,13 @@ public class openCV extends LinearOpMode {
                             input.rows()*(3f/4f)),
                     new Scalar(0, 255, 0), 4);
 
+
+
             /**
              * NOTE: to see how to get data from your pipeline to your OpMode as well as how
              * to change which stage of the pipeline is rendered to the viewport when it is
              * tapped, please see {@link PipelineStageSwitchingExample}
              */
-
             return input;
         }
 
@@ -212,6 +214,10 @@ public class openCV extends LinearOpMode {
             {
                 webcam.resumeViewport();
             }
+        }
+
+        public Vector2 getLatestResult() {
+            return lastResult;
         }
     }
 }

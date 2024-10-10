@@ -21,6 +21,6 @@ public class Vector2 {
 
     // return the magnitude of a Vector2 using the pythagorean theorem
     public double Magnitude() {
-        return  Math.sqrt((x * x) + ((y * y)));
+        return  Math.hypot(x, y);
     }
 }

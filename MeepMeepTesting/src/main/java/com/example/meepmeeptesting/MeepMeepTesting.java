@@ -32,3 +32,5 @@ public class MeepMeepTesting {
                 .start();
     }
 }
+
+class MeepMeep() extends Linear

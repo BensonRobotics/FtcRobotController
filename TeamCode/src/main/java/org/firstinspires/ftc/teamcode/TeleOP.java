@@ -2,9 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -25,10 +23,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 public class TeleOP extends LinearOpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotorEx frontLeftMotor = null;
-    private DcMotorEx frontRightMotor = null;
-    private DcMotorEx backLeftMotor = null;
-    private DcMotorEx backRightMotor = null;
+    private DcMotorEx frontLeftDrive = null;
+    private DcMotorEx frontRightDrive = null;
+    private DcMotorEx backLeftDrive = null;
+    private DcMotorEx backRightDrive = null;
 
     // IMU sensor object
     IMU imu;
@@ -40,36 +38,23 @@ public class TeleOP extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        frontLeftMotor = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
-        frontRightMotor = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
-        backLeftMotor = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
-        backRightMotor = hardwareMap.get(DcMotorEx.class, "backRightMotor");
+        frontLeftDrive = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
+        frontRightDrive = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
+        backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
+        backRightDrive = hardwareMap.get(DcMotorEx.class, "backRightMotor");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
-        frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        backRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-
-        frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        // Get needed gamepad joystick values
-        double leftStickY = scaleStickValue(-gamepad1.left_stick_y);  // Note: pushing stick forward gives negative value
-        double leftStickX =  scaleStickValue(gamepad1.left_stick_x);
-        double rightStickY =  scaleStickValue(-gamepad1.right_stick_y);  // Note: pushing stick forward gives negative value
-        double rightStickX =  scaleStickValue(gamepad1.right_stick_x);
-
-        Vector2 velocity = new Vector2(leftStickX, leftStickY);
+        frontLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
+        backLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
+        backRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
 
         /* Orientation Variables */
         double robotAngleToField = 0;
 
-        // Defines the mounting direction of the control hub
+        // Define the mounting direction of the control hub
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
 
@@ -88,6 +73,14 @@ public class TeleOP extends LinearOpMode {
 
         // Run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            // Get needed gamepad joystick values
+            double leftStickY = scaleStickValue(-gamepad1.left_stick_y);  // Note: pushing stick forward gives negative value
+            double leftStickX =  scaleStickValue(gamepad1.left_stick_x);
+            double rightStickY =  scaleStickValue(-gamepad1.right_stick_y);  // Note: pushing stick forward gives negative value
+            double rightStickX =  scaleStickValue(gamepad1.right_stick_x);
+
+            Vector2 velocity = new Vector2(leftStickX, leftStickY);
+
             // Take an input vector from the joysticks and use it to move. Exponential scaling will need to be applied for better control.
             moveWithFieldRelativeVector(velocity, robotAngleToField, rightStickX);
 
@@ -98,18 +91,17 @@ public class TeleOP extends LinearOpMode {
 
     private void moveRobotWithMotorPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
         double TPS312 = (312.0/60.0) * 537.7;
-    //This is the stupidest way to do this, on my part
-        frontLeftMotor.setVelocity(frontLeft * TPS312);
-        frontRightMotor.setVelocity(frontRight * TPS312);
-        backLeftMotor.setVelocity(backLeft * TPS312);
-        backRightMotor.setVelocity(backRight * TPS312);
+
+        frontLeftDrive.setVelocity(frontLeft * TPS312);
+        frontRightDrive.setVelocity(frontRight * TPS312);
+        backLeftDrive.setVelocity(backLeft * TPS312);
+        backRightDrive.setVelocity(backRight * TPS312);
     }
 
     // Update the robotAngleToField variable using the latest data from the gyro
     public double updateRobotAngleToField(IMU imu) {
         // If the driver presses the reset orientation button, reset the Z axis on the IMU
-        //Used back button instead as reset
-        if (gamepad1.back) {
+        if (gamepad1.y) {
             telemetry.addData("Yaw", "Resetting\n");
             imu.resetYaw();
         }
@@ -128,25 +120,31 @@ public class TeleOP extends LinearOpMode {
 
     // Move the robot using a Vector2 representing velocity as an input (relative to robot)
     private void MoveWithVector(Vector2 velocity, double rotation) {
-        // This copy pasted code from Gavin's tutorial video uses trig to figure out the individual motor values that will combine to a desired velocity vector.
+        // This (almost) copy pasted code from Gavin's tutorial video uses trig to figure out the individual motor values that will combine to a desired velocity vector.
         // It rotates the vector by -45°, which results in its components (the legs of the triangle) being oriented at right angles to the robot.
         // Then, it divides each of the components by the max of the two components to gain more speed in certain directions,
         // and multiplies these x and y components by the magnitude of the desired vector.
         // The if statement at the bottom just reduces the magnitude of the vector a little if one of the motor values exceeds the limit of 1
 
-        double xComponent = Math.cos(Math.atan2(velocity.y, velocity.x) - Math.PI / 4);
-        double yComponent = Math.sin(Math.atan2(velocity.y, velocity.x) - Math.PI / 4);
-        double max = Math.max(Math.abs(xComponent), Math.abs(yComponent));
+        if (velocity != new Vector2(0, 0) || rotation != 0) {
+            double xComponent = velocity.Magnitude() * Math.cos(Math.atan2(velocity.y, velocity.x) - Math.PI / 4);
+            double yComponent = velocity.Magnitude() * Math.sin(Math.atan2(velocity.y, velocity.x) - Math.PI / 4);
+            double max = Math.max(Math.abs(xComponent), Math.abs(yComponent));
 
-        double xMotorVelocity = xComponent/max * velocity.Magnitude() + rotation;
-        double yMotorVelocity = yComponent/max * velocity.Magnitude() - rotation;
+            double frontLeftMotorVelocity = xComponent/max + rotation;
+            double frontRightMotorVelocity = yComponent/max - rotation;
+            double backLeftMotorVelocity = yComponent/max + rotation;
+            double backRightMotorVelocity = xComponent/max - rotation;
 
-        if ((velocity.Magnitude() + Math.abs(rotation) > 1)) {
-            xMotorVelocity /= velocity.Magnitude() + rotation;
-            yMotorVelocity /= velocity.Magnitude() + rotation;
+            if ((velocity.Magnitude() + Math.abs(rotation) > 1)) {
+                frontLeftMotorVelocity /= velocity.Magnitude() + rotation;
+                frontRightMotorVelocity /= velocity.Magnitude() + rotation;
+                backLeftMotorVelocity /= velocity.Magnitude() + rotation;
+                backRightMotorVelocity /= velocity.Magnitude() + rotation;
+            }
+
+            moveRobotWithMotorPowers(frontLeftMotorVelocity, frontRightMotorVelocity, backLeftMotorVelocity, backRightMotorVelocity);
         }
-
-        moveRobotWithMotorPowers(xMotorVelocity, yMotorVelocity, yMotorVelocity, xMotorVelocity);
     }
 
     private double scaleStickValue(double stickValue) {
