@@ -23,4 +23,8 @@ public class Vector2 {
     public double Magnitude() {
         return  Math.hypot(x, y);
     }
+
+    public String Value() {
+        return ("(" + x + " " + y + ")");
+    }
 }

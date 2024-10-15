@@ -17,6 +17,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Quaternion;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
+import java.util.Objects;
+
 //This is a test from Desmond of the Github, Git, and Android Studio syncing
 
 @TeleOp(name="Basic: Linear OpMode", group="Linear OpMode")
@@ -79,17 +81,23 @@ public class TeleOP extends LinearOpMode {
             double rightStickY =  scaleStickValue(-gamepad1.right_stick_y);  // Note: pushing stick forward gives negative value
             double rightStickX =  scaleStickValue(gamepad1.right_stick_x);
 
-            Vector2 velocity = new Vector2(leftStickX, leftStickY);
+            Vector2 velocity = new Vector2(gamepad1.left_stick_x, -gamepad1.left_stick_y);
+
+            double rotation = rightStickX;
+
+            telemetry.addData("velocity:", (velocity.Value()));
+            updateTelemetry(telemetry);
 
             // Take an input vector from the joysticks and use it to move. Exponential scaling will need to be applied for better control.
-            moveWithFieldRelativeVector(velocity, robotAngleToField, rightStickX);
+            //MoveWithFieldRelativeVector(velocity, robotAngleToField, rightStickX);
+            MoveWithVector(velocity, rotation);
 
-            robotAngleToField = updateRobotAngleToField(imu);
+            robotAngleToField = UpdateRobotAngleToField(imu);
         }
 
     }
 
-    private void moveRobotWithMotorPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
+    private void MoveRobotWithMotorPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
         double TPS312 = (312.0/60.0) * 537.7;
 
         frontLeftDrive.setVelocity(frontLeft * TPS312);
@@ -99,7 +107,7 @@ public class TeleOP extends LinearOpMode {
     }
 
     // Update the robotAngleToField variable using the latest data from the gyro
-    public double updateRobotAngleToField(IMU imu) {
+    public double UpdateRobotAngleToField(IMU imu) {
         // If the driver presses the reset orientation button, reset the Z axis on the IMU
         if (gamepad1.y) {
             telemetry.addData("Yaw", "Resetting\n");
@@ -112,7 +120,7 @@ public class TeleOP extends LinearOpMode {
     }
 
     // Move the robot using a Vector2 representing velocity as an input (relative to robot)
-    private void moveWithFieldRelativeVector(Vector2 velocity, double robotAngleToField, double rotation) {
+    private void MoveWithFieldRelativeVector(Vector2 velocity, double robotAngleToField, double rotation) {
         Vector2 robotRelativeDirection = velocity.Rotate(robotAngleToField);
 
         MoveWithVector(robotRelativeDirection, rotation);
@@ -126,32 +134,34 @@ public class TeleOP extends LinearOpMode {
         // and multiplies these x and y components by the magnitude of the desired vector.
         // The if statement at the bottom just reduces the magnitude of the vector a little if one of the motor values exceeds the limit of 1
 
-        if (velocity != new Vector2(0, 0) || rotation != 0) {
-            double xComponent = velocity.Magnitude() * Math.cos(Math.atan2(velocity.y, velocity.x) - Math.PI / 4);
-            double yComponent = velocity.Magnitude() * Math.sin(Math.atan2(velocity.y, velocity.x) - Math.PI / 4);
-            double max = Math.max(Math.abs(xComponent), Math.abs(yComponent));
+        if (!Objects.equals(velocity, new Vector2(0, 0)) || rotation != 0) {
+            double sin = Math.sin(Math.atan2(velocity.y, velocity.x) - Math.PI / 4);
+            double cos = Math.cos(Math.atan2(velocity.y, velocity.x) - Math.PI / 4);
+            double xComponent = velocity.Magnitude() * cos;
+            double yComponent = velocity.Magnitude() * sin;
+            double max = Math.max(Math.abs(sin), Math.abs(cos));
 
             double frontLeftMotorVelocity = xComponent/max + rotation;
             double frontRightMotorVelocity = yComponent/max - rotation;
             double backLeftMotorVelocity = yComponent/max + rotation;
             double backRightMotorVelocity = xComponent/max - rotation;
 
-            if ((velocity.Magnitude() + Math.abs(rotation) > 1)) {
+            if ((velocity.Magnitude() + Math.abs(rotation)) > 1) {
                 frontLeftMotorVelocity /= velocity.Magnitude() + rotation;
                 frontRightMotorVelocity /= velocity.Magnitude() + rotation;
                 backLeftMotorVelocity /= velocity.Magnitude() + rotation;
                 backRightMotorVelocity /= velocity.Magnitude() + rotation;
             }
 
-            moveRobotWithMotorPowers(frontLeftMotorVelocity, frontRightMotorVelocity, backLeftMotorVelocity, backRightMotorVelocity);
+            MoveRobotWithMotorPowers(frontLeftMotorVelocity, frontRightMotorVelocity, backLeftMotorVelocity, backRightMotorVelocity);
         }
     }
 
     private double scaleStickValue(double stickValue) {
         if (stickValue < 0) {
-            stickValue = -nonlinearInterpolate(0, 1, -stickValue, "quadratic");
+            stickValue = -nonlinearInterpolate(0, 1, -stickValue, "cubic");
         } else {
-            stickValue = nonlinearInterpolate(0, 1, stickValue, "quadratic");
+            stickValue = nonlinearInterpolate(0, 1, stickValue, "cubic");
         }
         return stickValue;
     }
