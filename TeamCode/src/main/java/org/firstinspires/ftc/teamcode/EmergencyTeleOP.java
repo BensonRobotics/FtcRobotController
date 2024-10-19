@@ -8,11 +8,19 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 @TeleOp
 public class EmergencyTeleOP extends LinearOpMode {
+
+    public static final double NEW_P = 2.5;
+    public static final double NEW_I = 0.1;
+    public static final double NEW_D = 0.2;
+    public static final double NEW_F = 0.5;
+
     @Override
     public void runOpMode() throws InterruptedException {
+
         DcMotorEx frontLeftMotor;
         DcMotorEx frontRightMotor;
         DcMotorEx backLeftMotor;
@@ -39,6 +47,13 @@ public class EmergencyTeleOP extends LinearOpMode {
                 RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
+
+        PIDFCoefficients pidfNew = new PIDFCoefficients(NEW_P, NEW_I, NEW_D, NEW_F);
+
+        frontRightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
+        frontLeftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
+        backRightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
+        backLeftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
 
         //Factor to convert RPM to encoder steps per second
         double TPS312 = (312.0/60.0) * 537.7;
