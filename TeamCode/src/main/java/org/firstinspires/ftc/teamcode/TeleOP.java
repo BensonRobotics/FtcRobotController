@@ -66,7 +66,7 @@ public class TeleOP extends LinearOpMode {
         backLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
         backRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
 
-        liftMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        liftMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
 
         frontLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
@@ -89,6 +89,9 @@ public class TeleOP extends LinearOpMode {
         imu = hardwareMap.get(IMU.class, "imu");
         // Initialize the IMU with this mounting orientation. Note: if two conflicting directions are chosen, this initialization will cause a code exception.
         imu.initialize(new IMU.Parameters(orientationOnRobot));
+
+        double liftMotorCurrentThreshold = 3000.0;
+        int liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
 
         /*Main loop */
 
@@ -113,7 +116,7 @@ public class TeleOP extends LinearOpMode {
 
 
             UpdateServos();
-            UpdateLiftMotor();
+            UpdateLiftMotor(liftBottomPosition, liftMotorCurrentThreshold);
 
             // Take an input vector from the joysticks and use it to move. Exponential scaling will need to be applied for better control.
 //          MoveWithFieldRelativeVector(velocity, robotAngleToField, rotation);
@@ -125,44 +128,68 @@ public class TeleOP extends LinearOpMode {
     }
 
     private void UpdateServos() {
-        ArrayList<Double> desiredPositions = new ArrayList<Double>(1);
-        desiredPositions.add(0.0);
-        if (gamepad2.dpad_up & desiredPositions.get(0) <= 1) {
-            desiredPositions.set(0, desiredPositions.get(0) + 0.01);
-        } else if (gamepad2.dpad_down & desiredPositions.get(0) >= 0) {
-            desiredPositions.set(0, desiredPositions.get(0) - 0.01);
-        }
-
-        grabberServo.setPosition(desiredPositions.get(0));
+//        ArrayList<Double> desiredPositions = new ArrayList<Double>(1);
+//        desiredPositions.add(0.0);
+//        if (gamepad2.dpad_up & desiredPositions.get(0) <= 1) {
+//            desiredPositions.set(0, desiredPositions.get(0) + 0.01);
+//        } else if (gamepad2.dpad_down & desiredPositions.get(0) >= 0) {
+//            desiredPositions.set(0, desiredPositions.get(0) - 0.01);
+//        }
+//
+//        grabberServo.setPosition(desiredPositions.get(0));
     }
 
-    private void UpdateLiftMotor() {
-        double currentThreshold = 5;
+    private void UpdateLiftMotor(int bottomPosition, double currentThreshold) {
+        ArrayList<Integer> liftPositions = new ArrayList<Integer>(3);
+        liftPositions.add(bottomPosition);
+        liftPositions.add(bottomPosition + 2800);
+        liftPositions.add(bottomPosition + 4500);
 
-        ArrayList<Double> liftPositions = new ArrayList<Double>(3);
-        liftPositions.add(-50.0);
-        liftPositions.add(-300.0);
-        liftPositions.add(-600.0);
-
-        if (gamepad2.a || gamepad2.x || gamepad2.y) {
+        if (gamepad1.a || gamepad1.x || gamepad1.y) {
             int desiredPositionIndex = 0;
-            if (gamepad2.a) {
+            if (gamepad1.a) {
                 desiredPositionIndex = 0;
-            } else if (gamepad2.x) {
+            } else if (gamepad1.x) {
                 desiredPositionIndex = 1;
-            } else if (gamepad2.y) {
+            } else if (gamepad1.y) {
                 desiredPositionIndex = 2;
             }
 
-            liftMotor.setTargetPosition(0);
+            liftMotor.setTargetPosition(liftPositions.get(desiredPositionIndex));
             liftMotor.setPower(0.1);
+
+            if (IsOverloaded(liftMotor, currentThreshold)) {
+                liftMotor.setPower(0.0);
+            }
         }
 
-//        if (liftMotor.getCurrent(CurrentUnit.MILLIAMPS) > currentThreshold) {
-//            liftMotor.setPower(0.0);
-//        }
+        if (IsOverloaded(liftMotor, currentThreshold)) {
+            liftMotor.setPower(0.0);
+        }
         telemetry.addData("liftMotorPosition: ", liftMotor.getCurrentPosition());
         telemetry.addData("liftMotorCurrent: ", liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
+
+//        if (gamepad1.dpad_up) {
+//            liftMotor.setPower(0.05);
+//        } else if (gamepad1.dpad_down) {
+//            liftMotor.setPower(-0.05);
+//        } else {
+//            liftMotor.setPower(0.0);
+//        }
+    }
+
+    private int GetLiftBottomPosition(double currentThreshold) {
+        while (!IsOverloaded(liftMotor, currentThreshold)) {
+            liftMotor.setPower(-0.05);
+        }
+        liftMotor.setPower(0.0);
+
+        telemetry.addData("lift bottom position: ", liftMotor.getCurrentPosition());
+        return liftMotor.getCurrentPosition();
+    }
+
+    private boolean IsOverloaded(DcMotorEx motor, double currentThreshold) {
+        return (motor.getCurrent(CurrentUnit.MILLIAMPS) > currentThreshold);
     }
 
     private void MoveRobotWithMotorPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
