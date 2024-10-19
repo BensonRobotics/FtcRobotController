@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -36,6 +37,8 @@ public class TeleOP extends LinearOpMode {
 
     private Servo grabberServo = null;
 
+    private DcMotorEx liftMotor = null;
+
     // IMU sensor object
     IMU imu;
 
@@ -53,6 +56,8 @@ public class TeleOP extends LinearOpMode {
 
         grabberServo = hardwareMap.get(Servo.class, "grabberServo");
 
+        liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
+
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
@@ -61,10 +66,15 @@ public class TeleOP extends LinearOpMode {
         backLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
         backRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
 
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        liftMotor.setDirection(DcMotorEx.Direction.FORWARD);
+
+
+        frontLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        frontRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        backLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        backRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+
+        liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         /* Orientation Variables */
         double robotAngleToField = 0;
@@ -101,7 +111,9 @@ public class TeleOP extends LinearOpMode {
             telemetry.addData("velocity:", (velocity.Value()));
             updateTelemetry(telemetry);
 
+
             UpdateServos();
+            UpdateLiftMotor();
 
             // Take an input vector from the joysticks and use it to move. Exponential scaling will need to be applied for better control.
 //          MoveWithFieldRelativeVector(velocity, robotAngleToField, rotation);
@@ -114,11 +126,43 @@ public class TeleOP extends LinearOpMode {
 
     private void UpdateServos() {
         ArrayList<Double> desiredPositions = new ArrayList<Double>(1);
-        if (gamepad2.y & desiredPositions.get(0) <= 1) {
-            desiredPositions.add(0.0);
-            desiredPositions.set(0, desiredPositions.get(0) + 1);
-
+        desiredPositions.add(0.0);
+        if (gamepad2.dpad_up & desiredPositions.get(0) <= 1) {
+            desiredPositions.set(0, desiredPositions.get(0) + 0.01);
+        } else if (gamepad2.dpad_down & desiredPositions.get(0) >= 0) {
+            desiredPositions.set(0, desiredPositions.get(0) - 0.01);
         }
+
+        grabberServo.setPosition(desiredPositions.get(0));
+    }
+
+    private void UpdateLiftMotor() {
+        double currentThreshold = 5;
+
+        ArrayList<Double> liftPositions = new ArrayList<Double>(3);
+        liftPositions.add(-50.0);
+        liftPositions.add(-300.0);
+        liftPositions.add(-600.0);
+
+        if (gamepad2.a || gamepad2.x || gamepad2.y) {
+            int desiredPositionIndex = 0;
+            if (gamepad2.a) {
+                desiredPositionIndex = 0;
+            } else if (gamepad2.x) {
+                desiredPositionIndex = 1;
+            } else if (gamepad2.y) {
+                desiredPositionIndex = 2;
+            }
+
+            liftMotor.setTargetPosition(0);
+            liftMotor.setPower(0.1);
+        }
+
+//        if (liftMotor.getCurrent(CurrentUnit.MILLIAMPS) > currentThreshold) {
+//            liftMotor.setPower(0.0);
+//        }
+        telemetry.addData("liftMotorPosition: ", liftMotor.getCurrentPosition());
+        telemetry.addData("liftMotorCurrent: ", liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
     }
 
     private void MoveRobotWithMotorPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
