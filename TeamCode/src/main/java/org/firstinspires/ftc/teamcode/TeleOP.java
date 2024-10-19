@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -53,12 +54,17 @@ public class TeleOP extends LinearOpMode {
         backLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
         backRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
 
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         /* Orientation Variables */
         double robotAngleToField = 0;
 
         // Define the mounting direction of the control hub
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
+        RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD;
 
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 
@@ -76,12 +82,12 @@ public class TeleOP extends LinearOpMode {
         // Run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             // Get needed gamepad joystick values
-            double leftStickY = scaleStickValue(-gamepad1.left_stick_y);  // Note: pushing stick forward gives negative value
-            double leftStickX =  scaleStickValue(gamepad1.left_stick_x);
-            double rightStickY =  scaleStickValue(-gamepad1.right_stick_y);  // Note: pushing stick forward gives negative value
-            double rightStickX =  scaleStickValue(gamepad1.right_stick_x);
+            double leftStickY = ScaleStickValue(-gamepad1.left_stick_y);  // Note: pushing stick forward gives negative value
+            double leftStickX = ScaleStickValue(gamepad1.left_stick_x);
+            double rightStickY = ScaleStickValue(-gamepad1.right_stick_y);  // Note: pushing stick forward gives negative value
+            double rightStickX = ScaleStickValue(gamepad1.right_stick_x);
 
-            Vector2 velocity = new Vector2(gamepad1.left_stick_x, -gamepad1.left_stick_y);
+            Vector2 velocity = new Vector2(leftStickX, leftStickY);
 
             double rotation = rightStickX;
 
@@ -89,7 +95,7 @@ public class TeleOP extends LinearOpMode {
             updateTelemetry(telemetry);
 
             // Take an input vector from the joysticks and use it to move. Exponential scaling will need to be applied for better control.
-            //MoveWithFieldRelativeVector(velocity, robotAngleToField, rightStickX);
+//          MoveWithFieldRelativeVector(velocity, robotAngleToField, rotation);
             MoveWithVector(velocity, rotation);
 
             robotAngleToField = UpdateRobotAngleToField(imu);
@@ -98,7 +104,7 @@ public class TeleOP extends LinearOpMode {
     }
 
     private void MoveRobotWithMotorPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
-        double TPS312 = (312.0/60.0) * 537.7;
+        double TPS312 = (312.0 / 60.0) * 537.7;
 
         frontLeftDrive.setVelocity(frontLeft * TPS312);
         frontRightDrive.setVelocity(frontRight * TPS312);
@@ -109,7 +115,7 @@ public class TeleOP extends LinearOpMode {
     // Update the robotAngleToField variable using the latest data from the gyro
     public double UpdateRobotAngleToField(IMU imu) {
         // If the driver presses the reset orientation button, reset the Z axis on the IMU
-        if (gamepad1.y) {
+        if (gamepad1.x) {
             telemetry.addData("Yaw", "Resetting\n");
             imu.resetYaw();
         }
@@ -141,45 +147,38 @@ public class TeleOP extends LinearOpMode {
             double yComponent = velocity.Magnitude() * sin;
             double max = Math.max(Math.abs(sin), Math.abs(cos));
 
-            double frontLeftMotorVelocity = xComponent/max + rotation;
-            double frontRightMotorVelocity = yComponent/max - rotation;
-            double backLeftMotorVelocity = yComponent/max + rotation;
-            double backRightMotorVelocity = xComponent/max - rotation;
+            double frontLeftMotorVelocity = xComponent / max + rotation;
+            double frontRightMotorVelocity = yComponent / max - rotation;
+            double backLeftMotorVelocity = yComponent / max + rotation;
+            double backRightMotorVelocity = xComponent / max - rotation;
 
             if ((velocity.Magnitude() + Math.abs(rotation)) > 1) {
-                frontLeftMotorVelocity /= velocity.Magnitude() + rotation;
-                frontRightMotorVelocity /= velocity.Magnitude() + rotation;
-                backLeftMotorVelocity /= velocity.Magnitude() + rotation;
-                backRightMotorVelocity /= velocity.Magnitude() + rotation;
+                frontLeftMotorVelocity /= velocity.Magnitude() - rotation;
+                frontRightMotorVelocity /= velocity.Magnitude() - rotation;
+                backLeftMotorVelocity /= velocity.Magnitude() - rotation;
+                backRightMotorVelocity /= velocity.Magnitude() - rotation;
             }
 
             MoveRobotWithMotorPowers(frontLeftMotorVelocity, frontRightMotorVelocity, backLeftMotorVelocity, backRightMotorVelocity);
         }
     }
 
-    private double scaleStickValue(double stickValue) {
+    private double ScaleStickValue(double stickValue) {
+        int speedDenominator = 2;
         if (stickValue < 0) {
-            stickValue = -nonlinearInterpolate(0, 1, -stickValue, "cubic");
+            stickValue = -NonlinearInterpolate(0, 1, -stickValue, 1.1);
         } else {
-            stickValue = nonlinearInterpolate(0, 1, stickValue, "cubic");
+            stickValue = NonlinearInterpolate(0, 1, stickValue, 1.1);
         }
-        return stickValue;
+        return stickValue / speedDenominator;
     }
 
-    private double nonlinearInterpolate(double rangeStart, double rangeEnd, double index, String scalingType) {
+    private double NonlinearInterpolate(double rangeStart, double rangeEnd, double index, double power) {
         double output = 0;
-        switch (scalingType) {
-            case "quadratic":
-                // quadratic
-                // this bit of math interpolates between two numbers with an index using the given exponent. There is a desmos with the equation here:
-                // https://www.desmos.com/calculator/st8wrb0oph
-                output = index * Math.pow(index * ((index - rangeStart)/(rangeEnd - rangeStart)), 2);
-                break;
-            case "cubic":
-                // cubic
-                output = index * Math.pow(index * ((index - rangeStart)/(rangeEnd - rangeStart)), 3);
-                break;
-            }
-            return output;
-        }
+        // this bit of math interpolates between two numbers with an index using the given exponent. There is a desmos with the equation here:
+        // https://www.desmos.com/calculator/st8wrb0oph
+        output = index * Math.pow(index / (rangeEnd - rangeStart), power);
+
+        return output;
     }
+}
