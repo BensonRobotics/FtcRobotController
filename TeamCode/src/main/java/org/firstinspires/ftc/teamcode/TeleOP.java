@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
@@ -18,6 +19,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Quaternion;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 //This is a test from Desmond of the Github, Git, and Android Studio syncing
@@ -30,6 +33,8 @@ public class TeleOP extends LinearOpMode {
     private DcMotorEx frontRightDrive = null;
     private DcMotorEx backLeftDrive = null;
     private DcMotorEx backRightDrive = null;
+
+    private Servo grabberServo = null;
 
     // IMU sensor object
     IMU imu;
@@ -45,6 +50,8 @@ public class TeleOP extends LinearOpMode {
         frontRightDrive = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
         backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightDrive = hardwareMap.get(DcMotorEx.class, "backRightMotor");
+
+        grabberServo = hardwareMap.get(Servo.class, "grabberServo");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -94,6 +101,8 @@ public class TeleOP extends LinearOpMode {
             telemetry.addData("velocity:", (velocity.Value()));
             updateTelemetry(telemetry);
 
+            UpdateServos();
+
             // Take an input vector from the joysticks and use it to move. Exponential scaling will need to be applied for better control.
 //          MoveWithFieldRelativeVector(velocity, robotAngleToField, rotation);
             MoveWithVector(velocity, rotation);
@@ -101,6 +110,15 @@ public class TeleOP extends LinearOpMode {
             robotAngleToField = UpdateRobotAngleToField(imu);
         }
 
+    }
+
+    private void UpdateServos() {
+        ArrayList<Double> desiredPositions = new ArrayList<Double>(1);
+        if (gamepad2.y & desiredPositions.get(0) <= 1) {
+            desiredPositions.add(0.0);
+            desiredPositions.set(0, desiredPositions.get(0) + 1);
+
+        }
     }
 
     private void MoveRobotWithMotorPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
