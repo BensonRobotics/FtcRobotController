@@ -38,7 +38,7 @@ public class Auto extends LinearOpMode {
         backLeftMotor.setPower(1);
         frontRightMotor.setPower(1);
         backRightMotor.setPower(1);
-        sleep(250);
+        sleep(300);
         frontLeftMotor.setPower(0);
         backLeftMotor.setPower(0);
         frontRightMotor.setPower(0);
