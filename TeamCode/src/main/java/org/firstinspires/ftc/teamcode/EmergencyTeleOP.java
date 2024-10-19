@@ -40,7 +40,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
 
-        //Factor to convert RPM to encoder ticks per second
+        //Factor to convert RPM to encoder steps per second
         double TPS312 = (312.0/60.0) * 537.7;
 
         frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
