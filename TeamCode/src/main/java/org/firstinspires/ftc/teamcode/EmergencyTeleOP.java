@@ -16,7 +16,7 @@ public class EmergencyTeleOP extends LinearOpMode {
     public static final double NEW_P = 1.5;
     public static final double NEW_I = 0.2;
     public static final double NEW_D = 0.1;
-    public static final double NEW_F = 11.7;
+    public static final double NEW_F = 12.0;
 
     @Override
     public void runOpMode() throws InterruptedException {
