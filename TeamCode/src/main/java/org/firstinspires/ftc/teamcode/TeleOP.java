@@ -42,6 +42,11 @@ public class TeleOP extends LinearOpMode {
     // IMU sensor object
     IMU imu;
 
+    public static final double NEW_P = 1.5;
+    public static final double NEW_I = 0.2;
+    public static final double NEW_D = 0.1;
+    public static final double NEW_F = 11.7;
+
     public void runOpMode() {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
