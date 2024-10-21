@@ -32,17 +32,22 @@ public class Auto extends LinearOpMode {
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        double stepsPerMMDrive = 537.7/104.0;
+        int stepsTraveled = (int) (stepsPerMMDrive*200);
+
+        frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
         waitForStart();
 
-        frontLeftMotor.setPower(1);
-        backLeftMotor.setPower(1);
-        frontRightMotor.setPower(1);
-        backRightMotor.setPower(1);
-        sleep(300);
-        frontLeftMotor.setPower(0);
-        backLeftMotor.setPower(0);
-        frontRightMotor.setPower(0);
-        backRightMotor.setPower(0);
+        // Encoder on left motors may be reversed by setDirection, may not.
+        // If so, add - sign to left motors' mmTraveled
+        frontLeftMotor.setTargetPosition(stepsTraveled);
+        backLeftMotor.setTargetPosition(stepsTraveled);
+        frontRightMotor.setTargetPosition(stepsTraveled);
+        backRightMotor.setTargetPosition(stepsTraveled);
 
     }
 }
