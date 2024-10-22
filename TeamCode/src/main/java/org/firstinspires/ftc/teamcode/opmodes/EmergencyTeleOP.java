@@ -20,6 +20,10 @@ public class EmergencyTeleOP extends LinearOpMode {
     public static final double NEW_I_DRIVE = 0.2;
     public static final double NEW_D_DRIVE = 0.1;
     public static final double NEW_F_DRIVE = 12.0;
+
+    // TPS(motorRPM) = (motorRPM / 60) * motorStepsPerRevolution
+    // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
+    public static final double TPS312 = (312.0/60.0) * 537.7;
     public final ElapsedTime runtime = new ElapsedTime();
 
     @Override
@@ -29,12 +33,17 @@ public class EmergencyTeleOP extends LinearOpMode {
         DcMotorEx frontRightMotor;
         DcMotorEx backLeftMotor;
         DcMotorEx backRightMotor;
+        DcMotorEx liftMotor;
+        Servo grabberServo;
+
         // Declare our motors
         // Make sure your ID's match your configuration
         frontLeftMotor = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
         frontRightMotor = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
         backLeftMotor = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightMotor = hardwareMap.get(DcMotorEx.class, "backRightMotor");
+        liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
+        grabberServo = hardwareMap.get(Servo.class, "grabberServo");
 
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
@@ -42,6 +51,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         // See the note about this earlier on this page.
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Retrieve the IMU from the hardware map
         IMU imu = hardwareMap.get(IMU.class, "imu");
@@ -60,10 +70,10 @@ public class EmergencyTeleOP extends LinearOpMode {
         frontLeftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
         backRightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
         backLeftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         // TPS(motorRPM) = (motorRPM / 60) * motorStepsPerRevolution
         // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
-        double TPS312 = (312.0/60.0) * 537.7;
 
         // Reset drive system motor encoders
         frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
