@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
@@ -29,7 +30,6 @@ public class Auto extends LinearOpMode {
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
         // reverse the left side instead.
-        // See the note about this earlier on this page.
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -43,10 +43,10 @@ public class Auto extends LinearOpMode {
 
         PIDFCoefficients pidfNew = new PIDFCoefficients(NEW_P, NEW_I, NEW_D, NEW_F);
 
-        frontRightMotor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, pidfNew);
-        frontLeftMotor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, pidfNew);
-        backRightMotor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, pidfNew);
-        backLeftMotor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, pidfNew);
+        frontRightMotor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION, pidfNew);
+        frontLeftMotor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION, pidfNew);
+        backRightMotor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION, pidfNew);
+        backLeftMotor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION, pidfNew);
 
         waitForStart();
 
