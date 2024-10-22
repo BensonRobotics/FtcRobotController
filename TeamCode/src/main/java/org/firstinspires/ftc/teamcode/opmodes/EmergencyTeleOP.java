@@ -71,6 +71,8 @@ public class EmergencyTeleOP extends LinearOpMode {
         frontLeftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
         backRightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
         backLeftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
+
+        // Set liftMotor to RUN_TO_POSITION
         liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         // Make sure lift doesn't fall under gravity
