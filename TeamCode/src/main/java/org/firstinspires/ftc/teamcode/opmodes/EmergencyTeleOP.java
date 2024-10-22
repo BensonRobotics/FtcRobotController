@@ -79,9 +79,6 @@ public class EmergencyTeleOP extends LinearOpMode {
         // Just a failsafe, as setTargetPosition holds at position anyway
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // TPS(motorRPM) = (motorRPM / 60) * motorStepsPerRevolution
-        // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
-
         // Reset drive system motor encoders
         frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
