@@ -131,6 +131,11 @@ public class EmergencyTeleOP extends LinearOpMode {
             backLeftMotor.setVelocity(backLeftPower * TPS312);
             frontRightMotor.setVelocity(frontRightPower * TPS312);
             backRightMotor.setVelocity(backRightPower * TPS312);
+
+            // If liftMotor overcurrents, stop it
+            if (liftMotor.isOverCurrent()) {
+                liftMotor.setVelocity(0);
+            }
         }
     }
 }
