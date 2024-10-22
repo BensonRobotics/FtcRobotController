@@ -93,6 +93,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         runtime.reset();
 
         // Lift sensorless homing code, will move the lift during initialization
+        // Using built-in CurrentAlert is easier
         liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
         while (!liftMotor.isOverCurrent()) {
             liftMotor.setVelocity(-0.1 * TPS312);
