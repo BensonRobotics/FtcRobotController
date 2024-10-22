@@ -23,6 +23,12 @@ public class EmergencyTeleOP extends LinearOpMode {
     public static final double NEW_D_DRIVE = 0.1;
     public static final double NEW_F_DRIVE = 12.0;
 
+    //PIDF coefficients for lift motor's setPosition
+    public static final double NEW_P_LIFT = 1.5;
+    public static final double NEW_I_LIFT = 0.2;
+    public static final double NEW_D_LIFT = 0.1;
+    public static final double NEW_F_LIFT = 12.0;
+
     // TPS(motorRPM) = (motorRPM / 60) * motorStepsPerRevolution
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
     public static final double TPS312 = (312.0/60.0) * 537.7;
@@ -65,15 +71,14 @@ public class EmergencyTeleOP extends LinearOpMode {
 
         // New variable for drive system's PIDF coefficients
         PIDFCoefficients pidfNewDrive = new PIDFCoefficients(NEW_P_DRIVE, NEW_I_DRIVE, NEW_D_DRIVE, NEW_F_DRIVE);
+        PIDFCoefficients pidfNewLift = new PIDFCoefficients(NEW_P_LIFT, NEW_I_LIFT, NEW_D_LIFT, NEW_F_LIFT);
 
-        // Sets PIDF coefficients for drive system using variable
+        // Sets PIDF coefficients for drive system and lift motor using variables
         frontRightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
         frontLeftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
         backRightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
         backLeftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
-
-        // Set liftMotor to RUN_TO_POSITION
-        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        liftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfNewLift);
 
         // Make sure lift doesn't fall under gravity
         // Just a failsafe, as setTargetPosition holds at position anyway
