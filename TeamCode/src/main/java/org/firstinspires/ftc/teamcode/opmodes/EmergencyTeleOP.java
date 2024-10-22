@@ -9,6 +9,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
 public class EmergencyTeleOP extends LinearOpMode {
@@ -18,6 +20,7 @@ public class EmergencyTeleOP extends LinearOpMode {
     public static final double NEW_I_DRIVE = 0.2;
     public static final double NEW_D_DRIVE = 0.1;
     public static final double NEW_F_DRIVE = 12.0;
+    public final ElapsedTime runtime = new ElapsedTime();
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -58,8 +61,8 @@ public class EmergencyTeleOP extends LinearOpMode {
         backRightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
         backLeftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
 
-        // (motorRPM / 60) * motorStepsPerRevolution
-        // Output is basically the motor's max speed in encoder steps per second, which is setVelocity's unit
+        // TPS(motorRPM) = (motorRPM / 60) * motorStepsPerRevolution
+        // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
         double TPS312 = (312.0/60.0) * 537.7;
 
         // Reset drive system motor encoders
@@ -68,7 +71,10 @@ public class EmergencyTeleOP extends LinearOpMode {
         backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        // Play button is pressed
         waitForStart();
+
+        runtime.reset();
 
         if (isStopRequested()) return;
 
