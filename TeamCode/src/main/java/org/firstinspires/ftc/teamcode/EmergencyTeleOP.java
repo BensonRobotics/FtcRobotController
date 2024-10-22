@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 @TeleOp
 public class EmergencyTeleOP extends LinearOpMode {
 
+    // PIDF coefficients for drive system's setVelocity
     public static final double NEW_P_DRIVE = 1.5;
     public static final double NEW_I_DRIVE = 0.2;
     public static final double NEW_D_DRIVE = 0.1;
@@ -48,16 +49,20 @@ public class EmergencyTeleOP extends LinearOpMode {
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
 
+        // New variable for drive system's PIDF coefficients
         PIDFCoefficients pidfNewDrive = new PIDFCoefficients(NEW_P_DRIVE, NEW_I_DRIVE, NEW_D_DRIVE, NEW_F_DRIVE);
 
+        // Sets PIDF coefficients for drive system using variable
         frontRightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
         frontLeftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
         backRightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
         backLeftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
 
-        //Factor to convert RPM to encoder steps per second
+        // (motorRPM / 60) * motorStepsPerRevolution
+        // Output is basically the motor's max speed in encoder steps per second, which is setVelocity's unit
         double TPS312 = (312.0/60.0) * 537.7;
 
+        // Reset drive system motor encoders
         frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -95,6 +100,7 @@ public class EmergencyTeleOP extends LinearOpMode {
             double frontRightPower = (rotY - rotX - rx) / denominator;
             double backRightPower = (rotY + rotX - rx) / denominator;
 
+            // Set motor velocities, converted from (-1 to 1) to (-TPS312 to TPS312)
             frontLeftMotor.setVelocity(frontLeftPower * TPS312);
             backLeftMotor.setVelocity(backLeftPower * TPS312);
             frontRightMotor.setVelocity(frontRightPower * TPS312);
