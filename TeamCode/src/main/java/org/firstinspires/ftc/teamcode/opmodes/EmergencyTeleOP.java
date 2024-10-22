@@ -133,6 +133,8 @@ public class EmergencyTeleOP extends LinearOpMode {
             backRightMotor.setVelocity(backRightPower * TPS312);
 
             // If liftMotor overcurrents, stop it
+            // Would make this zero the encoder if it hits the bottom
+            // But in practice, it could hit something going down and erroneously zero itself at the wrong height
             if (liftMotor.isOverCurrent()) {
                 liftMotor.setVelocity(0);
             }
