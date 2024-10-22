@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -82,6 +84,14 @@ public class EmergencyTeleOP extends LinearOpMode {
         backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         runtime.reset();
+
+        // Lift sensorless homing code, will move the lift during initialization
+        liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
+        while (!liftMotor.isOverCurrent()) {
+            liftMotor.setVelocity(-0.1 * TPS312);
+        }
+        liftMotor.setVelocity(0);
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // Play button is pressed
         waitForStart();
