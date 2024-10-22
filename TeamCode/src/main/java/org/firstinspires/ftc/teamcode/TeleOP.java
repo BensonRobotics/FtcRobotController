@@ -74,6 +74,9 @@ public class TeleOP extends LinearOpMode {
 
         liftMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
+        // Hold lift at its set position once it reaches it.
+        liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
 
         frontLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         frontRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
