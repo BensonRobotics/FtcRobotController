@@ -81,10 +81,10 @@ public class EmergencyTeleOP extends LinearOpMode {
         backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        runtime.reset();
+
         // Play button is pressed
         waitForStart();
-
-        runtime.reset();
 
         if (isStopRequested()) return;
 
