@@ -83,6 +83,13 @@ public class EmergencyTeleOP extends LinearOpMode {
 
         runtime.reset();
 
+        // Lift sensorless homing code, will move the lift during initialization
+        while (!liftMotor.isOverCurrent()) {
+            liftMotor.setVelocity(-0.1 * TPS312);
+        }
+        liftMotor.setVelocity(0);
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
         // Play button is pressed
         waitForStart();
 
