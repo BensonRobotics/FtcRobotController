@@ -110,11 +110,11 @@ public class EmergencyTeleOP extends LinearOpMode {
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
 
-            // Quadratic scaling for joysticks, for improved control at lower speeds
-            // Stick values are -1 to 1, so |x| * x is the same as x^2 but with the correct sign
-            double scaledY = Math.abs(y) * y;
-            double scaledX = Math.abs(x) * x;
-            double scaledRx = Math.abs(rx) * rx;
+            // Cubic root scaling for joysticks, for improved control at lower speeds
+            // The Math.abs is there so that it maintains its sign and doesn't spit out complex numbers
+            double scaledY = Math.cbrt(Math.abs(y)) * y;
+            double scaledX = Math.cbrt(Math.abs(x)) * x;
+            double scaledRx = Math.cbrt(Math.abs(rx)) * rx;
 
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference.
