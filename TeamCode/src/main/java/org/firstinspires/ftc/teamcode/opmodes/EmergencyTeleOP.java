@@ -74,6 +74,10 @@ public class EmergencyTeleOP extends LinearOpMode {
         backLeftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
         liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
+        // Make sure lift doesn't fall under gravity
+        // Just a failsafe, as setTargetPosition holds at position anyway
+        liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         // TPS(motorRPM) = (motorRPM / 60) * motorStepsPerRevolution
         // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
 
@@ -132,9 +136,21 @@ public class EmergencyTeleOP extends LinearOpMode {
             frontRightMotor.setVelocity(frontRightPower * TPS312);
             backRightMotor.setVelocity(backRightPower * TPS312);
 
+            // Lift motor height presets
+            // A for bottom, X for middle, Y for top
+            if (gamepad1.a) {
+                liftMotor.setTargetPosition(0);
+            }
+            if (gamepad1.x) {
+                liftMotor.setTargetPosition(2800);
+            }
+            if (gamepad1.y) {
+                liftMotor.setTargetPosition(4500);
+            }
+
             // If liftMotor overcurrents, stop it
-            // Would make this zero the encoder if it hits the bottom
-            // But in practice, it could hit something going down and erroneously zero itself at the wrong height
+            // Would make this zero the encoder if it hits the bottom,
+            // But in practice, it could hit something going down and zero itself at the wrong height
             if (liftMotor.isOverCurrent()) {
                 liftMotor.setVelocity(0);
             }
