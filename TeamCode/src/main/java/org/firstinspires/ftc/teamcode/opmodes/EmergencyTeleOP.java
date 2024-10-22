@@ -112,6 +112,7 @@ public class EmergencyTeleOP extends LinearOpMode {
 
             // Cubic root scaling for joysticks, for improved control at lower speeds
             // The Math.abs is there so that it maintains its sign and doesn't spit out complex numbers
+            // Math.cbrt and Math.sqrt are always faster than using Math.pow
             double scaledY = Math.cbrt(Math.abs(y)) * y;
             double scaledX = Math.cbrt(Math.abs(x)) * x;
             double scaledRx = Math.cbrt(Math.abs(rx)) * rx;
