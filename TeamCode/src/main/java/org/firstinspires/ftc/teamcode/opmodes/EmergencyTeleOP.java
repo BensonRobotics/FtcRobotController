@@ -81,6 +81,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         // Just a failsafe, as setTargetPosition holds at position anyway
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        // Set drive motors to RUN_USING_ENCODER
         frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -104,6 +105,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         // This should be setPower to bypass the use of PIDF so it stops instantly
         liftMotor.setPower(0);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         // Play button is pressed
         waitForStart();
