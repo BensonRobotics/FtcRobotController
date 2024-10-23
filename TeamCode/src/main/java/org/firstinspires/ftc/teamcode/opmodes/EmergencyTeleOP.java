@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @TeleOp
 public class EmergencyTeleOP extends LinearOpMode {
 
+    // PIDF stands for Proportional, Integral, Derivative, Feedforward
     // PIDF coefficients for drive system's setVelocity
     public static final double NEW_P_DRIVE = 1.5;
     public static final double NEW_I_DRIVE = 0.2;
@@ -38,6 +39,7 @@ public class EmergencyTeleOP extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
+        // Introducing our devices!! Yayy!!!
         DcMotorEx frontLeftMotor;
         DcMotorEx frontRightMotor;
         DcMotorEx backLeftMotor;
@@ -91,6 +93,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        // Reset runtime variable, not used yet
         runtime.reset();
 
         // Lift sensorless homing code, will move the lift during initialization
@@ -127,14 +130,14 @@ public class EmergencyTeleOP extends LinearOpMode {
             double driveAngle = Math.atan2(scaledX,scaledY);
             double driveMagnitude = Math.hypot(scaledX,scaledY);
 
-            // This button choice was made so that it is hard to hit on accident,
-            // it can be freely changed based on preference.
+            // IMU Yaw reset button
+            // This button choice was made so that it is hard to hit on accident
             if (gamepad1.back) {
                 imu.resetYaw();
             }
-
+            // Set botHeading to robot Yaw from IMU
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-
+            // The evil code for calculating motor powers
             double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle - botHeading + 0.25 * Math.PI);
             double frontRightBackLeftMotors = driveMagnitude * Math.sin(driveAngle - botHeading - 0.25 * Math.PI);
             double frontLeftPower = frontLeftBackRightMotors - scaledRx;
