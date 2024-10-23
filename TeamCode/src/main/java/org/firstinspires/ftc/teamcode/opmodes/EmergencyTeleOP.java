@@ -102,7 +102,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         while (!liftMotor.isOverCurrent()) {
             liftMotor.setVelocity(-0.1 * TPS312);
         }
-        liftMotor.setVelocity(0);
+        liftMotor.setPower(0);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // Play button is pressed
@@ -178,7 +178,7 @@ public class EmergencyTeleOP extends LinearOpMode {
             // Would make this zero the encoder if it hits the bottom,
             // But in practice, it could hit something going down and zero itself at the wrong height
             if (liftMotor.isOverCurrent()) {
-                liftMotor.setVelocity(0);
+                liftMotor.setPower(0);
             }
         }
     }
