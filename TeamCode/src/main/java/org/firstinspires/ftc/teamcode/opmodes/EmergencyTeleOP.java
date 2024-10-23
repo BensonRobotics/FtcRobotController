@@ -24,11 +24,9 @@ public class EmergencyTeleOP extends LinearOpMode {
     public static final double NEW_D_DRIVE = 0.1;
     public static final double NEW_F_DRIVE = 12.0;
 
-    //PIDF coefficients for lift motor's setPosition
+    // Proportional coefficient for lift motor's setPosition
+    // setPositionPIDFCoefficients uses the IDF (PIDF without P) from setVelocityPIDFCoefficients
     public static final double NEW_P_LIFT = 1.5;
-    public static final double NEW_I_LIFT = 0.2;
-    public static final double NEW_D_LIFT = 0.1;
-    public static final double NEW_F_LIFT = 12.0;
 
     // TPS(motorRPM) = (motorRPM / 60) * motorStepsPerRevolution
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
@@ -72,20 +70,23 @@ public class EmergencyTeleOP extends LinearOpMode {
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
 
-        // New variable for drive system's PIDF coefficients
-        PIDFCoefficients pidfNewDrive = new PIDFCoefficients(NEW_P_DRIVE, NEW_I_DRIVE, NEW_D_DRIVE, NEW_F_DRIVE);
-        PIDFCoefficients pidfNewLift = new PIDFCoefficients(NEW_P_LIFT, NEW_I_LIFT, NEW_D_LIFT, NEW_F_LIFT);
-
         // Sets PIDF coefficients for drive system and lift motor using variables
-        frontRightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
-        frontLeftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
-        backRightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
-        backLeftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNewDrive);
-        liftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidfNewLift);
+        frontRightMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
+        frontLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
+        backRightMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
+        backLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
+        liftMotor.setPositionPIDFCoefficients(NEW_P_LIFT);
 
         // Make sure lift doesn't fall under gravity
         // Just a failsafe, as setTargetPosition holds at position anyway
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
 
         // Reset drive system motor encoders
         frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
