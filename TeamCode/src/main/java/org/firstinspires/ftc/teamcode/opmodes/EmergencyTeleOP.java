@@ -31,6 +31,7 @@ public class EmergencyTeleOP extends LinearOpMode {
 
     // TPS(motorRPM) = (motorRPM / 60) * motorStepsPerRevolution
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
+    // 537.7 is 312 RPM motor's encoder steps per revolution
     public static final double TPS312 = (312.0/60.0) * 537.7;
     public static ElapsedTime runtime = new ElapsedTime();
 

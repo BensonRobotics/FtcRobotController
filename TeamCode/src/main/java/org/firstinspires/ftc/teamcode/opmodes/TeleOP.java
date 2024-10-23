@@ -87,6 +87,9 @@ public class TeleOP extends LinearOpMode {
 
     // Move robot using 4 motor velocity/power values with domains from -1 to 1
     private void MoveRobotWithMotorPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
+        // TPS(motorRPM) = (motorRPM / 60) * motorStepsPerRevolution
+        // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
+        // 537.7 is 312 RPM motor's encoder steps per revolution
         double TPS312 = (312.0 / 60.0) * 537.7;
 
         frontLeftDrive.setVelocity(frontLeft * TPS312);
