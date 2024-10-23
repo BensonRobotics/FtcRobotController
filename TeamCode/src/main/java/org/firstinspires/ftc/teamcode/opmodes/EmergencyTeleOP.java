@@ -108,7 +108,8 @@ public class EmergencyTeleOP extends LinearOpMode {
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-            double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
+            // Get and assign joystick values. remember, Y stick value is reversed
+            double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
 
@@ -122,6 +123,7 @@ public class EmergencyTeleOP extends LinearOpMode {
             // Factor to correct for imperfect strafing
             scaledX = scaledX * 1.1;
 
+            // Calculate angle and magnitude from joystick values
             double driveAngle = Math.atan2(scaledX,scaledY);
             double driveMagnitude = Math.hypot(scaledX,scaledY);
 
@@ -133,27 +135,29 @@ public class EmergencyTeleOP extends LinearOpMode {
 
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
-            double frontLeftBackRightMotors = Math.sin(driveAngle - botHeading + 0.25 * Math.PI);
-            double frontRightBackLeftMotors = Math.sin(driveAngle - botHeading - 0.25 * Math.PI);
+            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle - botHeading + 0.25 * Math.PI);
+            double frontRightBackLeftMotors = driveMagnitude * Math.sin(driveAngle - botHeading - 0.25 * Math.PI);
             double frontLeftPower = frontLeftBackRightMotors - scaledRx;
             double backLeftPower = frontRightBackLeftMotors - scaledRx;
             double frontRightPower = frontRightBackLeftMotors + scaledRx;
             double backRightPower = frontLeftBackRightMotors + scaledRx;
 
+            // The Great Cleaving approaches
             // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
-            // Denominator is the largest motor power (absolute value)
+            // Denominator is the largest motor power (absolute value) or 1
             // This ensures all the powers maintain the same ratio
-            double denominator = Math.max(Math.max(Math.abs(frontRightPower),Math.abs(frontLeftPower)),Math.max(Math.abs(backRightPower),Math.abs(backLeftPower)));
+            double denominator = Math.max(Math.max(Math.max(Math.abs(frontRightPower),Math.abs(frontLeftPower)),Math.max(Math.abs(backRightPower),Math.abs(backLeftPower))),1);
+            // CLEAVING TIME
             frontRightPower /= denominator;
             frontLeftPower /= denominator;
             backRightPower /= denominator;
             backLeftPower /= denominator;
 
             // Set motor velocities, converted from (-1 to 1) to (-TPS312 to TPS312)
-            frontLeftMotor.setVelocity(frontLeftPower * driveMagnitude * TPS312);
-            backLeftMotor.setVelocity(backLeftPower * driveMagnitude * TPS312);
-            frontRightMotor.setVelocity(frontRightPower * driveMagnitude * TPS312);
-            backRightMotor.setVelocity(backRightPower * driveMagnitude * TPS312);
+            frontLeftMotor.setVelocity(frontLeftPower * TPS312);
+            backLeftMotor.setVelocity(backLeftPower * TPS312);
+            frontRightMotor.setVelocity(frontRightPower * TPS312);
+            backRightMotor.setVelocity(backRightPower * TPS312);
 
             // Lift motor height presets
             // A for bottom, X for middle, Y for top
