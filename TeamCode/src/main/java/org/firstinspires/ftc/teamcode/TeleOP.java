@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
@@ -158,18 +160,18 @@ public class TeleOP extends LinearOpMode {
         liftPositions.add(bottomPosition + 2800);
         liftPositions.add(bottomPosition + 4500);
 
-        if (gamepad1.a || gamepad1.x || gamepad1.y) {
+        if (gamepad2.a || gamepad2.x || gamepad2.y) {
             int desiredPositionIndex = 0;
-            if (gamepad1.a) {
+            if (gamepad2.a) {
                 desiredPositionIndex = 0;
-            } else if (gamepad1.x) {
+            } else if (gamepad2.x) {
                 desiredPositionIndex = 1;
-            } else if (gamepad1.y) {
+            } else if (gamepad2.y) {
                 desiredPositionIndex = 2;
             }
 
             liftMotor.setTargetPosition(liftPositions.get(desiredPositionIndex));
-            liftMotor.setPower(0.1);
+            //liftMotor.setPower(0.1);
 
             if (IsOverloaded(liftMotor, currentThreshold)) {
                 liftMotor.setPower(0.0);
@@ -181,6 +183,7 @@ public class TeleOP extends LinearOpMode {
         }
         telemetry.addData("liftMotorPosition: ", liftMotor.getCurrentPosition());
         telemetry.addData("liftMotorCurrent: ", liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
+        telemetry.addData("target_position", liftPositions);
 
 //        if (gamepad1.dpad_up) {
 //            liftMotor.setPower(0.05);
