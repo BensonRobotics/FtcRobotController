@@ -119,6 +119,12 @@ public class EmergencyTeleOP extends LinearOpMode {
             double scaledX = Math.cbrt(Math.abs(x)) * x;
             double scaledRx = Math.cbrt(Math.abs(rx)) * rx;
 
+            // Factor to correct for imperfect strafing
+            scaledX = scaledX * 1.1;
+
+            double driveAngle = Math.atan2(scaledX,scaledY);
+            double driveMagnitude = Math.hypot(scaledX,scaledY);
+
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference.
             if (gamepad1.back) {
@@ -127,26 +133,27 @@ public class EmergencyTeleOP extends LinearOpMode {
 
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
-            // Rotate the movement direction counter to the bot's rotation
-            double rotX = scaledX * Math.cos(-botHeading) - scaledY * Math.sin(-botHeading);
-            double rotY = scaledX * Math.sin(-botHeading) + scaledY * Math.cos(-botHeading);
+            double frontLeftBackRightMotors = Math.sin(driveAngle - botHeading + 0.25 * Math.PI);
+            double frontRightBackLeftMotors = Math.sin(driveAngle - botHeading - 0.25 * Math.PI);
+            double frontLeftPower = frontLeftBackRightMotors - scaledRx;
+            double backLeftPower = frontRightBackLeftMotors - scaledRx;
+            double frontRightPower = frontRightBackLeftMotors + scaledRx;
+            double backRightPower = frontLeftBackRightMotors + scaledRx;
 
-            rotX = rotX * 1.1;  // Counteract imperfect strafing
-
-            // Denominator is the largest motor power (absolute value) or 1
-            // This ensures all the powers maintain the same ratio,
-            // but only if at least one is out of the range [-1, 1]
-            double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(scaledRx), 1);
-            double frontLeftPower = (rotY + rotX + scaledRx) / denominator;
-            double backLeftPower = (rotY - rotX + scaledRx) / denominator;
-            double frontRightPower = (rotY - rotX - scaledRx) / denominator;
-            double backRightPower = (rotY + rotX - scaledRx) / denominator;
+            // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
+            // Denominator is the largest motor power (absolute value)
+            // This ensures all the powers maintain the same ratio
+            double denominator = Math.max(Math.max(Math.abs(frontRightPower),Math.abs(frontLeftPower)),Math.max(Math.abs(backRightPower),Math.abs(backLeftPower)));
+            frontRightPower /= denominator;
+            frontLeftPower /= denominator;
+            backRightPower /= denominator;
+            backLeftPower /= denominator;
 
             // Set motor velocities, converted from (-1 to 1) to (-TPS312 to TPS312)
-            frontLeftMotor.setVelocity(frontLeftPower * TPS312);
-            backLeftMotor.setVelocity(backLeftPower * TPS312);
-            frontRightMotor.setVelocity(frontRightPower * TPS312);
-            backRightMotor.setVelocity(backRightPower * TPS312);
+            frontLeftMotor.setVelocity(frontLeftPower * driveMagnitude * TPS312);
+            backLeftMotor.setVelocity(backLeftPower * driveMagnitude * TPS312);
+            frontRightMotor.setVelocity(frontRightPower * driveMagnitude * TPS312);
+            backRightMotor.setVelocity(backRightPower * driveMagnitude * TPS312);
 
             // Lift motor height presets
             // A for bottom, X for middle, Y for top
