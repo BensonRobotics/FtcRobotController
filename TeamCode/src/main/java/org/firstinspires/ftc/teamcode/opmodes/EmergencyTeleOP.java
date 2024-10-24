@@ -145,12 +145,12 @@ public class EmergencyTeleOP extends LinearOpMode {
             // Set botHeading to robot Yaw from IMU
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             // The evil code for calculating motor powers
-            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle + botHeading - 0.75 * Math.PI);
-            double frontRightBackLeftMotors = driveMagnitude * Math.sin(driveAngle + botHeading + 0.75 * Math.PI);
-            double frontLeftPower = frontLeftBackRightMotors - scaledRx;
-            double backLeftPower = frontRightBackLeftMotors - scaledRx;
-            double frontRightPower = frontRightBackLeftMotors + scaledRx;
-            double backRightPower = frontLeftBackRightMotors + scaledRx;
+            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle - botHeading - 0.75 * Math.PI);
+            double frontRightBackLeftMotors = driveMagnitude * Math.sin(driveAngle - botHeading + 0.75 * Math.PI);
+            double frontLeftPower = frontLeftBackRightMotors + scaledRx;
+            double backLeftPower = frontRightBackLeftMotors + scaledRx;
+            double frontRightPower = frontRightBackLeftMotors - scaledRx;
+            double backRightPower = frontLeftBackRightMotors - scaledRx;
 
             // The Great Cleaving approaches
             // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
