@@ -101,8 +101,10 @@ public class EmergencyTeleOP extends LinearOpMode {
 
         // Lift sensorless homing code, will move the lift during initialization
         // Using built-in CurrentAlert is easier
+        // liftMotor gets switched back to RUN_TO_POSITION near end of code
         liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
         while (!liftMotor.isOverCurrent()) {
+            liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             liftMotor.setVelocity(-0.1 * TPS312);
         }
         // This should be setPower to bypass the use of PIDF so it stops instantly
