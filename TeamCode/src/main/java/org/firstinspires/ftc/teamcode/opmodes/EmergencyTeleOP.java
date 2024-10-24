@@ -22,8 +22,8 @@ public class EmergencyTeleOP extends LinearOpMode {
     public static final double NEW_D_DRIVE = 0.1;
     public static final double NEW_F_DRIVE = 12.0;
 
-    // Proportional coefficient for lift motor's setPosition and setVelocity
-    // setPositionPIDFCoefficients uses the IDF (PIDF without P) from setVelocityPIDFCoefficients
+    // PIDF coefficients for lift motor's setVelocity
+    // Proportional coefficient for lift motor's setPosition
     public static final double NEW_POS_P_LIFT = 1.5;
     public static final double NEW_P_LIFT = 1.5;
     public static final double NEW_I_LIFT = 0.2;
@@ -192,12 +192,12 @@ public class EmergencyTeleOP extends LinearOpMode {
                 // This should be setPower to bypass the use of PIDF so it stops instantly
                 liftMotor.setPower(0);
             }
-            // Telemetry time
+            // Telemetry for lift actual height, lift target height, and lift current draw
             telemetry.addData("Lift Height",liftMotor.getCurrentPosition());
             telemetry.addLine();
             telemetry.addData("Lift Target",liftMotor.getTargetPosition());
             telemetry.addLine();
-            telemetry.addData("Lift Current Draw (Milliamps)",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
+            telemetry.addData("Lift Current (Milliamps)",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
             telemetry.update();
         }
     }
