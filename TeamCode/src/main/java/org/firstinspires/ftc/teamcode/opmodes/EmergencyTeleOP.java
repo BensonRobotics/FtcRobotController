@@ -145,6 +145,8 @@ public class EmergencyTeleOP extends LinearOpMode {
             // Set botHeading to robot Yaw from IMU
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             // The evil code for calculating motor powers
+            // Desmos used to troubleshoot directions without robot
+            // https://www.desmos.com/calculator/ckxjhqekpo
             double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle - botHeading + 0.25 * Math.PI);
             double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle - botHeading - 0.25 * Math.PI);
             double frontLeftPower = frontLeftBackRightMotors + scaledRx;
