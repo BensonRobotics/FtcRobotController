@@ -108,7 +108,6 @@ public class EmergencyTeleOP extends LinearOpMode {
         // This should be setPower to bypass the use of PIDF so it stops instantly
         liftMotor.setPower(0);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         // Play button is pressed
         waitForStart();
@@ -180,6 +179,8 @@ public class EmergencyTeleOP extends LinearOpMode {
             if (gamepad1.y) {
                 liftMotor.setTargetPosition(4500);
             }
+            // Tell liftMotor to run to to target position
+            liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             // If liftMotor overcurrents, stop it
             // Would make this zero the encoder if it hits the bottom,
