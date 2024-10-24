@@ -192,6 +192,10 @@ public class EmergencyTeleOP extends LinearOpMode {
                 // This should be setPower to bypass the use of PIDF so it stops instantly
                 liftMotor.setPower(0);
             }
+            // Telemetry time
+            telemetry.addData("Lift Height",liftMotor.getCurrentPosition());
+            telemetry.addData("Lift Target",liftMotor.getTargetPosition());
+            telemetry.update();
         }
     }
 }
