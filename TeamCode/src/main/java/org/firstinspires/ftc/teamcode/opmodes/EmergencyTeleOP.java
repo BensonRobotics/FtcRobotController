@@ -179,8 +179,9 @@ public class EmergencyTeleOP extends LinearOpMode {
             if (gamepad1.y) {
                 liftMotor.setTargetPosition(4500);
             }
-            // Tell liftMotor to run to to target position
+            // Tell liftMotor to run to to target position at 0.5 speed
             liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            liftMotor.setPower(0.5);
 
             // If liftMotor overcurrents, stop it
             // Would make this zero the encoder if it hits the bottom,
