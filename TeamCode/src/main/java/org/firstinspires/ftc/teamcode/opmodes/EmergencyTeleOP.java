@@ -194,7 +194,10 @@ public class EmergencyTeleOP extends LinearOpMode {
             }
             // Telemetry time
             telemetry.addData("Lift Height",liftMotor.getCurrentPosition());
+            telemetry.addLine();
             telemetry.addData("Lift Target",liftMotor.getTargetPosition());
+            telemetry.addLine();
+            telemetry.addData("Lift Current Draw (Milliamps)",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
             telemetry.update();
         }
     }
