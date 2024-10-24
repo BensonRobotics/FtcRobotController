@@ -24,9 +24,13 @@ public class EmergencyTeleOP extends LinearOpMode {
     public static final double NEW_D_DRIVE = 0.1;
     public static final double NEW_F_DRIVE = 12.0;
 
-    // Proportional coefficient for lift motor's setPosition
+    // Proportional coefficient for lift motor's setPosition and setVelocity
     // setPositionPIDFCoefficients uses the IDF (PIDF without P) from setVelocityPIDFCoefficients
+    public static final double NEW_POS_P_LIFT = 1.5;
     public static final double NEW_P_LIFT = 1.5;
+    public static final double NEW_I_LIFT = 0.2;
+    public static final double NEW_D_LIFT = 0.1;
+    public static final double NEW_F_LIFT = 12.0;
 
     // TPS(motorRPM) = (motorRPM / 60) * motorStepsPerRevolution
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
@@ -75,7 +79,8 @@ public class EmergencyTeleOP extends LinearOpMode {
         frontLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
         backRightMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
         backLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
-        liftMotor.setPositionPIDFCoefficients(NEW_P_LIFT);
+        liftMotor.setVelocityPIDFCoefficients(NEW_P_LIFT,NEW_I_LIFT,NEW_D_LIFT,NEW_F_LIFT);
+        liftMotor.setPositionPIDFCoefficients(NEW_POS_P_LIFT);
 
         // Make sure lift doesn't fall under gravity
         // Just a failsafe, as setTargetPosition holds at position anyway
