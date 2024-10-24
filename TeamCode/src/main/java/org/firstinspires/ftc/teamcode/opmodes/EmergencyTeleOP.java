@@ -189,7 +189,6 @@ public class EmergencyTeleOP extends LinearOpMode {
             // Would make this zero the encoder if it hits the bottom,
             // But in practice, it could hit something going down and zero itself at the wrong height
             if (liftMotor.isOverCurrent()) {
-                // This should be setPower to bypass the use of PIDF so it stops instantly
                 liftMotor.setPower(0);
             }
             // Telemetry for lift actual height, lift target height, and lift current draw
