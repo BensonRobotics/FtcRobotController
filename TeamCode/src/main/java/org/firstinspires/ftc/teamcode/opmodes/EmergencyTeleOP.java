@@ -30,7 +30,7 @@ public class EmergencyTeleOP extends LinearOpMode {
     public static final double NEW_D_LIFT = 0.1;
     public static final double NEW_F_LIFT = 12.0;
 
-    // TPS(motorRPM) = (motorRPM / 60) * motorStepsPerRevolution
+    // TPSmotorRPM = (motorRPM / 60) * motorStepsPerRevolution
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
     // 537.7 is a 312 RPM motor's encoder steps per revolution
     public static final double TPS312 = (312.0/60.0) * 537.7;
