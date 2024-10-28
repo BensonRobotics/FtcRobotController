@@ -17,15 +17,15 @@ public class EmergencyTeleOP extends LinearOpMode {
 
     // PIDF stands for Proportional, Integral, Derivative, Feedforward
     // PIDF coefficients for drive system's setVelocity
-    public static final double NEW_P_DRIVE = 1.2;
+    public static final double NEW_P_DRIVE = 1.0;
     public static final double NEW_I_DRIVE = 0.2;
     public static final double NEW_D_DRIVE = 0.1;
     public static final double NEW_F_DRIVE = 12.0;
 
     // PIDF coefficients for lift motor's setVelocity
     // Proportional coefficient for lift motor's setPosition
-    public static final double NEW_POS_P_LIFT = 1.2;
-    public static final double NEW_P_LIFT = 1.2;
+    public static final double NEW_POS_P_LIFT = 1.0;
+    public static final double NEW_P_LIFT = 1.0;
     public static final double NEW_I_LIFT = 0.2;
     public static final double NEW_D_LIFT = 0.1;
     public static final double NEW_F_LIFT = 12.0;
