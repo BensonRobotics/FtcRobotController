@@ -20,7 +20,7 @@ public class EmergencyTeleOP extends LinearOpMode {
     public static final double NEW_P_DRIVE = 0.5;
     public static final double NEW_I_DRIVE = 0.2;
     public static final double NEW_D_DRIVE = 0.1;
-    public static final double NEW_F_DRIVE = 12.0;
+    public static final double NEW_F_DRIVE = 10.0;
 
     // PIDF coefficients for lift motor's setVelocity
     // Proportional coefficient for lift motor's setPosition
@@ -102,7 +102,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         // Lift sensorless homing code, will move the lift during initialization
         // Using built-in CurrentAlert is easier
         // liftMotor gets switched back to RUN_TO_POSITION near end of code
-        liftMotor.setCurrentAlert(2500, CurrentUnit.MILLIAMPS);
+        liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
         while (!liftMotor.isOverCurrent()) {
             liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             liftMotor.setVelocity(-0.25 * TPS312);
@@ -180,7 +180,7 @@ public class EmergencyTeleOP extends LinearOpMode {
                 liftMotor.setTargetPosition(2800);
             }
             if (gamepad1.y) {
-                liftMotor.setTargetPosition(4390);
+                liftMotor.setTargetPosition(4300);
             }
             // Tell liftMotor to run to to target position at 0.5 speed
             liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
