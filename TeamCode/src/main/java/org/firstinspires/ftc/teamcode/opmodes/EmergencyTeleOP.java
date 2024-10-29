@@ -17,14 +17,14 @@ public class EmergencyTeleOP extends LinearOpMode {
 
     // PIDF stands for Proportional, Integral, Derivative, Feedforward
     // PIDF coefficients for drive system's setVelocity
-    public static final double NEW_P_DRIVE = 1.0;
+    public static final double NEW_P_DRIVE = 0.5;
     public static final double NEW_I_DRIVE = 0.2;
     public static final double NEW_D_DRIVE = 0.1;
     public static final double NEW_F_DRIVE = 12.0;
 
     // PIDF coefficients for lift motor's setVelocity
     // Proportional coefficient for lift motor's setPosition
-    public static final double NEW_POS_P_LIFT = 1.0;
+    public static final double NEW_POS_P_LIFT = 2.0;
     public static final double NEW_P_LIFT = 1.0;
     public static final double NEW_I_LIFT = 0.2;
     public static final double NEW_D_LIFT = 0.1;
@@ -102,7 +102,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         // Lift sensorless homing code, will move the lift during initialization
         // Using built-in CurrentAlert is easier
         // liftMotor gets switched back to RUN_TO_POSITION near end of code
-        liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
+        liftMotor.setCurrentAlert(2000, CurrentUnit.MILLIAMPS);
         while (!liftMotor.isOverCurrent()) {
             liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             liftMotor.setVelocity(-0.1 * TPS312);
@@ -147,8 +147,8 @@ public class EmergencyTeleOP extends LinearOpMode {
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
             // https://www.desmos.com/calculator/ckxjhqekpo
-            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle - botHeading + 0.25 * Math.PI);
-            double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle - botHeading - 0.25 * Math.PI);
+            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
+            double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
             double frontLeftPower = frontLeftBackRightMotors + scaledRx;
             double backLeftPower = frontRightBackLeftMotors + scaledRx;
             double frontRightPower = frontRightBackLeftMotors - scaledRx;
@@ -184,7 +184,7 @@ public class EmergencyTeleOP extends LinearOpMode {
             }
             // Tell liftMotor to run to to target position at 0.5 speed
             liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            liftMotor.setPower(0.5);
+            liftMotor.setPower(0.75);
 
             // If liftMotor overcurrents, stop it
             // Would make this zero the encoder if it hits the bottom,
