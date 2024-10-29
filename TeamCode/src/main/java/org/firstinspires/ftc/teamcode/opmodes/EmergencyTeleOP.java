@@ -110,6 +110,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         // This should be setPower to bypass the use of PIDF so it stops instantly
         liftMotor.setPower(0);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setTargetPosition(0);
 
         // Play button is pressed
         waitForStart();
