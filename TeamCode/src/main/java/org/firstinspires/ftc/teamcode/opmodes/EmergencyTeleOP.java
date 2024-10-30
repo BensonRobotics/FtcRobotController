@@ -36,7 +36,8 @@ public class EmergencyTeleOP extends LinearOpMode {
     public static final double TPS312 = (312.0/60.0) * 537.7;
 
     // Factor for converting magnitude to linear speed in MM/S
-    public static final double magnitudeToMM = (312/60)*104;
+    // Drive wheels are 104mm in diameter, 104*PI in circumference
+    public static final double magnitudeToMM = (312.0/60.0)*104.0*Math.PI;
     public static ElapsedTime runtime = new ElapsedTime();
 
     @Override
