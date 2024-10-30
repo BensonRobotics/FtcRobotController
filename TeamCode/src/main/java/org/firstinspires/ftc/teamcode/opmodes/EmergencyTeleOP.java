@@ -102,7 +102,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         // Lift sensorless homing code, will move the lift during initialization
         // Using built-in CurrentAlert is easier
         // liftMotor gets switched back to RUN_TO_POSITION near end of code
-        liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
+        liftMotor.setCurrentAlert(2500, CurrentUnit.MILLIAMPS);
         while (!liftMotor.isOverCurrent()) {
             liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             liftMotor.setVelocity(-0.25 * TPS312);
@@ -111,6 +111,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         liftMotor.setPower(0);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setTargetPosition(0);
+        liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
 
         // Play button is pressed
         waitForStart();
@@ -119,19 +120,18 @@ public class EmergencyTeleOP extends LinearOpMode {
 
         while (opModeIsActive()) {
             // Get and assign joystick values. remember, Y stick value is reversed
-            double y = -gamepad1.left_stick_y;
-            double x = gamepad1.left_stick_x;
-            double rx = gamepad1.right_stick_x;
+            // These would normally be y, x, and rx, see next comment
+            double scaledY = -gamepad1.left_stick_y;
+            double scaledX = gamepad1.left_stick_x;
+            double scaledRx = gamepad1.right_stick_x;
 
+            // This is commented out to bypass it, it seems to cause problems
             // Cubic root scaling for joysticks, for improved control at lower speeds
             // The Math.abs is there so that it maintains its sign and doesn't spit out complex numbers
             // Math.cbrt and Math.sqrt are always faster than using Math.pow
-            double scaledY = Math.cbrt(Math.abs(y)) * y;
-            double scaledX = Math.cbrt(Math.abs(x)) * x;
-            double scaledRx = Math.cbrt(Math.abs(rx)) * rx;
-
-            // Factor to correct for imperfect strafing
-            scaledX = scaledX * 1.1;
+            //double scaledY = Math.cbrt(Math.abs(y)) * y;
+            //double scaledX = Math.cbrt(Math.abs(x)) * x;
+            //double scaledRx = Math.cbrt(Math.abs(rx)) * rx;
 
             // Calculate angle and magnitude from joystick values
             double driveAngle = Math.atan2(scaledX,scaledY);
