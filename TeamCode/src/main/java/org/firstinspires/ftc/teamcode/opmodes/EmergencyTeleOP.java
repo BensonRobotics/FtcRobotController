@@ -173,10 +173,11 @@ public class EmergencyTeleOP extends LinearOpMode {
             frontRightMotor.setVelocity(frontRightPower * TPS312);
             backRightMotor.setVelocity(backRightPower * TPS312);
 
+            // Lift homing button
             if (gamepad1.options) {
                 isLiftHoming = true;
             }
-            // Lift motor height presets
+            // Lift motor height presets, if not homing
             // A for bottom, X for middle, Y for top
             if (!isLiftHoming) {
                 if (gamepad1.a) {
@@ -196,12 +197,12 @@ public class EmergencyTeleOP extends LinearOpMode {
                 if (liftMotor.isOverCurrent()) {
                     liftMotor.setPower(0);
                 }
-            } else {
+            } else { // If liftMotor is in fact homing
                 liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
                 if (!liftMotor.isOverCurrent()) {
                     liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                     liftMotor.setVelocity(-0.25 * TPS312);
-                } else {
+                } else { // Once homing is finished
                     // This should be setPower to bypass the use of PIDF so it stops instantly
                     liftMotor.setPower(0);
                     liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
