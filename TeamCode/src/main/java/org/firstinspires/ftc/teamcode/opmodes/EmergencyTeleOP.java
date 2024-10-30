@@ -26,7 +26,7 @@ public class EmergencyTeleOP extends LinearOpMode {
     // Proportional coefficient for lift motor's setPosition
     public static final double NEW_POS_P_LIFT = 2.0;
     public static final double NEW_P_LIFT = 1.0;
-    public static final double NEW_I_LIFT = 0.2;
+    public static final double NEW_I_LIFT = 0.1;
     public static final double NEW_D_LIFT = 0.1;
     public static final double NEW_F_LIFT = 10.0;
 
