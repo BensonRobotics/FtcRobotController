@@ -9,8 +9,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -19,25 +17,33 @@ public class EmergencyTeleOP extends LinearOpMode {
 
     // PIDF stands for Proportional, Integral, Derivative, Feedforward
     // PIDF coefficients for drive system's setVelocity
-    public static final double NEW_P_DRIVE = 1.5;
-    public static final double NEW_I_DRIVE = 0.2;
+    public static final double NEW_P_DRIVE = 0.2;
+    public static final double NEW_I_DRIVE = 0.1;
     public static final double NEW_D_DRIVE = 0.1;
-    public static final double NEW_F_DRIVE = 12.0;
+    public static final double NEW_F_DRIVE = 10.0;
 
+    // PIDF coefficients for lift motor's setVelocity
     // Proportional coefficient for lift motor's setPosition
-    // setPositionPIDFCoefficients uses the IDF (PIDF without P) from setVelocityPIDFCoefficients
-    public static final double NEW_P_LIFT = 1.5;
+    public static final double NEW_POS_P_LIFT = 2.5;
+    public static final double NEW_P_LIFT = 1.0;
+    public static final double NEW_I_LIFT = 0.1;
+    public static final double NEW_D_LIFT = 0.1;
+    public static final double NEW_F_LIFT = 10.0;
 
-    // TPS(motorRPM) = (motorRPM / 60) * motorStepsPerRevolution
+    // TPSmotorRPM = (motorRPM / 60) * motorStepsPerRevolution
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
     // 537.7 is a 312 RPM motor's encoder steps per revolution
     public static final double TPS312 = (312.0/60.0) * 537.7;
+
+    // Factor for converting magnitude to linear speed in MM/S
+    // Drive wheels are 104mm in diameter, 104*PI in circumference
+    public static final double magnitudeToMM = (312.0/60.0)*104.0*Math.PI;
     public static ElapsedTime runtime = new ElapsedTime();
 
     @Override
     public void runOpMode() throws InterruptedException {
 
-        // Introducing our devices!! Yayy!!!
+        // Declare our devices!! Yayy!!!
         DcMotorEx frontLeftMotor;
         DcMotorEx frontRightMotor;
         DcMotorEx backLeftMotor;
@@ -45,7 +51,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         DcMotorEx liftMotor;
         Servo grabberServo;
 
-        // Declare our motors
+        // Assign our devices
         // Make sure your ID's match your configuration
         frontLeftMotor = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
         frontRightMotor = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
@@ -67,7 +73,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
-        // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
+        // Without this, the REV Hub's orientation is assumed to be logo up USB forward
         imu.initialize(parameters);
 
         // Sets PIDF coefficients for drive system and lift motor using variables
@@ -75,18 +81,18 @@ public class EmergencyTeleOP extends LinearOpMode {
         frontLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
         backRightMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
         backLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
-        liftMotor.setPositionPIDFCoefficients(NEW_P_LIFT);
+        liftMotor.setVelocityPIDFCoefficients(NEW_P_LIFT,NEW_I_LIFT,NEW_D_LIFT,NEW_F_LIFT);
+        liftMotor.setPositionPIDFCoefficients(NEW_POS_P_LIFT);
 
         // Make sure lift doesn't fall under gravity
         // Just a failsafe, as setTargetPosition holds at position anyway
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        // Set drive motors to RUN_USING_ENCODER
         frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
 
         // Reset drive system motor encoders
         frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -98,14 +104,19 @@ public class EmergencyTeleOP extends LinearOpMode {
         runtime.reset();
 
         // Lift sensorless homing code, will move the lift during initialization
-        // Using built-in CurrentAlert is easier
-        liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
+        // Using built-in CurrentAlert is better
+        // liftMotor gets switched back to RUN_TO_POSITION near end of code
+        liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
         while (!liftMotor.isOverCurrent()) {
-            liftMotor.setVelocity(-0.1 * TPS312);
+            liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            liftMotor.setVelocity(-0.25 * TPS312);
         }
         // This should be setPower to bypass the use of PIDF so it stops instantly
         liftMotor.setPower(0);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setTargetPosition(0);
+        liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
+        boolean isLiftHoming = false;
 
         // Play button is pressed
         waitForStart();
@@ -114,23 +125,19 @@ public class EmergencyTeleOP extends LinearOpMode {
 
         while (opModeIsActive()) {
             // Get and assign joystick values. remember, Y stick value is reversed
+            // These would normally be y, x, and rx, see next comment
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
 
-            // Cubic root scaling for joysticks, for improved control at lower speeds
+            // Calculate angle and magnitude from joystick values
+            double driveAngle = Math.atan2(x, y);
+            double driveMagnitude = Math.hypot(x, y);
+
+            // Cubic root scaling for driveMagnitude, for improved control at lower speeds
             // The Math.abs is there so that it maintains its sign and doesn't spit out complex numbers
             // Math.cbrt and Math.sqrt are always faster than using Math.pow
-            double scaledY = Math.cbrt(Math.abs(y)) * y;
-            double scaledX = Math.cbrt(Math.abs(x)) * x;
-            double scaledRx = Math.cbrt(Math.abs(rx)) * rx;
-
-            // Factor to correct for imperfect strafing
-            scaledX = scaledX * 1.1;
-
-            // Calculate angle and magnitude from joystick values
-            double driveAngle = Math.atan2(scaledX,scaledY);
-            double driveMagnitude = Math.hypot(scaledX,scaledY);
+            double scaledDriveMagnitude = Math.cbrt(Math.abs(driveMagnitude)) * driveMagnitude;
 
             // IMU Yaw reset button
             // This button choice was made so that it is hard to hit on accident
@@ -140,12 +147,14 @@ public class EmergencyTeleOP extends LinearOpMode {
             // Set botHeading to robot Yaw from IMU
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             // The evil code for calculating motor powers
-            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle - botHeading + 0.25 * Math.PI);
-            double frontRightBackLeftMotors = driveMagnitude * Math.sin(driveAngle - botHeading - 0.25 * Math.PI);
-            double frontLeftPower = frontLeftBackRightMotors - scaledRx;
-            double backLeftPower = frontRightBackLeftMotors - scaledRx;
-            double frontRightPower = frontRightBackLeftMotors + scaledRx;
-            double backRightPower = frontLeftBackRightMotors + scaledRx;
+            // Desmos used to troubleshoot directions without robot
+            // https://www.desmos.com/calculator/ckxjhqekpo
+            double frontLeftBackRightMotors = scaledDriveMagnitude * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
+            double frontRightBackLeftMotors = scaledDriveMagnitude * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
+            double frontLeftPower = frontLeftBackRightMotors + rx;
+            double backLeftPower = frontRightBackLeftMotors + rx;
+            double frontRightPower = frontRightBackLeftMotors - rx;
+            double backRightPower = frontLeftBackRightMotors - rx;
 
             // The Great Cleaving approaches
             // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
@@ -164,25 +173,57 @@ public class EmergencyTeleOP extends LinearOpMode {
             frontRightMotor.setVelocity(frontRightPower * TPS312);
             backRightMotor.setVelocity(backRightPower * TPS312);
 
-            // Lift motor height presets
+            // Lift homing button
+            if (gamepad1.options) {
+                isLiftHoming = true;
+            }
+            // Lift motor height presets, if not homing
             // A for bottom, X for middle, Y for top
-            if (gamepad1.a) {
-                liftMotor.setTargetPosition(0);
-            }
-            if (gamepad1.x) {
-                liftMotor.setTargetPosition(2800);
-            }
-            if (gamepad1.y) {
-                liftMotor.setTargetPosition(4500);
-            }
+            if (!isLiftHoming) {
+                if (gamepad1.a) {
+                    liftMotor.setTargetPosition(0);
+                }
+                if (gamepad1.x) {
+                    liftMotor.setTargetPosition(2800);
+                }
+                if (gamepad1.y) {
+                    liftMotor.setTargetPosition(4300);
+                }
+                // Tell liftMotor to run to to target position at set speed
+                liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                liftMotor.setPower(0.75);
 
-            // If liftMotor overcurrents, stop it
-            // Would make this zero the encoder if it hits the bottom,
-            // But in practice, it could hit something going down and zero itself at the wrong height
-            if (liftMotor.isOverCurrent()) {
-                // This should be setPower to bypass the use of PIDF so it stops instantly
-                liftMotor.setPower(0);
+                // If liftMotor overcurrents, stop it
+                if (liftMotor.isOverCurrent()) {
+                    liftMotor.setPower(0);
+                }
+            } else { // If liftMotor is in fact homing
+                liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
+                if (!liftMotor.isOverCurrent()) {
+                    liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    liftMotor.setVelocity(-0.25 * TPS312);
+                } else { // Once homing is finished
+                    // This should be setPower to bypass the use of PIDF so it stops instantly
+                    liftMotor.setPower(0);
+                    liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    liftMotor.setTargetPosition(0);
+                    liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
+                    isLiftHoming = false;
+                }
+
             }
+            // Telemetry
+            telemetry.addData("Lift Height:",liftMotor.getCurrentPosition());
+            telemetry.addLine();
+            telemetry.addData("Lift Target:",liftMotor.getTargetPosition());
+            telemetry.addLine();
+            telemetry.addData("Lift Current (Milliamps):",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
+            telemetry.addLine();
+            telemetry.addData("Robot Speed (MM/S):",driveMagnitude*magnitudeToMM);
+            telemetry.addLine();
+            telemetry.addData("Lift Homing State:",isLiftHoming);
+
+            telemetry.update();
         }
     }
 }
