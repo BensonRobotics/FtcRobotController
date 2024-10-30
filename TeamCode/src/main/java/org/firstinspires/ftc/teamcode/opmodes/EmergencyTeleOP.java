@@ -43,7 +43,7 @@ public class EmergencyTeleOP extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        // Introducing our devices!! Yayy!!!
+        // Declare our devices!! Yayy!!!
         DcMotorEx frontLeftMotor;
         DcMotorEx frontRightMotor;
         DcMotorEx backLeftMotor;
@@ -51,7 +51,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         DcMotorEx liftMotor;
         Servo grabberServo;
 
-        // Declare our motors
+        // Assign our devices
         // Make sure your ID's match your configuration
         frontLeftMotor = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
         frontRightMotor = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
