@@ -116,6 +116,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setTargetPosition(0);
         liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
+        boolean isLiftHoming = false;
 
         // Play button is pressed
         waitForStart();
@@ -172,26 +173,45 @@ public class EmergencyTeleOP extends LinearOpMode {
             frontRightMotor.setVelocity(frontRightPower * TPS312);
             backRightMotor.setVelocity(backRightPower * TPS312);
 
+            if (gamepad1.options) {
+                isLiftHoming = true;
+            }
             // Lift motor height presets
             // A for bottom, X for middle, Y for top
-            if (gamepad1.a) {
-                liftMotor.setTargetPosition(0);
-            }
-            if (gamepad1.x) {
-                liftMotor.setTargetPosition(2800);
-            }
-            if (gamepad1.y) {
-                liftMotor.setTargetPosition(4300);
-            }
-            // Tell liftMotor to run to to target position at 0.5 speed
-            liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            liftMotor.setPower(0.75);
+            if (!isLiftHoming) {
+                if (gamepad1.a) {
+                    liftMotor.setTargetPosition(0);
+                }
+                if (gamepad1.x) {
+                    liftMotor.setTargetPosition(2800);
+                }
+                if (gamepad1.y) {
+                    liftMotor.setTargetPosition(4300);
+                }
+                // Tell liftMotor to run to to target position at 0.5 speed
+                liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                liftMotor.setPower(0.75);
 
-            // If liftMotor overcurrents, stop it
-            // Would make this zero the encoder if it hits the bottom,
-            // But in practice, it could hit something going down and zero itself at the wrong height
-            if (liftMotor.isOverCurrent()) {
-                liftMotor.setPower(0);
+                // If liftMotor overcurrents, stop it
+                // Would make this zero the encoder if it hits the bottom,
+                // But in practice, it could hit something going down and zero itself at the wrong height
+                if (liftMotor.isOverCurrent()) {
+                    liftMotor.setPower(0);
+                }
+            } else {
+                liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
+                if (!liftMotor.isOverCurrent()) {
+                    liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    liftMotor.setVelocity(-0.25 * TPS312);
+                } else {
+                    // This should be setPower to bypass the use of PIDF so it stops instantly
+                    liftMotor.setPower(0);
+                    liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    liftMotor.setTargetPosition(0);
+                    liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
+                    isLiftHoming = false;
+                }
+
             }
             // Telemetry for lift actual height, lift target height, and lift current draw
             telemetry.addData("Lift Height",liftMotor.getCurrentPosition());
