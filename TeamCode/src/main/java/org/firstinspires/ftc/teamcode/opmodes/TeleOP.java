@@ -46,6 +46,7 @@ public class TeleOP extends LinearOpMode {
 
         double liftMotorCurrentThreshold = 3000.0;
         int liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
+        liftMotor.setTargetPosition(liftBottomPosition);
 
 
         /*Main loop */
@@ -142,8 +143,8 @@ public class TeleOP extends LinearOpMode {
         }
 
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
-        telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.DEGREES));
-        return orientation.getYaw(AngleUnit.DEGREES);
+        telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.RADIANS));
+        return orientation.getYaw(AngleUnit.RADIANS);
     }
 
     // Move the robot using a Vector2 representing velocity as an input (relative to robot)
@@ -189,12 +190,9 @@ public class TeleOP extends LinearOpMode {
 
             int desiredPosition = liftPositions.get(desiredPositionIndex);
 
-            if (!((liftMotor.getCurrentPosition() + 25 != desiredPosition) || (liftMotor.getCurrentPosition() - 25 != desiredPosition))) {
-                liftMotor.setTargetPosition(desiredPosition);
-                liftMotor.setPower(0.2);
-            } else {
-                liftMotor.setPower(0.0);
-            }
+            liftMotor.setTargetPosition(desiredPosition);
+            liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            liftMotor.setPower(0.5);
 
             if (IsOverloaded(liftMotor, currentThreshold)) {
                 liftMotor.setPower(0.0);
@@ -205,8 +203,9 @@ public class TeleOP extends LinearOpMode {
             liftMotor.setPower(0.0);
         }
 
-        telemetry.addData("liftMotorPosition: ", liftMotor.getCurrentPosition());
-        telemetry.addData("liftMotorCurrent: ", liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
+        telemetry.addData("liftMotorPosition", liftMotor.getCurrentPosition());
+        telemetry.addData("liftMotorCurrent", liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
+        telemetry.addData("Lift motor mode", liftMotor.getMode());
 
 //        if (gamepad1.dpad_up) {
 //            liftMotor.setPower(0.05);
@@ -291,9 +290,8 @@ public class TeleOP extends LinearOpMode {
         backLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         backRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
-        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         /* Orientation Variables */
 
