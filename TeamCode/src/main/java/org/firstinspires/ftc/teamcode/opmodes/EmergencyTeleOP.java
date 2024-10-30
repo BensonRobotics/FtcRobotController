@@ -17,8 +17,8 @@ public class EmergencyTeleOP extends LinearOpMode {
 
     // PIDF stands for Proportional, Integral, Derivative, Feedforward
     // PIDF coefficients for drive system's setVelocity
-    public static final double NEW_P_DRIVE = 0.5;
-    public static final double NEW_I_DRIVE = 0.2;
+    public static final double NEW_P_DRIVE = 0.2;
+    public static final double NEW_I_DRIVE = 0.1;
     public static final double NEW_D_DRIVE = 0.1;
     public static final double NEW_F_DRIVE = 10.0;
 
@@ -28,7 +28,7 @@ public class EmergencyTeleOP extends LinearOpMode {
     public static final double NEW_P_LIFT = 1.0;
     public static final double NEW_I_LIFT = 0.2;
     public static final double NEW_D_LIFT = 0.1;
-    public static final double NEW_F_LIFT = 12.0;
+    public static final double NEW_F_LIFT = 10.0;
 
     // TPSmotorRPM = (motorRPM / 60) * motorStepsPerRevolution
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
@@ -102,7 +102,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         // Lift sensorless homing code, will move the lift during initialization
         // Using built-in CurrentAlert is easier
         // liftMotor gets switched back to RUN_TO_POSITION near end of code
-        liftMotor.setCurrentAlert(2500, CurrentUnit.MILLIAMPS);
+        liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
         while (!liftMotor.isOverCurrent()) {
             liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             liftMotor.setVelocity(-0.25 * TPS312);
@@ -121,21 +121,18 @@ public class EmergencyTeleOP extends LinearOpMode {
         while (opModeIsActive()) {
             // Get and assign joystick values. remember, Y stick value is reversed
             // These would normally be y, x, and rx, see next comment
-            double scaledY = -gamepad1.left_stick_y;
-            double scaledX = gamepad1.left_stick_x;
-            double scaledRx = gamepad1.right_stick_x;
-
-            // This is commented out to bypass it, it seems to cause problems
-            // Cubic root scaling for joysticks, for improved control at lower speeds
-            // The Math.abs is there so that it maintains its sign and doesn't spit out complex numbers
-            // Math.cbrt and Math.sqrt are always faster than using Math.pow
-            //double scaledY = Math.cbrt(Math.abs(y)) * y;
-            //double scaledX = Math.cbrt(Math.abs(x)) * x;
-            //double scaledRx = Math.cbrt(Math.abs(rx)) * rx;
+            double y = -gamepad1.left_stick_y;
+            double x = gamepad1.left_stick_x;
+            double rx = gamepad1.right_stick_x;
 
             // Calculate angle and magnitude from joystick values
-            double driveAngle = Math.atan2(scaledX,scaledY);
-            double driveMagnitude = Math.hypot(scaledX,scaledY);
+            double driveAngle = Math.atan2(x, y);
+            double driveMagnitude = Math.hypot(x, y);
+
+            // Cubic root scaling for driveMagnitude, for improved control at lower speeds
+            // The Math.abs is there so that it maintains its sign and doesn't spit out complex numbers
+            // Math.cbrt and Math.sqrt are always faster than using Math.pow
+            double scaledDriveMagnitude = Math.cbrt(Math.abs(driveMagnitude)) * driveMagnitude;
 
             // IMU Yaw reset button
             // This button choice was made so that it is hard to hit on accident
@@ -147,12 +144,12 @@ public class EmergencyTeleOP extends LinearOpMode {
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
             // https://www.desmos.com/calculator/ckxjhqekpo
-            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
-            double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
-            double frontLeftPower = frontLeftBackRightMotors + scaledRx;
-            double backLeftPower = frontRightBackLeftMotors + scaledRx;
-            double frontRightPower = frontRightBackLeftMotors - scaledRx;
-            double backRightPower = frontLeftBackRightMotors - scaledRx;
+            double frontLeftBackRightMotors = scaledDriveMagnitude * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
+            double frontRightBackLeftMotors = scaledDriveMagnitude * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
+            double frontLeftPower = frontLeftBackRightMotors + rx;
+            double backLeftPower = frontRightBackLeftMotors + rx;
+            double frontRightPower = frontRightBackLeftMotors - rx;
+            double backRightPower = frontLeftBackRightMotors - rx;
 
             // The Great Cleaving approaches
             // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
