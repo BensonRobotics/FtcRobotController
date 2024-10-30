@@ -214,15 +214,15 @@ public class EmergencyTeleOP extends LinearOpMode {
 
             }
             // Telemetry
-            telemetry.addData("Lift Height",liftMotor.getCurrentPosition());
+            telemetry.addData("Lift Height:",liftMotor.getCurrentPosition());
             telemetry.addLine();
-            telemetry.addData("Lift Target",liftMotor.getTargetPosition());
+            telemetry.addData("Lift Target:",liftMotor.getTargetPosition());
             telemetry.addLine();
-            telemetry.addData("Lift Current (Milliamps)",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
+            telemetry.addData("Lift Current (Milliamps):",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
             telemetry.addLine();
-            telemetry.addData("Robot Speed (MM/S)",driveMagnitude*magnitudeToMM);
+            telemetry.addData("Robot Speed (MM/S):",driveMagnitude*magnitudeToMM);
             telemetry.addLine();
-            telemetry.addData("Is Lift Homing?",isLiftHoming);
+            telemetry.addData("Lift Homing State:",isLiftHoming);
 
             telemetry.update();
         }
