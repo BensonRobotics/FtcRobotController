@@ -213,7 +213,7 @@ public class EmergencyTeleOP extends LinearOpMode {
                 }
 
             }
-            // Telemetry for lift actual height, lift target height, and lift current draw
+            // Telemetry
             telemetry.addData("Lift Height",liftMotor.getCurrentPosition());
             telemetry.addLine();
             telemetry.addData("Lift Target",liftMotor.getTargetPosition());
@@ -221,6 +221,9 @@ public class EmergencyTeleOP extends LinearOpMode {
             telemetry.addData("Lift Current (Milliamps)",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
             telemetry.addLine();
             telemetry.addData("Robot Speed (MM/S)",driveMagnitude*magnitudeToMM);
+            telemetry.addLine();
+            telemetry.addData("Is Lift Homing?",isLiftHoming);
+
             telemetry.update();
         }
     }
