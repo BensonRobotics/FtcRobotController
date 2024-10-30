@@ -34,6 +34,9 @@ public class EmergencyTeleOP extends LinearOpMode {
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
     // 537.7 is a 312 RPM motor's encoder steps per revolution
     public static final double TPS312 = (312.0/60.0) * 537.7;
+
+    // Factor for converting magnitude to linear speed in MM/S
+    public static final double magnitudeToMM = (312/60)*104;
     public static ElapsedTime runtime = new ElapsedTime();
 
     @Override
@@ -195,6 +198,8 @@ public class EmergencyTeleOP extends LinearOpMode {
             telemetry.addData("Lift Target",liftMotor.getTargetPosition());
             telemetry.addLine();
             telemetry.addData("Lift Current (Milliamps)",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
+            telemetry.addLine();
+            telemetry.addData("Robot Speed (MM/S)",driveMagnitude*magnitudeToMM);
             telemetry.update();
         }
     }
