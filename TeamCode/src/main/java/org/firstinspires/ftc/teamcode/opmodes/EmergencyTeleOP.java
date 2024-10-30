@@ -193,8 +193,6 @@ public class EmergencyTeleOP extends LinearOpMode {
                 liftMotor.setPower(0.75);
 
                 // If liftMotor overcurrents, stop it
-                // Would make this zero the encoder if it hits the bottom,
-                // But in practice, it could hit something going down and zero itself at the wrong height
                 if (liftMotor.isOverCurrent()) {
                     liftMotor.setPower(0);
                 }
