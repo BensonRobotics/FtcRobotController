@@ -73,7 +73,7 @@ public class EmergencyTeleOP extends LinearOpMode {
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
-        // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
+        // Without this, the REV Hub's orientation is assumed to be logo up USB forward
         imu.initialize(parameters);
 
         // Sets PIDF coefficients for drive system and lift motor using variables
