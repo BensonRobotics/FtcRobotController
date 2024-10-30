@@ -9,10 +9,10 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 public class Auto extends LinearOpMode {
     // PIDF stands for Proportional, Integral, Derivative, Feedforward
     // PIDF coefficients for drive system's setPosition
-    public static final double NEW_P_DRIVE = 1.0;
-    public static final double NEW_I_DRIVE = 0.2;
+    public static final double NEW_P_DRIVE = 0.5;
+    public static final double NEW_I_DRIVE = 0.1;
     public static final double NEW_D_DRIVE = 0.1;
-    public static final double NEW_F_DRIVE = 12.0;
+    public static final double NEW_F_DRIVE = 10.0;
 
     public void runOpMode(){
         DcMotorEx frontLeftMotor;
@@ -43,6 +43,10 @@ public class Auto extends LinearOpMode {
         frontRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        frontRightMotor.setTargetPosition(0);
+        frontLeftMotor.setTargetPosition(0);
+        backRightMotor.setTargetPosition(0);
+        backLeftMotor.setTargetPosition(0);
 
         // Set drive motors' Position Proportional Coefficients
         frontRightMotor.setPositionPIDFCoefficients(NEW_P_DRIVE);
