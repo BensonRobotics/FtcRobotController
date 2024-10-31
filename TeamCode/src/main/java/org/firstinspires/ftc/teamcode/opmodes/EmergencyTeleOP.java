@@ -193,7 +193,7 @@ EmergencyTeleOP extends LinearOpMode {
 
             // Other lift motor code. Insanely complicated.
             // Lift is controlled by right stick Y axis
-            liftMotor.setPower(scaledRY);
+            liftMotor.setVelocity(scaledRY*TPS312);
 
             // Grabber servo code. Super complicated.
             // If you let go of right bumper, servo will stay running forward at a lower speed
