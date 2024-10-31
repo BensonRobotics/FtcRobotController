@@ -16,19 +16,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class
 EmergencyTeleOP extends LinearOpMode {
 
-    // PIDF stands for Proportional, Integral, Derivative, Feedforward
-    // PIDF coefficients for drive system's setVelocity
-    public static final double NEW_P_DRIVE = 1.0;
-    public static final double NEW_I_DRIVE = 0.2;
-    public static final double NEW_D_DRIVE = 0.1;
-    public static final double NEW_F_DRIVE = 10.0;
-
     // TPSmotorRPM = (motorRPM / 60) * motorStepsPerRevolution
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
     // 537.7 is a 312 RPM motor's encoder steps per revolution
     public static final double TPS312 = (312.0/60.0) * 537.7;
     public static boolean isLiftHoming = false;
     public static ElapsedTime runtime = new ElapsedTime();
+    public static double acceleratedDriveMagnitude = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -68,12 +62,6 @@ EmergencyTeleOP extends LinearOpMode {
                 RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
         // Without this, the REV Hub's orientation is assumed to be logo up USB forward
         imu.initialize(parameters);
-
-        // Sets PIDF coefficients for drive system and lift motor using variables
-        frontRightMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
-        frontLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
-        backRightMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
-        backLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
 
         // Make sure lift doesn't fall under gravity
         // Just a failsafe, as setTargetPosition holds at position anyway
@@ -118,6 +106,16 @@ EmergencyTeleOP extends LinearOpMode {
             double scaledRX = Math.cbrt(Math.abs(rx)) * rx;
             double scaledRY = Math.cbrt(Math.abs(ry)) * ry;
 
+            // Linear acceleration code for driveMagnitude
+            // +0.05 to -0.05 is the tolerance where it will just bypass the incrementer to reduce wobbling around the target speed
+            // If acceleration is too fast, decrease the increment values
+            if (acceleratedDriveMagnitude - scaledDriveMagnitude < -0.05) {
+                acceleratedDriveMagnitude = acceleratedDriveMagnitude + 0.01;
+            } else if (acceleratedDriveMagnitude - scaledDriveMagnitude > 0.05) {
+                acceleratedDriveMagnitude = acceleratedDriveMagnitude - 0.01;
+            } else {
+                acceleratedDriveMagnitude = scaledDriveMagnitude;
+            }
 
             // IMU Yaw reset button
             // This button choice was made so that it is hard to hit on accident
@@ -129,8 +127,8 @@ EmergencyTeleOP extends LinearOpMode {
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
             // https://www.desmos.com/calculator/3gzff5bzbn
-            double frontLeftBackRightMotors = scaledDriveMagnitude * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
-            double frontRightBackLeftMotors = scaledDriveMagnitude * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
+            double frontLeftBackRightMotors = acceleratedDriveMagnitude * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
+            double frontRightBackLeftMotors = acceleratedDriveMagnitude * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
             double frontLeftPower = frontLeftBackRightMotors + scaledRX;
             double backLeftPower = frontRightBackLeftMotors + scaledRX;
             double frontRightPower = frontRightBackLeftMotors - scaledRX;
