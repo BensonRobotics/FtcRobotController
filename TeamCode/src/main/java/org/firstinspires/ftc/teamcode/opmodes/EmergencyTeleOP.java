@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -9,7 +10,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
@@ -43,7 +43,7 @@ EmergencyTeleOP extends LinearOpMode {
         DcMotorEx backLeftMotor;
         DcMotorEx backRightMotor;
         DcMotorEx liftMotor;
-        Servo grabberServo;
+        CRServo grabberServo;
 
         // Assign our devices
         // Make sure your ID's match your configuration
@@ -52,7 +52,7 @@ EmergencyTeleOP extends LinearOpMode {
         backLeftMotor = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightMotor = hardwareMap.get(DcMotorEx.class, "backRightMotor");
         liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
-        grabberServo = hardwareMap.get(Servo.class, "grabberServo");
+        grabberServo = hardwareMap.get(CRServo.class, "grabberServo");
 
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
@@ -190,6 +190,11 @@ EmergencyTeleOP extends LinearOpMode {
                 }
 
             }
+
+            // Servo code. Super complicated.
+            grabberServo.setPower(gamepad1.right_trigger);
+            grabberServo.setPower(-gamepad1.left_trigger);
+
             // Telemetry
             telemetry.addData("Lift Height:",liftMotor.getCurrentPosition());
             telemetry.addLine();
