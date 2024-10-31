@@ -203,12 +203,12 @@ EmergencyTeleOP extends LinearOpMode {
             // If you let go of left bumper, servo will stop
             if (gamepad1.right_bumper) {
                 grabberServo.setPower(1);
-            } else if (grabberServo.getPower()==1){
+            } else if (grabberServo.getPower()>0){
                 grabberServo.setPower(0.25);
             }
             if (gamepad1.left_bumper) {
                 grabberServo.setPower(-1);
-            } else if (grabberServo.getPower()==-1) {
+            } else if (grabberServo.getPower()<0) {
                 grabberServo.setPower(0);
             }
 
