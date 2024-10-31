@@ -108,7 +108,7 @@ EmergencyTeleOP extends LinearOpMode {
         // Using built-in CurrentAlert is better
         // liftMotor gets switched back to RUN_TO_POSITION near end of code
         boolean isLiftHoming = true;
-        liftMotor.setCurrentAlert(1000, CurrentUnit.MILLIAMPS);
+        liftMotor.setCurrentAlert(800, CurrentUnit.MILLIAMPS);
         while (!liftMotor.isOverCurrent()) {
             liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             liftMotor.setVelocity(-0.25 * TPS312);
@@ -217,7 +217,7 @@ EmergencyTeleOP extends LinearOpMode {
                     liftMotor.setPower(0);
                 }
             } else { // If liftMotor is in fact homing
-                liftMotor.setCurrentAlert(1000, CurrentUnit.MILLIAMPS);
+                liftMotor.setCurrentAlert(800, CurrentUnit.MILLIAMPS);
                 if (!liftMotor.isOverCurrent()) {
                     liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                     liftMotor.setVelocity(-0.25 * TPS312);
