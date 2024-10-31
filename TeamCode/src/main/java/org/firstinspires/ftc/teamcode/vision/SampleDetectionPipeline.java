@@ -10,8 +10,6 @@ import org.openftc.easyopencv.OpenCvPipeline;
 class SampleDetectionPipeline extends OpenCvPipeline {
     boolean viewportPaused;
 
-
-
     /*
      * NOTE: if you wish to use additional Mat objects in your processing pipeline, it is
      * highly recommended to declare them here as instance variables and re-use them for

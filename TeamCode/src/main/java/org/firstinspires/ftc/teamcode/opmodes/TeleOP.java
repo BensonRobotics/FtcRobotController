@@ -4,9 +4,10 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -14,6 +15,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Objects;
 
 //This is a test from Desmond of the Github, Git, and Android Studio syncing
@@ -27,7 +30,7 @@ public class TeleOP extends LinearOpMode {
     private DcMotorEx backLeftDrive = null;
     private DcMotorEx backRightDrive = null;
 
-    private Servo grabberServo = null;
+    private CRServo grabberServo = null;
 
     private DcMotorEx liftMotor = null;
 
@@ -54,7 +57,8 @@ public class TeleOP extends LinearOpMode {
         backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightDrive = hardwareMap.get(DcMotorEx.class, "backRightMotor");
 
-        grabberServo = hardwareMap.get(Servo.class, "grabberServo");
+        grabberServo = hardwareMap.get(CRServo.class, "grabberServo");
+        grabberServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
 
@@ -211,17 +215,20 @@ public class TeleOP extends LinearOpMode {
     }
 
 
-    // Servos
-    double desiredLiftServoPosition = 0.0;
-    private void UpdateServos(Servo grabberServo) {
-
+    // Servo
+    double desiredLiftServoPower = 0.0;
+    private void UpdateServos(CRServo grabberServo) {
         if (gamepad2.dpad_up) {
-            desiredLiftServoPosition = 1;
-        } else if (gamepad2.dpad_down) {desiredLiftServoPosition = -1;
+            desiredLiftServoPower = 1;
+        } else if (gamepad2.dpad_down) {
+            desiredLiftServoPower = -1;
+        } else {
+            desiredLiftServoPower = 0;
         }
 
-        grabberServo.setPosition(desiredLiftServoPosition);
-        telemetry.addData("Grabber Servo Desired Position", desiredLiftServoPosition);
+        grabberServo.setPower(desiredLiftServoPower);
+
+        telemetry.addData("Grabber Servo Desired Power", desiredLiftServoPower);
         telemetry.addData("dpad up", gamepad2.dpad_up);
     }
 
@@ -311,11 +318,5 @@ public class TeleOP extends LinearOpMode {
 
     private boolean IsOverloaded(DcMotorEx motor, double currentThreshold) {
         return (motor.getCurrent(CurrentUnit.MILLIAMPS) > currentThreshold);
-    }
-
-
-    // Initialization
-    private void Initialize() {
-        double r = 0;
     }
 }
