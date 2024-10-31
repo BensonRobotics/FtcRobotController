@@ -130,8 +130,9 @@ public class TeleOP extends LinearOpMode {
             telemetry.addData("velocity:", (velocity.Value()));
             updateTelemetry(telemetry);
 
+            double grabberServoPower = ScaleStickValue(gamepad2.right_stick_y);
+            UpdateServos(grabberServoPower);
 
-            UpdateServos(grabberServo);
             UpdateLiftMotor(liftBottomPosition, liftMotorCurrentThreshold);
 
             // Take an input vector from the joysticks and use it to move. Exponential scaling will need to be applied for better control.
@@ -216,20 +217,8 @@ public class TeleOP extends LinearOpMode {
 
 
     // Servo
-    double desiredLiftServoPower = 0.0;
-    private void UpdateServos(CRServo grabberServo) {
-        if (gamepad2.dpad_up) {
-            desiredLiftServoPower = 1;
-        } else if (gamepad2.dpad_down) {
-            desiredLiftServoPower = -1;
-        } else {
-            desiredLiftServoPower = 0;
-        }
-
-        grabberServo.setPower(desiredLiftServoPower);
-
-        telemetry.addData("Grabber Servo Desired Power", desiredLiftServoPower);
-        telemetry.addData("dpad up", gamepad2.dpad_up);
+    private void UpdateServos(double servo1Power) {
+        grabberServo.setPower(servo1Power);
     }
 
 
@@ -271,13 +260,13 @@ public class TeleOP extends LinearOpMode {
         telemetry.addData("liftMotorCurrent", liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
         telemetry.addData("Lift motor mode", liftMotor.getMode());
 
-//        if (gamepad1.dpad_up) {
-//            liftMotor.setPower(0.05);
-//        } else if (gamepad1.dpad_down) {
-//            liftMotor.setPower(-0.05);
-//        } else {
-//            liftMotor.setPower(0.0);
-//        }
+        double rightStickY = -gamepad2.right_stick_y;
+        if (rightStickY != 0) {
+            liftMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+            liftMotor.setPower(rightStickY);
+        } else {
+            liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        }
     }
 
     // Calibrate the lift by slowly running it into the bottom of it's travel, and detecting when the resistance on the motor reaches a certain
@@ -308,10 +297,9 @@ public class TeleOP extends LinearOpMode {
 
     // Utility:
     private double NonlinearInterpolate(double rangeStart, double rangeEnd, double index, double power) {
-        double output = 0;
         // this bit of math interpolates between two numbers with an index using the given exponent. There is a desmos with the equation here:
         // https://www.desmos.com/calculator/st8wrb0oph
-        output = index * Math.pow(index / (rangeEnd - rangeStart), power);
+        double output = index * Math.pow(index / (rangeEnd - rangeStart), power);
 
         return output;
     }
