@@ -39,21 +39,77 @@ public class TeleOP extends LinearOpMode {
     public static final double NEW_D = 0.1;
     public static final double NEW_F = 12.0;
 
-    public void runOpMode() {
-        Initialize();
+    double liftMotorCurrentThreshold;
+    int liftBottomPosition;
 
-        double robotAngleToField = 0;
+    public void runOpMode() throws InterruptedException{
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
+        // Initialize the hardware variables. Note that the strings used here as parameters
+        // to 'get' must correspond to the names assigned during the robot configuration
+        // step (using the FTC Robot Controller app on the phone).
+        frontLeftDrive = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
+        frontRightDrive = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
+        backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
+        backRightDrive = hardwareMap.get(DcMotorEx.class, "backRightMotor");
+
+        grabberServo = hardwareMap.get(Servo.class, "grabberServo");
+
+        liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
+
+        // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
+        // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
+        // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
+        frontLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
+        frontRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
+        backLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
+        backRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
+
+        liftMotor.setDirection(DcMotorEx.Direction.REVERSE);
+
+
+        frontLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        frontRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        backLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        backRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+
+        liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        liftMotor.setTargetPosition(0);
+        liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         double liftMotorCurrentThreshold = 3000.0;
-        int liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
-        liftMotor.setTargetPosition(liftBottomPosition);
 
+        /* Orientation Variables */
+
+        // Define the mounting direction of the control hub
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
+        RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD;
+
+        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+
+        // define the control hub IMU (Integrated Measurement Unit)
+        imu = hardwareMap.get(IMU.class, "imu");
+        // Initialize the IMU with this mounting orientation. Note: if two conflicting directions are chosen, this initialization will cause a code exception.
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
+
+        PIDFCoefficients pidfNew = new PIDFCoefficients(NEW_P, NEW_I, NEW_D, NEW_F);
+
+        frontRightDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
+        frontLeftDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
+        backRightDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
+        backLeftDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
+
+        double robotAngleToField = 0;
 
         /*Main loop */
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
         runtime.reset();
+
+        int liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
+        liftMotor.setTargetPosition(liftBottomPosition);
 
         // Run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -71,7 +127,7 @@ public class TeleOP extends LinearOpMode {
             updateTelemetry(telemetry);
 
 
-            UpdateServos();
+            UpdateServos(grabberServo);
             UpdateLiftMotor(liftBottomPosition, liftMotorCurrentThreshold);
 
             // Take an input vector from the joysticks and use it to move. Exponential scaling will need to be applied for better control.
@@ -156,16 +212,18 @@ public class TeleOP extends LinearOpMode {
 
 
     // Servos
-    private void UpdateServos() {
-//        ArrayList<Double> desiredPositions = new ArrayList<Double>(1);
-//        desiredPositions.add(0.0);
-//        if (gamepad2.dpad_up & desiredPositions.get(0) <= 1) {
-//            desiredPositions.set(0, desiredPositions.get(0) + 0.01);
-//        } else if (gamepad2.dpad_down & desiredPositions.get(0) >= 0) {
-//            desiredPositions.set(0, desiredPositions.get(0) - 0.01);
-//        }
-//
-//        grabberServo.setPosition(desiredPositions.get(0));
+    double desiredLiftServoPosition = 0.0;
+    private void UpdateServos(Servo grabberServo) {
+
+        if (gamepad2.dpad_up) {
+            desiredLiftServoPosition = 1;
+        } else if (gamepad2.dpad_down) {
+            desiredLiftServoPosition = -1;
+        }
+
+        grabberServo.setPosition(desiredLiftServoPosition);
+        telemetry.addData("Grabber Servo Desired Position", desiredLiftServoPosition);
+        telemetry.addData("dpad up", gamepad2.dpad_up);
     }
 
 
@@ -175,8 +233,8 @@ public class TeleOP extends LinearOpMode {
     private void UpdateLiftMotor(int bottomPosition, double currentThreshold) {
         ArrayList<Integer> liftPositions = new ArrayList<Integer>(3);
         liftPositions.add(bottomPosition);
-        liftPositions.add(bottomPosition + 2800);
-        liftPositions.add(bottomPosition + 4500);
+        liftPositions.add(bottomPosition + 3000);
+        liftPositions.add(bottomPosition + 4400);
 
         if (gamepad2.a || gamepad2.x || gamepad2.y) {
             // Since the variable is initialized to 0, and if we are running this code we know either a, x, or y has been pressed,
@@ -259,58 +317,6 @@ public class TeleOP extends LinearOpMode {
 
     // Initialization
     private void Initialize() {
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
-
-        // Initialize the hardware variables. Note that the strings used here as parameters
-        // to 'get' must correspond to the names assigned during the robot configuration
-        // step (using the FTC Robot Controller app on the phone).
-        frontLeftDrive = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
-        frontRightDrive = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
-        backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
-        backRightDrive = hardwareMap.get(DcMotorEx.class, "backRightMotor");
-
-        grabberServo = hardwareMap.get(Servo.class, "grabberServo");
-
-        liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
-
-        // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
-        // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
-        // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
-        frontLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
-        frontRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
-        backLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
-        backRightDrive.setDirection(DcMotorEx.Direction.FORWARD);
-
-        liftMotor.setDirection(DcMotorEx.Direction.REVERSE);
-
-
-        frontLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        frontRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        backLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        backRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-
-        liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        /* Orientation Variables */
-
-        // Define the mounting direction of the control hub
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD;
-
-        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
-
-        // define the control hub IMU (Integrated Measurement Unit)
-        imu = hardwareMap.get(IMU.class, "imu");
-        // Initialize the IMU with this mounting orientation. Note: if two conflicting directions are chosen, this initialization will cause a code exception.
-        imu.initialize(new IMU.Parameters(orientationOnRobot));
-
-        PIDFCoefficients pidfNew = new PIDFCoefficients(NEW_P, NEW_I, NEW_D, NEW_F);
-
-        frontRightDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
-        frontLeftDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
-        backRightDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
-        backLeftDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
+        double r = 0;
     }
 }
