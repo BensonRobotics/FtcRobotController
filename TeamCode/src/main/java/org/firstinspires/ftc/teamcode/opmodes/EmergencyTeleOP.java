@@ -15,6 +15,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @TeleOp
 public class
 EmergencyTeleOP extends LinearOpMode {
+    public static final double NEW_P_DRIVE = 1.0;
+    public static final double NEW_I_DRIVE = 0.2;
+    public static final double NEW_D_DRIVE = 0.1;
+    public static final double NEW_F_DRIVE = 10.0;
 
     // TPSmotorRPM = (motorRPM / 60) * motorStepsPerRevolution
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
@@ -42,6 +46,12 @@ EmergencyTeleOP extends LinearOpMode {
         backRightMotor = hardwareMap.get(DcMotorEx.class, "backRightMotor");
         liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
         grabberServo = hardwareMap.get(CRServo.class, "grabberServo");
+
+        // Apply drive system PIDF coefficients
+        frontLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
+        frontRightMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
+        backLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
+        backRightMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
 
         // Reverse motors that are backwards otherwise
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -77,6 +87,9 @@ EmergencyTeleOP extends LinearOpMode {
         backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        // Make sure motors don't run from the get-go
+        grabberServo.setPower(0);
+
         // Reset runtime variable, not used yet
         runtime.reset();
 
@@ -102,7 +115,6 @@ EmergencyTeleOP extends LinearOpMode {
             // Math.cbrt and Math.sqrt are always faster than using Math.pow
             double scaledDriveMagnitude = Math.cbrt(Math.abs(driveMagnitude)) * driveMagnitude;
             double scaledRX = Math.cbrt(Math.abs(rx)) * rx;
-            double scaledRY = Math.cbrt(Math.abs(ry)) * ry;
 
             // IMU Yaw reset button
             // This button choice was made so that it is hard to hit on accident
@@ -180,9 +192,9 @@ EmergencyTeleOP extends LinearOpMode {
 
             // Other lift motor code
             // Lift is controlled by right stick Y axis
-            if (scaledRY != 0) {
+            if (ry != 0) {
                 liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                liftMotor.setVelocity(0.75 * scaledRY * TPS312);
+                liftMotor.setVelocity(0.75 * ry * TPS312);
             } else if (liftMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
                 liftMotor.setTargetPosition(liftMotor.getCurrentPosition());
                 liftMotor.setPower(0.75);
