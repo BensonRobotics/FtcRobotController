@@ -22,7 +22,6 @@ EmergencyTeleOP extends LinearOpMode {
     public static final double TPS312 = (312.0/60.0) * 537.7;
     public static boolean isLiftHoming = false;
     public static ElapsedTime runtime = new ElapsedTime();
-    public static double acceleratedDriveMagnitude = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -47,12 +46,11 @@ EmergencyTeleOP extends LinearOpMode {
         // Set lift motor overcurrent amperage
         liftMotor.setCurrentAlert(2000, CurrentUnit.MILLIAMPS);
 
-        // Reverse the right side motors. This may be wrong for your setup.
-        // If your robot moves backwards when commanded to go forwards,
-        // reverse the left side instead.
+        // Reverse motors that are backwards otherwise
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        grabberServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Retrieve the IMU from the hardware map
         IMU imu = hardwareMap.get(IMU.class, "imu");
@@ -109,17 +107,6 @@ EmergencyTeleOP extends LinearOpMode {
             double scaledRX = Math.cbrt(Math.abs(rx)) * rx;
             double scaledRY = Math.cbrt(Math.abs(ry)) * ry;
 
-            // Linear acceleration code for driveMagnitude
-            // +0.05 to -0.05 is the tolerance where it will just bypass the incrementer to reduce wobbling around the target speed
-            // If acceleration is too fast, decrease the increment values
-            if (acceleratedDriveMagnitude - scaledDriveMagnitude < -0.05) {
-                acceleratedDriveMagnitude = acceleratedDriveMagnitude + 0.01;
-            } else if (acceleratedDriveMagnitude - scaledDriveMagnitude > 0.05) {
-                acceleratedDriveMagnitude = acceleratedDriveMagnitude - 0.01;
-            } else {
-                acceleratedDriveMagnitude = scaledDriveMagnitude;
-            }
-
             // IMU Yaw reset button
             // This button choice was made so that it is hard to hit on accident
             if (gamepad1.back) {
@@ -130,8 +117,8 @@ EmergencyTeleOP extends LinearOpMode {
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
             // https://www.desmos.com/calculator/3gzff5bzbn
-            double frontLeftBackRightMotors = acceleratedDriveMagnitude * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
-            double frontRightBackLeftMotors = acceleratedDriveMagnitude * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
+            double frontLeftBackRightMotors = scaledDriveMagnitude * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
+            double frontRightBackLeftMotors = scaledDriveMagnitude * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
             double frontLeftPower = frontLeftBackRightMotors + scaledRX;
             double backLeftPower = frontRightBackLeftMotors + scaledRX;
             double frontRightPower = frontRightBackLeftMotors - scaledRX;
@@ -194,9 +181,17 @@ EmergencyTeleOP extends LinearOpMode {
             // Lift motor position-based code ends here
              */
 
-            // Other lift motor code. Insanely complicated.
+            // Other lift motor code
             // Lift is controlled by right stick Y axis
-            liftMotor.setVelocity(scaledRY*TPS312);
+            if (scaledRY != 0) {
+                liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                liftMotor.setVelocity(0.75 * scaledRY * TPS312);
+            } else if (liftMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
+                liftMotor.setTargetPosition(liftMotor.getCurrentPosition());
+                liftMotor.setPower(0.75);
+                liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            }
+
 
             // Grabber servo code. Super complicated.
             // If you let go of right bumper, servo will stay running forward at a lower speed
