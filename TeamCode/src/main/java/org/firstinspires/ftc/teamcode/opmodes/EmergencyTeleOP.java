@@ -52,6 +52,8 @@ EmergencyTeleOP extends LinearOpMode {
         DcMotorEx liftMotor;
         Servo grabberServo;
 
+        boolean isLiftHoming = false;
+
         // Assign our devices
         // Make sure your ID's match your configuration
         frontLeftMotor = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
@@ -101,39 +103,6 @@ EmergencyTeleOP extends LinearOpMode {
 
         // Reset runtime variable, not used yet
         runtime.reset();
-
-        // Lift sensorless homing code, will move the lift during initialization
-        // Using built-in CurrentAlert is better
-        // liftMotor gets switched back to RUN_TO_POSITION near end of code
-        boolean isLiftHoming = true;
-        liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
-        while (!liftMotor.isOverCurrent()) {
-            liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            liftMotor.setPower(-0.25);
-            telemetry.addData("Lift Height:",liftMotor.getCurrentPosition());
-            telemetry.addLine();
-            telemetry.addData("Lift Target:",liftMotor.getTargetPosition());
-            telemetry.addLine();
-            telemetry.addData("Lift Current (Milliamps):",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
-            telemetry.addLine();
-            telemetry.addData("Lift Homing State:",isLiftHoming);
-            telemetry.update();
-        }
-        // This should be setPower to bypass the use of PIDF so it stops instantly
-        liftMotor.setPower(0);
-        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        liftMotor.setTargetPosition(0);
-        liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
-        isLiftHoming = false;
-
-        telemetry.addData("Lift Height:",liftMotor.getCurrentPosition());
-        telemetry.addLine();
-        telemetry.addData("Lift Target:",liftMotor.getTargetPosition());
-        telemetry.addLine();
-        telemetry.addData("Lift Current (Milliamps):",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
-        telemetry.addLine();
-        telemetry.addData("Lift Homing State:",isLiftHoming);
-        telemetry.update();
 
         // Play button is pressed
         waitForStart();
