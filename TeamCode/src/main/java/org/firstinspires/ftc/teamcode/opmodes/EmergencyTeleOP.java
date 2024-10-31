@@ -198,7 +198,7 @@ EmergencyTeleOP extends LinearOpMode {
             liftMotor.setPower(scaledRY);
 
             // Grabber servo code. Super complicated.
-            // If you let go of right bumper, servo will stay running forward
+            // If you let go of right bumper, servo will stay running forward at a lower speed
             // If you let go of left bumper, servo will stop
             if (gamepad1.right_bumper) {
                 grabberServo.setPower(1);
