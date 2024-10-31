@@ -82,8 +82,6 @@ EmergencyTeleOP extends LinearOpMode {
         frontLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
         backRightMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
         backLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
-        liftMotor.setVelocityPIDFCoefficients(NEW_P_LIFT,NEW_I_LIFT,NEW_D_LIFT,NEW_F_LIFT);
-        liftMotor.setPositionPIDFCoefficients(NEW_POS_P_LIFT);
 
         // Make sure lift doesn't fall under gravity
         // Just a failsafe, as setTargetPosition holds at position anyway
@@ -108,10 +106,10 @@ EmergencyTeleOP extends LinearOpMode {
         // Using built-in CurrentAlert is better
         // liftMotor gets switched back to RUN_TO_POSITION near end of code
         boolean isLiftHoming = true;
-        liftMotor.setCurrentAlert(800, CurrentUnit.MILLIAMPS);
+        liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
         while (!liftMotor.isOverCurrent()) {
             liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            liftMotor.setVelocity(-0.25 * TPS312);
+            liftMotor.setPower(-0.25);
             telemetry.addData("Lift Height:",liftMotor.getCurrentPosition());
             telemetry.addLine();
             telemetry.addData("Lift Target:",liftMotor.getTargetPosition());
@@ -217,12 +215,11 @@ EmergencyTeleOP extends LinearOpMode {
                     liftMotor.setPower(0);
                 }
             } else { // If liftMotor is in fact homing
-                liftMotor.setCurrentAlert(800, CurrentUnit.MILLIAMPS);
+                liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
                 if (!liftMotor.isOverCurrent()) {
                     liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    liftMotor.setVelocity(-0.25 * TPS312);
+                    liftMotor.setPower(-0.25);
                 } else { // Once homing is finished
-                    // This should be setPower to bypass the use of PIDF so it stops instantly
                     liftMotor.setPower(0);
                     liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     liftMotor.setTargetPosition(0);

@@ -21,6 +21,7 @@ import java.util.Objects;
 @TeleOp(name="Basic: Linear OpMode", group="Linear OpMode")
 public class TeleOP extends LinearOpMode {
     // Declare OpMode members.
+
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotorEx frontLeftDrive = null;
     private DcMotorEx frontRightDrive = null;
@@ -42,6 +43,9 @@ public class TeleOP extends LinearOpMode {
     public void runOpMode() {
         Initialize();
 
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
         double robotAngleToField = 0;
 
         double liftMotorCurrentThreshold = 3000.0;
@@ -57,6 +61,7 @@ public class TeleOP extends LinearOpMode {
 
         // Run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            boolean opModeActive = opModeIsActive();
             // Get needed gamepad joystick values
             double leftStickY = ScaleStickValue(-gamepad1.left_stick_y);  // Note: pushing stick forward gives negative value
             double leftStickX = ScaleStickValue(gamepad1.left_stick_x);
