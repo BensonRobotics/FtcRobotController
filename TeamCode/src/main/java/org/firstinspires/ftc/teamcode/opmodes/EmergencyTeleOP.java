@@ -14,9 +14,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
 public class
-
-
-
 EmergencyTeleOP extends LinearOpMode {
 
     // PIDF stands for Proportional, Integral, Derivative, Feedforward
@@ -110,17 +107,35 @@ EmergencyTeleOP extends LinearOpMode {
         // Lift sensorless homing code, will move the lift during initialization
         // Using built-in CurrentAlert is better
         // liftMotor gets switched back to RUN_TO_POSITION near end of code
-        liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
+        boolean isLiftHoming = true;
+        liftMotor.setCurrentAlert(1000, CurrentUnit.MILLIAMPS);
         while (!liftMotor.isOverCurrent()) {
             liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             liftMotor.setVelocity(-0.25 * TPS312);
+            telemetry.addData("Lift Height:",liftMotor.getCurrentPosition());
+            telemetry.addLine();
+            telemetry.addData("Lift Target:",liftMotor.getTargetPosition());
+            telemetry.addLine();
+            telemetry.addData("Lift Current (Milliamps):",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
+            telemetry.addLine();
+            telemetry.addData("Lift Homing State:",isLiftHoming);
+            telemetry.update();
         }
         // This should be setPower to bypass the use of PIDF so it stops instantly
         liftMotor.setPower(0);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setTargetPosition(0);
         liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
-        boolean isLiftHoming = false;
+        isLiftHoming = false;
+
+        telemetry.addData("Lift Height:",liftMotor.getCurrentPosition());
+        telemetry.addLine();
+        telemetry.addData("Lift Target:",liftMotor.getTargetPosition());
+        telemetry.addLine();
+        telemetry.addData("Lift Current (Milliamps):",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
+        telemetry.addLine();
+        telemetry.addData("Lift Homing State:",isLiftHoming);
+        telemetry.update();
 
         // Play button is pressed
         waitForStart();
@@ -178,7 +193,7 @@ EmergencyTeleOP extends LinearOpMode {
             backRightMotor.setVelocity(backRightPower * TPS312);
 
             // Lift homing button
-            if (gamepad1.options) {
+            if (gamepad1.start) {
                 isLiftHoming = true;
             }
             // Lift motor height presets, if not homing
@@ -202,7 +217,7 @@ EmergencyTeleOP extends LinearOpMode {
                     liftMotor.setPower(0);
                 }
             } else { // If liftMotor is in fact homing
-                liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
+                liftMotor.setCurrentAlert(1000, CurrentUnit.MILLIAMPS);
                 if (!liftMotor.isOverCurrent()) {
                     liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                     liftMotor.setVelocity(-0.25 * TPS312);
