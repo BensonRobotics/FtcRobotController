@@ -105,7 +105,6 @@ EmergencyTeleOP extends LinearOpMode {
             double scaledDriveMagnitude = Math.cbrt(Math.abs(driveMagnitude)) * driveMagnitude;
             double scaledRX = Math.cbrt(Math.abs(rx)) * rx;
             double scaledRY = Math.cbrt(Math.abs(ry)) * ry;
-            double acceleratedDriveMagnitude = 0;
 
             // Linear acceleration code for driveMagnitude
             // +0.05 to -0.05 is the tolerance where it will just bypass the incrementer to reduce wobbling around the target speed
