@@ -217,8 +217,7 @@ public class TeleOP extends LinearOpMode {
 
         if (gamepad2.dpad_up) {
             desiredLiftServoPosition = 1;
-        } else if (gamepad2.dpad_down) {
-            desiredLiftServoPosition = -1;
+        } else if (gamepad2.dpad_down) {desiredLiftServoPosition = -1;
         }
 
         grabberServo.setPosition(desiredLiftServoPosition);
