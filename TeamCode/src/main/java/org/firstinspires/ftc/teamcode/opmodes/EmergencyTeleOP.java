@@ -50,6 +50,9 @@ EmergencyTeleOP extends LinearOpMode {
         liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
         grabberServo = hardwareMap.get(CRServo.class, "grabberServo");
 
+        // Set lift motor overcurrent amperage
+        liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
+
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
         // reverse the left side instead.
@@ -102,6 +105,7 @@ EmergencyTeleOP extends LinearOpMode {
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
+            double ry = -gamepad1.right_stick_y;
 
             // Calculate angle and magnitude from joystick values
             double driveAngle = Math.atan2(x, y);
@@ -148,6 +152,9 @@ EmergencyTeleOP extends LinearOpMode {
             frontRightMotor.setVelocity(frontRightPower * TPS312);
             backRightMotor.setVelocity(backRightPower * TPS312);
 
+            /*
+            // Lift motor position-based code starts here
+
             // Lift homing button
             if (gamepad1.start) {
                 isLiftHoming = true;
@@ -168,10 +175,6 @@ EmergencyTeleOP extends LinearOpMode {
                 liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 liftMotor.setPower(0.75);
 
-                // If liftMotor overcurrents, stop it
-                if (liftMotor.isOverCurrent()) {
-                    liftMotor.setPower(0);
-                }
             } else { // If liftMotor is in fact homing
                 liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
                 if (!liftMotor.isOverCurrent()) {
@@ -186,6 +189,12 @@ EmergencyTeleOP extends LinearOpMode {
                 }
 
             }
+            // Lift motor position-based code ends here
+             */
+
+            // Other lift motor code. Insanely complicated.
+            // Lift is controlled by right stick Y axis
+            liftMotor.setPower(ry);
 
             // Grabber servo code. Super complicated.
             // If you let go of right bumper, servo will stay running forward
@@ -199,6 +208,11 @@ EmergencyTeleOP extends LinearOpMode {
                 grabberServo.setPower(-1);
             } else if (grabberServo.getPower()==-1) {
                 grabberServo.setPower(0);
+            }
+
+            // If liftMotor overcurrents, stop it
+            if (liftMotor.isOverCurrent()) {
+                liftMotor.setPower(0);
             }
 
             // Telemetry
