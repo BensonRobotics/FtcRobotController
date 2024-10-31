@@ -23,14 +23,6 @@ EmergencyTeleOP extends LinearOpMode {
     public static final double NEW_D_DRIVE = 0.1;
     public static final double NEW_F_DRIVE = 10.0;
 
-    // PIDF coefficients for lift motor's setVelocity
-    // Proportional coefficient for lift motor's setPosition
-    public static final double NEW_POS_P_LIFT = 2.5;
-    public static final double NEW_P_LIFT = 1.0;
-    public static final double NEW_I_LIFT = 0.1;
-    public static final double NEW_D_LIFT = 0.1;
-    public static final double NEW_F_LIFT = 10.0;
-
     // TPSmotorRPM = (motorRPM / 60) * motorStepsPerRevolution
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
     // 537.7 is a 312 RPM motor's encoder steps per revolution
