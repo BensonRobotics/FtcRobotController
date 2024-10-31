@@ -18,8 +18,8 @@ EmergencyTeleOP extends LinearOpMode {
 
     // PIDF stands for Proportional, Integral, Derivative, Feedforward
     // PIDF coefficients for drive system's setVelocity
-    public static final double NEW_P_DRIVE = 0.2;
-    public static final double NEW_I_DRIVE = 0.1;
+    public static final double NEW_P_DRIVE = 1.0;
+    public static final double NEW_I_DRIVE = 0.2;
     public static final double NEW_D_DRIVE = 0.1;
     public static final double NEW_F_DRIVE = 10.0;
 
@@ -27,10 +27,6 @@ EmergencyTeleOP extends LinearOpMode {
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
     // 537.7 is a 312 RPM motor's encoder steps per revolution
     public static final double TPS312 = (312.0/60.0) * 537.7;
-
-    // Factor for converting magnitude to linear speed in MM/S
-    // Drive wheels are 104mm in diameter, 104*PI in circumference
-    public static final double magnitudeToMM = (312.0/60.0)*104.0*Math.PI;
     public static boolean isLiftHoming = false;
     public static ElapsedTime runtime = new ElapsedTime();
 
@@ -191,7 +187,7 @@ EmergencyTeleOP extends LinearOpMode {
 
             }
 
-            // Servo code. Super complicated.
+            // Grabber servo code. Super complicated.
             // If you let go of right bumper, servo will stay running forward
             // If you let go of left bumper, servo will stop
             if (gamepad1.right_bumper) {
@@ -210,9 +206,7 @@ EmergencyTeleOP extends LinearOpMode {
             telemetry.addLine();
             telemetry.addData("Lift Current (Milliamps):",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
             telemetry.addLine();
-            telemetry.addData("Robot Speed (MM/S):",driveMagnitude*magnitudeToMM);
-            telemetry.addLine();
-            telemetry.addData("Lift Homing State:",isLiftHoming);
+            telemetry.addData("Lift Homing:",isLiftHoming);
 
             telemetry.update();
         }
