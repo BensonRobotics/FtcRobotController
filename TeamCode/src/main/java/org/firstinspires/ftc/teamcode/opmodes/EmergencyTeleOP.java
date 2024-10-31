@@ -43,9 +43,6 @@ EmergencyTeleOP extends LinearOpMode {
         liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
         grabberServo = hardwareMap.get(CRServo.class, "grabberServo");
 
-        // Set lift motor overcurrent amperage
-        liftMotor.setCurrentAlert(2000, CurrentUnit.MILLIAMPS);
-
         // Reverse motors that are backwards otherwise
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -205,11 +202,6 @@ EmergencyTeleOP extends LinearOpMode {
                 grabberServo.setPower(-1);
             } else if (grabberServo.getPower()<0) {
                 grabberServo.setPower(0);
-            }
-
-            // If liftMotor overcurrents, stop it
-            if (liftMotor.isOverCurrent()) {
-                liftMotor.setPower(0);
             }
 
             // Telemetry
