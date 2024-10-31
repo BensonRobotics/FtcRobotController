@@ -216,10 +216,11 @@ EmergencyTeleOP extends LinearOpMode {
             }
 
             // Telemetry
-            telemetry.addData("Lift Height:",liftMotor.getCurrentPosition());
+            // Telemetry related to position-based lift motor code is commented out as well
+            /* telemetry.addData("Lift Height:",liftMotor.getCurrentPosition());
             telemetry.addLine();
             telemetry.addData("Lift Target:",liftMotor.getTargetPosition());
-            telemetry.addLine();
+            telemetry.addLine(); */
             telemetry.addData("Lift Current (Milliamps):",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
             telemetry.addLine();
             telemetry.addData("Lift Homing:",isLiftHoming);
