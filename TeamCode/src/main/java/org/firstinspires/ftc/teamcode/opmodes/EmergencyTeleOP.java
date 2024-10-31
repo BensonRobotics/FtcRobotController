@@ -116,6 +116,7 @@ EmergencyTeleOP extends LinearOpMode {
             // Math.cbrt and Math.sqrt are always faster than using Math.pow
             double scaledDriveMagnitude = Math.cbrt(Math.abs(driveMagnitude)) * driveMagnitude;
             double scaledRX = Math.cbrt(Math.abs(rx)) * rx;
+            double scaledRY = Math.cbrt(Math.abs(ry)) * ry;
 
 
             // IMU Yaw reset button
@@ -194,7 +195,7 @@ EmergencyTeleOP extends LinearOpMode {
 
             // Other lift motor code. Insanely complicated.
             // Lift is controlled by right stick Y axis
-            liftMotor.setPower(ry);
+            liftMotor.setPower(scaledRY);
 
             // Grabber servo code. Super complicated.
             // If you let go of right bumper, servo will stay running forward
