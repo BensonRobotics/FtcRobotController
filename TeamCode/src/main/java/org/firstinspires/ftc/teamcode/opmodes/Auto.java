@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 @Autonomous(name="Auto1",group="187auto ")
 public class Auto extends LinearOpMode {
 
+    public static final double NEW_POS_P_DRIVE = 1.0;
+
     public void runOpMode(){
         DcMotorEx frontLeftMotor;
         DcMotorEx frontRightMotor;
@@ -19,6 +21,11 @@ public class Auto extends LinearOpMode {
         frontRightMotor = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
         backLeftMotor = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightMotor = hardwareMap.get(DcMotorEx.class, "backRightMotor");
+
+        frontLeftMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
+        frontRightMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
+        backLeftMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
+        backRightMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
 
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
