@@ -45,7 +45,7 @@ EmergencyTeleOP extends LinearOpMode {
         grabberServo = hardwareMap.get(CRServo.class, "grabberServo");
 
         // Set lift motor overcurrent amperage
-        liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
+        liftMotor.setCurrentAlert(2000, CurrentUnit.MILLIAMPS);
 
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
