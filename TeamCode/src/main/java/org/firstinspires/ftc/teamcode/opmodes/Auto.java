@@ -47,10 +47,10 @@ public class Auto extends LinearOpMode {
         backRightMotor.setTargetPosition(targetSteps);
 
         // Set all motor power levels
-        frontRightMotor.setPower(1);
-        frontLeftMotor.setPower(1);
-        backRightMotor.setPower(1);
-        backLeftMotor.setPower(1);
+        frontRightMotor.setPower(0.5);
+        frontLeftMotor.setPower(0.5);
+        backRightMotor.setPower(0.5);
+        backLeftMotor.setPower(0.5);
 
         // Tell all motors to run to target position
         frontRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
