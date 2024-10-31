@@ -163,7 +163,7 @@ EmergencyTeleOP extends LinearOpMode {
                     liftMotor.setTargetPosition(0);
                 }
                 if (gamepad1.x) {
-                    liftMotor.setTargetPosition(2800);
+                    liftMotor.setTargetPosition(3000);
                 }
                 if (gamepad1.y) {
                     liftMotor.setTargetPosition(4300);
