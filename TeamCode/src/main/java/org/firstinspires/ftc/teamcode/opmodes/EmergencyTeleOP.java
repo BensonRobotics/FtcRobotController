@@ -31,6 +31,7 @@ EmergencyTeleOP extends LinearOpMode {
     // Factor for converting magnitude to linear speed in MM/S
     // Drive wheels are 104mm in diameter, 104*PI in circumference
     public static final double magnitudeToMM = (312.0/60.0)*104.0*Math.PI;
+    public static boolean isLiftHoming = false;
     public static ElapsedTime runtime = new ElapsedTime();
 
     @Override
@@ -43,8 +44,6 @@ EmergencyTeleOP extends LinearOpMode {
         DcMotorEx backRightMotor;
         DcMotorEx liftMotor;
         Servo grabberServo;
-
-        boolean isLiftHoming = false;
 
         // Assign our devices
         // Make sure your ID's match your configuration
