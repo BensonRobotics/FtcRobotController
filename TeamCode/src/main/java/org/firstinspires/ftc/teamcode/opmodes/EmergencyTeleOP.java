@@ -111,10 +111,12 @@ EmergencyTeleOP extends LinearOpMode {
             double driveAngle = Math.atan2(x, y);
             double driveMagnitude = Math.hypot(x, y);
 
-            // Cubic root scaling for driveMagnitude, for improved control at lower speeds
+            // Cubic root scaling for driveMagnitude and rotation stick, improved control at lower speeds
             // The Math.abs is there so that it maintains its sign and doesn't spit out complex numbers
             // Math.cbrt and Math.sqrt are always faster than using Math.pow
             double scaledDriveMagnitude = Math.cbrt(Math.abs(driveMagnitude)) * driveMagnitude;
+            double scaledRX = Math.cbrt(Math.abs(rx)) * rx;
+
 
             // IMU Yaw reset button
             // This button choice was made so that it is hard to hit on accident
@@ -128,10 +130,10 @@ EmergencyTeleOP extends LinearOpMode {
             // https://www.desmos.com/calculator/ckxjhqekpo
             double frontLeftBackRightMotors = scaledDriveMagnitude * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
             double frontRightBackLeftMotors = scaledDriveMagnitude * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
-            double frontLeftPower = frontLeftBackRightMotors + rx;
-            double backLeftPower = frontRightBackLeftMotors + rx;
-            double frontRightPower = frontRightBackLeftMotors - rx;
-            double backRightPower = frontLeftBackRightMotors - rx;
+            double frontLeftPower = frontLeftBackRightMotors + scaledRX;
+            double backLeftPower = frontRightBackLeftMotors + scaledRX;
+            double frontRightPower = frontRightBackLeftMotors - scaledRX;
+            double backRightPower = frontLeftBackRightMotors - scaledRX;
 
             // The Great Cleaving approaches
             // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
