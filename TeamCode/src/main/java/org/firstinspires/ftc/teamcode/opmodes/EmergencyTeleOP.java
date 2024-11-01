@@ -113,6 +113,9 @@ EmergencyTeleOP extends LinearOpMode {
             double driveAngle = Math.atan2(x, y);
             double driveMagnitude = Math.hypot(x, y);
 
+            // Cut driveMagnitude in half for controllability
+            driveMagnitude /= 2;
+
             // IMU Yaw reset button
             // This button choice was made so that it is hard to hit on accident
             if (gamepad1.back) {
