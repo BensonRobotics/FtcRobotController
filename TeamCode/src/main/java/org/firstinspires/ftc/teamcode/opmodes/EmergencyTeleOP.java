@@ -57,7 +57,6 @@ EmergencyTeleOP extends LinearOpMode {
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        grabberServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Retrieve the IMU from the hardware map
         IMU imu = hardwareMap.get(IMU.class, "imu");
