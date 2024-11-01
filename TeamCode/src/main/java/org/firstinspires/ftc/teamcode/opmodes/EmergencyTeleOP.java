@@ -113,6 +113,9 @@ EmergencyTeleOP extends LinearOpMode {
             double driveAngle = Math.atan2(x, y);
             double driveMagnitude = Math.hypot(x, y);
 
+            // Better way of setting speed limit
+            driveMagnitude = driveMagnitude * 0.75;
+            rx = rx * 0.75;
             // IMU Yaw reset button
             // This button choice was made so that it is hard to hit on accident
             if (gamepad1.back) {
@@ -142,11 +145,10 @@ EmergencyTeleOP extends LinearOpMode {
             backLeftPower /= denominator;
 
             // Set motor velocities, converted from (-1 to 1) to (-TPS312 to TPS312)
-            // Max speed limit is the first multiplier
-            frontLeftMotor.setVelocity(0.75 * frontLeftPower * TPS312);
-            backLeftMotor.setVelocity(0.75 * backLeftPower * TPS312);
-            frontRightMotor.setVelocity(0.75 * frontRightPower * TPS312);
-            backRightMotor.setVelocity(0.75 * backRightPower * TPS312);
+            frontLeftMotor.setVelocity(frontLeftPower * TPS312);
+            backLeftMotor.setVelocity(backLeftPower * TPS312);
+            frontRightMotor.setVelocity(frontRightPower * TPS312);
+            backRightMotor.setVelocity(backRightPower * TPS312);
 
             /*
             // Lift motor position-based code starts here
