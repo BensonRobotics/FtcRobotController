@@ -110,12 +110,6 @@ EmergencyTeleOP extends LinearOpMode {
             double driveAngle = Math.atan2(x, y);
             double driveMagnitude = Math.hypot(x, y);
 
-            // Cubic root scaling for driveMagnitude and rotation stick, improved control at lower speeds
-            // The Math.abs is there so that it maintains its sign and doesn't spit out complex numbers
-            // Math.cbrt and Math.sqrt are always faster than using Math.pow
-            double scaledDriveMagnitude = Math.cbrt(Math.abs(driveMagnitude)) * driveMagnitude;
-            double scaledRX = Math.cbrt(Math.abs(rx)) * rx;
-
             // IMU Yaw reset button
             // This button choice was made so that it is hard to hit on accident
             if (gamepad1.back) {
@@ -126,12 +120,12 @@ EmergencyTeleOP extends LinearOpMode {
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
             // https://www.desmos.com/calculator/3gzff5bzbn
-            double frontLeftBackRightMotors = scaledDriveMagnitude * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
-            double frontRightBackLeftMotors = scaledDriveMagnitude * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
-            double frontLeftPower = frontLeftBackRightMotors + scaledRX;
-            double backLeftPower = frontRightBackLeftMotors + scaledRX;
-            double frontRightPower = frontRightBackLeftMotors - scaledRX;
-            double backRightPower = frontLeftBackRightMotors - scaledRX;
+            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
+            double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
+            double frontLeftPower = frontLeftBackRightMotors + rx;
+            double backLeftPower = frontRightBackLeftMotors + rx;
+            double frontRightPower = frontRightBackLeftMotors - rx;
+            double backRightPower = frontLeftBackRightMotors - rx;
 
             // The Great Cleaving approaches
             // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
@@ -197,8 +191,8 @@ EmergencyTeleOP extends LinearOpMode {
                 liftMotor.setVelocity(0.75 * ry * TPS312);
             } else if (liftMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
                 liftMotor.setTargetPosition(liftMotor.getCurrentPosition());
-                liftMotor.setPower(0.75);
                 liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                liftMotor.setPower(0.75);
             }
 
 
