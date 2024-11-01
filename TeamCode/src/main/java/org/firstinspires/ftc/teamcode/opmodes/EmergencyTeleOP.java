@@ -70,6 +70,10 @@ EmergencyTeleOP extends LinearOpMode {
         // Make sure lift doesn't fall under gravity
         // Just a failsafe, as setTargetPosition holds at position anyway
         // ...Unless the lift is joystick-based and not height preset-based
+        frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Set drive motors to RUN_USING_ENCODER
