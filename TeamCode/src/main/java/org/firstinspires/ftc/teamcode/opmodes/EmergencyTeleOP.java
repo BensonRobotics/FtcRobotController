@@ -194,7 +194,7 @@ EmergencyTeleOP extends LinearOpMode {
             // Lift is controlled by right stick Y axis
             if (ry != 0) {
                 liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                liftMotor.setVelocity(0.75 * ry * TPS312);
+                liftMotor.setPower(0.75 * ry);
             } else if (liftMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
                 liftMotor.setTargetPosition(liftMotor.getCurrentPosition());
                 liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
