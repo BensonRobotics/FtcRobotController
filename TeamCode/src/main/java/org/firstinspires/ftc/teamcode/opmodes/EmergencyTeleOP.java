@@ -201,7 +201,7 @@ EmergencyTeleOP extends LinearOpMode {
                 liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 liftMotor.setPower(0.75);
             }
-            if (liftMotor.isOverCurrent()) {
+            if (liftMotor.isOverCurrent() && ry > 0) {
                 liftMotor.setPower(0);
             }
 
