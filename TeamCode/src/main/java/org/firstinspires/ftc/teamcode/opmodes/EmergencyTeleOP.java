@@ -127,8 +127,8 @@ EmergencyTeleOP extends LinearOpMode {
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
             // https://www.desmos.com/calculator/3gzff5bzbn
-            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle/* + botHeading*/ + 0.25 * Math.PI);
-            double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle/* + botHeading*/ - 0.25 * Math.PI);
+            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
+            double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
             double frontLeftPower = frontLeftBackRightMotors + rx;
             double backLeftPower = frontRightBackLeftMotors + rx;
             double frontRightPower = frontRightBackLeftMotors - rx;
