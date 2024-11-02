@@ -92,6 +92,7 @@ EmergencyTeleOP extends LinearOpMode {
 
         // Make sure motors don't run from the get-go
         grabberServo.setPower(0);
+        liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
 
         // Reset runtime variable, not used yet
         runtime.reset();
@@ -173,7 +174,7 @@ EmergencyTeleOP extends LinearOpMode {
                 liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 liftMotor.setPower(0.75);
 
-            } else { // If liftMotor is in fact homing
+            } elseAlert { // If liftMotor is in fact homing
                 liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
                 if (!liftMotor.isOverCurrent()) {
                     liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -192,6 +193,9 @@ EmergencyTeleOP extends LinearOpMode {
 
             // Other lift motor code
             // Lift is controlled by right stick Y axis
+            if (liftMotor.isOverCurrent() || (liftMotor.getCurrentPosition() > 4300 && ry > 0)) {
+                ry = 0;
+            }
             if (ry != 0) {
                 liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 liftMotor.setPower(0.75 * ry);
