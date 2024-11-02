@@ -193,9 +193,6 @@ EmergencyTeleOP extends LinearOpMode {
 
             // Other lift motor code
             // Lift is controlled by right stick Y axis
-            if (liftMotor.isOverCurrent() || (liftMotor.getCurrentPosition() > 4300 && ry > 0)) {
-                ry = 0;
-            }
             if (ry != 0) {
                 liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 liftMotor.setPower(0.75 * ry);
@@ -204,7 +201,9 @@ EmergencyTeleOP extends LinearOpMode {
                 liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 liftMotor.setPower(0.75);
             }
-
+            if (liftMotor.isOverCurrent() || liftMotor.getCurrentPosition() > 4300 && ry > 0) {
+                liftMotor.setPower(0);
+            }
 
             // Grabber servo code. Super complicated.
             // If you let go of right bumper, servo will stay running forward at a lower speed
