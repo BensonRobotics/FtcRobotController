@@ -92,7 +92,7 @@ EmergencyTeleOP extends LinearOpMode {
 
         // Make sure motors don't run from the get-go
         grabberServo.setPower(0);
-        liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
+        liftMotor.setCurrentAlert(2500, CurrentUnit.MILLIAMPS);
 
         // Reset runtime variable, not used yet
         runtime.reset();
@@ -201,7 +201,7 @@ EmergencyTeleOP extends LinearOpMode {
                 liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 liftMotor.setPower(0.75);
             }
-            if (liftMotor.isOverCurrent() || liftMotor.getCurrentPosition() > 4300 && ry > 0) {
+            if (liftMotor.isOverCurrent()) {
                 liftMotor.setPower(0);
             }
 
