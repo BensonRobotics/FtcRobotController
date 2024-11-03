@@ -29,6 +29,8 @@ EmergencyTeleOP extends LinearOpMode {
     public static final boolean useFieldCentric = false;
     public static final boolean useDiscreteLift = false;
     public static final int liftCurrentAlert = 2500;
+    public static final double driveSpeedLimit = 0.75;
+    public static final double liftSpeedLimit = 0.75;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -120,8 +122,8 @@ EmergencyTeleOP extends LinearOpMode {
             double driveMagnitude = Math.hypot(x, y);
 
             // Better way of setting speed limit
-            driveMagnitude = driveMagnitude * 0.75;
-            rx = rx * 0.75;
+            driveMagnitude = driveMagnitude * driveSpeedLimit;
+            rx = rx * driveSpeedLimit;
             // IMU Yaw reset button
             // This button choice was made so that it is hard to hit on accident
             if (gamepad1.back) {
@@ -177,7 +179,7 @@ EmergencyTeleOP extends LinearOpMode {
                     }
                     // Tell liftMotor to run to to target position at set speed
                     liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    liftMotor.setPower(0.75);
+                    liftMotor.setPower(liftSpeedLimit);
 
                 } else { // If liftMotor is in fact homing
                     liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
@@ -196,11 +198,11 @@ EmergencyTeleOP extends LinearOpMode {
                 // Lift is controlled by right stick Y axis
                 if (ry != 0) {
                     liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    liftMotor.setPower(0.75 * ry);
+                    liftMotor.setPower(liftSpeedLimit * ry);
                 } else if (liftMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
                     liftMotor.setTargetPosition(liftMotor.getCurrentPosition());
                     liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    liftMotor.setPower(0.75);
+                    liftMotor.setPower(liftSpeedLimit);
                 }
                 if (liftMotor.isOverCurrent() && ry > 0) {
                     liftMotor.setPower(0);
