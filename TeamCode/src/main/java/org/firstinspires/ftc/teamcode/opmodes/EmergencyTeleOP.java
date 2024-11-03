@@ -26,6 +26,9 @@ EmergencyTeleOP extends LinearOpMode {
     public static final double TPS312 = (312.0/60.0) * 537.7;
     public static boolean isLiftHoming = false;
     public static ElapsedTime runtime = new ElapsedTime();
+    public static final boolean useFieldCentric = false;
+    public static final boolean useDiscreteLift = false;
+    public static final int liftCurrentAlert = 2500;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -92,10 +95,12 @@ EmergencyTeleOP extends LinearOpMode {
 
         // Make sure motors don't run from the get-go
         grabberServo.setPower(0);
-        liftMotor.setCurrentAlert(2500, CurrentUnit.MILLIAMPS);
+        liftMotor.setCurrentAlert(liftCurrentAlert, CurrentUnit.MILLIAMPS);
 
         // Reset runtime variable, not used yet
         runtime.reset();
+
+        double botHeading = 0;
 
         // Play button is pressed
         waitForStart();
@@ -122,13 +127,15 @@ EmergencyTeleOP extends LinearOpMode {
             if (gamepad1.back) {
                 imu.resetYaw();
             }
-            // Set botHeading to robot Yaw from IMU
-            double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            // Set botHeading to robot Yaw from IMU, if used
+            if (useFieldCentric) {
+                botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            }
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
             // https://www.desmos.com/calculator/3gzff5bzbn
-            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle/* + botHeading*/ + 0.25 * Math.PI);
-            double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle/* + botHeading*/ - 0.25 * Math.PI);
+            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
+            double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
             double frontLeftPower = frontLeftBackRightMotors + rx;
             double backLeftPower = frontRightBackLeftMotors + rx;
             double frontRightPower = frontRightBackLeftMotors - rx;
@@ -151,58 +158,53 @@ EmergencyTeleOP extends LinearOpMode {
             frontRightMotor.setVelocity(frontRightPower * TPS312);
             backRightMotor.setVelocity(backRightPower * TPS312);
 
-            /*
-            // Lift motor position-based code starts here
+            if (useDiscreteLift) { // If using discrete lift
+                // Lift homing button
+                if (gamepad1.start) {
+                    isLiftHoming = true;
+                }
+                // Lift motor height presets, if not homing
+                // A for bottom, X for middle, Y for top
+                if (!isLiftHoming) {
+                    if (gamepad1.a) {
+                        liftMotor.setTargetPosition(0);
+                    }
+                    if (gamepad1.x) {
+                        liftMotor.setTargetPosition(3000);
+                    }
+                    if (gamepad1.y) {
+                        liftMotor.setTargetPosition(4300);
+                    }
+                    // Tell liftMotor to run to to target position at set speed
+                    liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    liftMotor.setPower(0.75);
 
-            // Lift homing button
-            if (gamepad1.start) {
-                isLiftHoming = true;
-            }
-            // Lift motor height presets, if not homing
-            // A for bottom, X for middle, Y for top
-            if (!isLiftHoming) {
-                if (gamepad1.a) {
-                    liftMotor.setTargetPosition(0);
+                } else { // If liftMotor is in fact homing
+                    liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
+                    if (!liftMotor.isOverCurrent()) {
+                        liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                        liftMotor.setPower(-0.25);
+                    } else { // Once homing is finished
+                        liftMotor.setPower(0);
+                        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        liftMotor.setTargetPosition(0);
+                        liftMotor.setCurrentAlert(liftCurrentAlert, CurrentUnit.MILLIAMPS);
+                        isLiftHoming = false;
+                    }
                 }
-                if (gamepad1.x) {
-                    liftMotor.setTargetPosition(3000);
-                }
-                if (gamepad1.y) {
-                    liftMotor.setTargetPosition(4300);
-                }
-                // Tell liftMotor to run to to target position at set speed
-                liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                liftMotor.setPower(0.75);
-
-            } elseAlert { // If liftMotor is in fact homing
-                liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
-                if (!liftMotor.isOverCurrent()) {
+            } else { // If not using discrete lift
+                // Lift is controlled by right stick Y axis
+                if (ry != 0) {
                     liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    liftMotor.setPower(-0.25);
-                } else { // Once homing is finished
-                    liftMotor.setPower(0);
-                    liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    liftMotor.setTargetPosition(0);
-                    liftMotor.setCurrentAlert(3000, CurrentUnit.MILLIAMPS);
-                    isLiftHoming = false;
+                    liftMotor.setPower(0.75 * ry);
+                } else if (liftMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
+                    liftMotor.setTargetPosition(liftMotor.getCurrentPosition());
+                    liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    liftMotor.setPower(0.75);
                 }
-
-            }
-            // Lift motor position-based code ends here
-             */
-
-            // Other lift motor code
-            // Lift is controlled by right stick Y axis
-            if (ry != 0) {
-                liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                liftMotor.setPower(0.75 * ry);
-            } else if (liftMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
-                liftMotor.setTargetPosition(liftMotor.getCurrentPosition());
-                liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                liftMotor.setPower(0.75);
-            }
-            if (liftMotor.isOverCurrent() && ry > 0) {
-                liftMotor.setPower(0);
+                if (liftMotor.isOverCurrent() && ry > 0) {
+                    liftMotor.setPower(0);
+                }
             }
 
             // Grabber servo code. Super complicated.
@@ -220,11 +222,10 @@ EmergencyTeleOP extends LinearOpMode {
             }
 
             // Telemetry
-            // Telemetry related to position-based lift motor code is commented out as well
-            /* telemetry.addData("Lift Height:",liftMotor.getCurrentPosition());
+            telemetry.addData("Lift Height:",liftMotor.getCurrentPosition());
             telemetry.addLine();
             telemetry.addData("Lift Target:",liftMotor.getTargetPosition());
-            telemetry.addLine(); */
+            telemetry.addLine();
             telemetry.addData("Lift Current (Milliamps):",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
             telemetry.addLine();
             telemetry.addData("Lift Homing:",isLiftHoming);
