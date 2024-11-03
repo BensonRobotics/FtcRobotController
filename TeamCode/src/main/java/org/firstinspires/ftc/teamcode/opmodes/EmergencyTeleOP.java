@@ -35,6 +35,8 @@ EmergencyTeleOP extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
+        // Test of Android Studio on my newly reset PC
+
         // Declare our devices!! Yayy!!!
         DcMotorEx frontLeftMotor;
         DcMotorEx frontRightMotor;
