@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-@Autonomous(name="Auto1",group="187auto ")
+@Autonomous
 public class Auto extends LinearOpMode {
 
     public static final double NEW_POS_P_DRIVE = 1.0;
