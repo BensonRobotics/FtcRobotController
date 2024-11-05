@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import android.util.Size;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -9,12 +11,23 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Objects;
@@ -42,8 +55,14 @@ public class TeleOP extends LinearOpMode {
     public static final double NEW_D = 0.1;
     public static final double NEW_F = 12.0;
 
+    /*April Tag Detection*/
+    private static final boolean USE_WEBCAM = true;
+    private AprilTagProcessor aprilTag;
+    private VisionPortal visionPortal;
+
     double liftMotorCurrentThreshold;
     int liftBottomPosition;
+
 
     public void runOpMode() throws InterruptedException{
         telemetry.addData("Status", "Initialized");
@@ -106,6 +125,9 @@ public class TeleOP extends LinearOpMode {
 
         double robotAngleToField = 0;
 
+        /*April Tag Detection*/
+        InitAprilTag();
+
         /*Main loop */
 
         // Wait for the game to start (driver presses PLAY)
@@ -117,6 +139,9 @@ public class TeleOP extends LinearOpMode {
 
         // Run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            /*AprilTag stuff*/
+            UpdateAprilTagTelemetry();
+
             // Get needed gamepad joystick values
             double leftStickY = ScaleStickValue(-gamepad1.left_stick_y);  // Note: pushing stick forward gives negative value
             double leftStickX = ScaleStickValue(gamepad1.left_stick_x);
@@ -142,6 +167,7 @@ public class TeleOP extends LinearOpMode {
             robotAngleToField = UpdateRobotAngleToField(imu);
         }
 
+        visionPortal.close();
     }
 
 
@@ -306,5 +332,64 @@ public class TeleOP extends LinearOpMode {
 
     private boolean IsOverloaded(DcMotorEx motor, double currentThreshold) {
         return (motor.getCurrent(CurrentUnit.MILLIAMPS) > currentThreshold);
+    }
+
+    private void InitAprilTag() {
+        Position cameraPosition = new Position(DistanceUnit.INCH, 0, 0, 0, 0);
+        YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.RADIANS, 0, 0, 0, 0);
+
+        // Create the AprilTag processor - all these values are blind guesses as none of it has been tested yet
+        aprilTag = new AprilTagProcessor.Builder().
+                setDrawTagOutline(true)
+                .setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary())
+                .setOutputUnits(DistanceUnit.CM, AngleUnit.RADIANS)
+                .build();
+
+        // Again just a guess for what value we'll want. According to the example program this should be able to detect a 2" tag from 6 feet away at 22 FPS
+        aprilTag.setDecimation(2);
+
+        VisionPortal.Builder builder = new VisionPortal.Builder();
+
+        if (USE_WEBCAM) {
+            builder.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"));
+        } else {
+            builder.setCamera(BuiltinCameraDirection.BACK);
+        }
+
+        // Set camera resolution - another guess
+        builder.setCameraResolution(new Size(640, 480));
+
+        builder.enableLiveView(true);
+
+        // Set stream format; apparently the MJPEG format uses less bandwidth than YUY2
+        builder.setStreamFormat(VisionPortal.StreamFormat.YUY2);
+
+        builder.setAutoStopLiveView(true);
+
+        // Set and enable the processor
+        builder.addProcessor(aprilTag);
+
+        visionPortal = builder.build();
+
+        // Enable or disable the aprilTag processor
+        visionPortal.setProcessorEnabled(aprilTag, true);
+    }
+
+    private void UpdateAprilTagTelemetry() {
+        List<AprilTagDetection> currentdetections = aprilTag.getDetections();
+        telemetry.addData("# AprilTags Detected", currentdetections.size());
+
+        // Iterate through the list of detections and display the info for each one
+        for (AprilTagDetection detection : currentdetections) {
+            if (detection.metadata != null) {
+                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+            } else {
+                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+            }
+        }
     }
 }
