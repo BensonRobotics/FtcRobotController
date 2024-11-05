@@ -96,7 +96,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
  */
 
 
-@TeleOp(name="Ring counter test", group ="Concept")
+//@TeleOp(name="Ring counter test", group ="Concept")
 //@Disabled
 public class VuforiaTFTest extends LinearOpMode {
 

@@ -11,7 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@TeleOp(name="TeleOp", group="Linear Opmode")
+//@TeleOp(name="TeleOp", group="Linear Opmode")
 public class TeleOpV1 extends LinearOpMode {
     
     private boolean[] button = {false, false, false, false, false, false, false};
