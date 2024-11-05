@@ -22,7 +22,7 @@ import java.util.Objects;
 //This is a test from Desmond of the Github, Git, and Android Studio syncing
 
 @TeleOp(name="Basic: Linear OpMode", group="Linear OpMode")
-public class TeleOP extends LinearOpMode {
+public class NoahTeleOP extends LinearOpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotorEx frontLeftDrive = null;
