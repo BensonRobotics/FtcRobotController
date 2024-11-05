@@ -32,7 +32,7 @@ DesmondTeleOP extends LinearOpMode {
     public static boolean isLiftHoming = false;
     public static ElapsedTime runtime = new ElapsedTime();
     public static final boolean useFieldCentric = false;
-    public static final boolean useDiscreteLift = false;
+    public static final boolean useDiscreteLift = true;
     public static final short liftCurrentAlert = 2500;
     public static final float driveSpeedLimit = 0.75F;
     public static final float liftSpeedLimit = 0.75F;
