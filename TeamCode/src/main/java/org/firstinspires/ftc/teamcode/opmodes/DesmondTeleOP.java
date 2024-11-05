@@ -15,27 +15,26 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @TeleOp
 public class
 DesmondTeleOP extends LinearOpMode {
-    public static final double NEW_P_DRIVE = 1.0;
-    public static final double NEW_I_DRIVE = 0.2;
-    public static final double NEW_D_DRIVE = 0.1;
-    public static final double NEW_F_DRIVE = 10.0;
+    public static final float NEW_P_DRIVE = 1.0F;
+    public static final float NEW_I_DRIVE = 0.2F;
+    public static final float NEW_D_DRIVE = 0.1F;
+    public static final float NEW_F_DRIVE = 10.0F;
 
-    // TPSmotorRPM = (motorRPM / 60) * motorStepsPerRevolution
+    // TPSmotorRPM = motorRPM * motorStepsPerRevolution / 60
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
     // 537.7 is a 312 RPM motor's encoder steps per revolution
-    public static final double TPS312 = (312.0/60.0) * 537.7;
+    // Output is first cast to float, since the equation itself uses double precision
+    public static final float TPS312 = (float) (312.0 * 537.7 / 60.0);
     public static boolean isLiftHoming = false;
     public static ElapsedTime runtime = new ElapsedTime();
     public static final boolean useFieldCentric = false;
     public static final boolean useDiscreteLift = false;
-    public static final int liftCurrentAlert = 2500;
-    public static final double driveSpeedLimit = 0.75;
-    public static final double liftSpeedLimit = 0.75;
+    public static final short liftCurrentAlert = 2500;
+    public static final float driveSpeedLimit = 0.75F;
+    public static final float liftSpeedLimit = 0.75F;
 
     @Override
     public void runOpMode() throws InterruptedException {
-
-        // Test of Android Studio on my newly reset PC
 
         // Declare our devices!! Yayy!!!
         DcMotorEx frontLeftMotor;
