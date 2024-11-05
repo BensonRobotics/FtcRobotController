@@ -20,11 +20,15 @@ DesmondTeleOP extends LinearOpMode {
     public static final float NEW_D_DRIVE = 0.1F;
     public static final float NEW_F_DRIVE = 10.0F;
 
-    // TPSmotorRPM = motorRPM * motorStepsPerRevolution / 60
+    // driveTicksPerSecond = driveMotorRPM * driveMotorStepsPerRevolution / 60
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
     // 537.7 is a 312 RPM motor's encoder steps per revolution
     // Output is first cast to float, since the equation itself uses double precision
-    public static final float TPS312 = (float) (312.0 * 537.7 / 60.0);
+    public static final float driveTicksPerSecond = (float) (312.0 * 537.7 / 60.0);
+
+    // liftStepsPerMM = liftMotorStepsPerRevolution / (liftPulleyPitchDiameter * PI)
+    // Output is how many encoder steps per mm of lift height
+    public static final double liftStepsPerMM = 537.7 / (38.2 * Math.PI);
     public static boolean isLiftHoming = false;
     public static ElapsedTime runtime = new ElapsedTime();
     public static final boolean useFieldCentric = false;
@@ -155,34 +159,39 @@ DesmondTeleOP extends LinearOpMode {
             backRightPower /= denominator;
             backLeftPower /= denominator;
 
-            // Set motor velocities, converted from (-1 to 1) to (-TPS312 to TPS312)
-            frontLeftMotor.setVelocity(frontLeftPower * TPS312);
-            backLeftMotor.setVelocity(backLeftPower * TPS312);
-            frontRightMotor.setVelocity(frontRightPower * TPS312);
-            backRightMotor.setVelocity(backRightPower * TPS312);
+            // Set motor velocities, converted from (-1 to 1) to (-driveTicksPerSecond to driveTicksPerSecond)
+            frontLeftMotor.setVelocity(frontLeftPower * driveTicksPerSecond);
+            backLeftMotor.setVelocity(backLeftPower * driveTicksPerSecond);
+            frontRightMotor.setVelocity(frontRightPower * driveTicksPerSecond);
+            backRightMotor.setVelocity(backRightPower * driveTicksPerSecond);
 
             if (useDiscreteLift) { // If using discrete lift
                 // Lift homing button
                 if (gamepad1.start) {
                     isLiftHoming = true;
                 }
-                // Lift motor height presets, if not homing
+                // Lift motor height presets in MM from bottom position
                 // A for bottom, X for middle, Y for top
+                // Please comment what each height preset means
                 if (!isLiftHoming) {
                     if (gamepad1.a) {
+                        // Bottom position
                         liftMotor.setTargetPosition(0);
                     }
                     if (gamepad1.x) {
-                        liftMotor.setTargetPosition(3000);
+                        // Height for clearing submersible rim
+                        liftMotor.setTargetPosition((int) (60 * liftStepsPerMM));
                     }
                     if (gamepad1.y) {
-                        liftMotor.setTargetPosition(4300);
+                        // Lower basket height
+                        liftMotor.setTargetPosition((int) (670 * liftStepsPerMM));
                     }
                     // Tell liftMotor to run to to target position at set speed
                     liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     liftMotor.setPower(liftSpeedLimit);
 
                 } else { // If liftMotor is in fact homing
+                    // Lift homing code
                     liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
                     if (!liftMotor.isOverCurrent()) {
                         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -197,6 +206,7 @@ DesmondTeleOP extends LinearOpMode {
                 }
             } else { // If not using discrete lift
                 // Lift is controlled by right stick Y axis
+                // Engages RUN_TO_POSITION when slide stops moving for active position holding
                 if (ry != 0) {
                     liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                     liftMotor.setPower(liftSpeedLimit * ry);
@@ -206,6 +216,7 @@ DesmondTeleOP extends LinearOpMode {
                     liftMotor.setPower(liftSpeedLimit);
                 }
                 // Lift motor current trip, only if going up, to allow for potential hanging
+                // Remember to tighten the belt on the viper slide to prevent skipping
                 if (liftMotor.isOverCurrent() && ry > 0) {
                     liftMotor.setPower(0);
                 }
