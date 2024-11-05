@@ -15,14 +15,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.Objects;
 
 //This is a test from Desmond of the Github, Git, and Android Studio syncing
 
-@TeleOp(name="Basic: Linear OpMode", group="Linear OpMode")
-public class TeleOP extends LinearOpMode {
+@TeleOp
+public class NoahTeleOP extends LinearOpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotorEx frontLeftDrive = null;

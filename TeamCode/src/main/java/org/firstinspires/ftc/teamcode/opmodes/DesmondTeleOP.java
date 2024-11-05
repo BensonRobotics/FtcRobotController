@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
 public class
-EmergencyTeleOP extends LinearOpMode {
+DesmondTeleOP extends LinearOpMode {
     public static final double NEW_P_DRIVE = 1.0;
     public static final double NEW_I_DRIVE = 0.2;
     public static final double NEW_D_DRIVE = 0.1;
