@@ -8,6 +8,9 @@ import static android.content.ContentValues.TAG;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+@Disabled
 public class AutonomousPaths {
     
     MecanumWheelDriverV2 drive;
