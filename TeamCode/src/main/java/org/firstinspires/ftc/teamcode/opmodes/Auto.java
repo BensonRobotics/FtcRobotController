@@ -5,6 +5,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+/**
+ *
+ */
+
 @Autonomous
 public class Auto extends LinearOpMode {
 
@@ -53,16 +57,16 @@ public class Auto extends LinearOpMode {
         frontRightMotor.setTargetPosition(targetSteps);
         backRightMotor.setTargetPosition(targetSteps);
 
-        // Set all motor power levels
-        frontRightMotor.setPower(0.5);
-        frontLeftMotor.setPower(0.5);
-        backRightMotor.setPower(0.5);
-        backLeftMotor.setPower(0.5);
-
         // Tell all motors to run to target position
         frontRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         frontLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         backRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         backLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+
+        // Set all motor power levels
+        frontRightMotor.setPower(0.5);
+        frontLeftMotor.setPower(0.5);
+        backRightMotor.setPower(0.5);
+        backLeftMotor.setPower(0.5);
     }
 }
