@@ -102,6 +102,8 @@ DesmondTeleOP extends LinearOpMode {
 
         // Make sure motors don't run from the get-go
         grabberServo.setPower(0);
+
+        // Set lift motor current trip
         liftMotor.setCurrentAlert(liftCurrentAlert, CurrentUnit.MILLIAMPS);
 
         // Reset runtime variable, not used yet
