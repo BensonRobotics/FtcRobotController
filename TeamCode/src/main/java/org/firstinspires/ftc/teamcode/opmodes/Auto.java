@@ -1,9 +1,12 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 
 /*
 Hi, Desi here. I was going to implement some fixes, but I was informed that Ed would be using
@@ -29,14 +32,15 @@ half second, just to make sure all residual momentum is gone.
 
 @Autonomous
 public class Auto extends LinearOpMode {
-
     public static final double NEW_POS_P_DRIVE = 1.0;
+    public static final double stepsPerMMDrive = 537.7 / (104.0 * Math.PI);
+    public static double botHeading = 0;
+    DcMotorEx frontLeftMotor;
+    DcMotorEx frontRightMotor;
+    DcMotorEx backLeftMotor;
+    DcMotorEx backRightMotor;
 
     public void runOpMode(){
-        DcMotorEx frontLeftMotor;
-        DcMotorEx frontRightMotor;
-        DcMotorEx backLeftMotor;
-        DcMotorEx backRightMotor;
         // Declare our motors
         // Make sure your ID's match your configuration
         frontLeftMotor = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
@@ -55,11 +59,11 @@ public class Auto extends LinearOpMode {
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        // Calculations to convert linear distance in mm to encoder steps
-        double stepsPerMMDrive = 537.7/104.0*Math.PI;
-        // Set targetSteps to distance in MM, converted to encoder steps
-        // (int) casts float value to int for rounding down
-        int targetSteps = (int) (stepsPerMMDrive*1000);
+        // Set all motors to brake automatically
+        frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Zero all motor encoders
         frontLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -67,13 +71,23 @@ public class Auto extends LinearOpMode {
         backLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
-        waitForStart();
+        // Retrieve the IMU from the hardware map
+        IMU imu = hardwareMap.get(IMU.class, "imu");
+        // Adjust the orientation parameters to match your robot
+        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
+        // Without this, the REV Hub's orientation is assumed to be logo up USB forward
+        imu.initialize(parameters);
 
+        waitForStart();
+    }
+    private void driveWithTrigonometry(double angle, double power, double distance) {
         // Set all motor target positions
-        frontLeftMotor.setTargetPosition(targetSteps);
-        backLeftMotor.setTargetPosition(targetSteps);
-        frontRightMotor.setTargetPosition(targetSteps);
-        backRightMotor.setTargetPosition(targetSteps);
+        frontLeftMotor.setTargetPosition(frontLeftBackRightPosition);
+        backLeftMotor.setTargetPosition(frontRightBackLeftPosition);
+        frontRightMotor.setTargetPosition(frontLeftBackRightPosition);
+        backRightMotor.setTargetPosition(frontRightBackLeftPosition);
 
         // Tell all motors to run to target position
         frontRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
@@ -82,9 +96,9 @@ public class Auto extends LinearOpMode {
         backLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
         // Set all motor power levels
-        frontRightMotor.setPower(0.5);
-        frontLeftMotor.setPower(0.5);
-        backRightMotor.setPower(0.5);
-        backLeftMotor.setPower(0.5);
+        frontRightMotor.setPower(power);
+        frontLeftMotor.setPower(power);
+        backRightMotor.setPower(power);
+        backLeftMotor.setPower(power);
     }
 }
