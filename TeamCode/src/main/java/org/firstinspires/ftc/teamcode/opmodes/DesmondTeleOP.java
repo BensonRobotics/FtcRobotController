@@ -17,30 +17,30 @@ public class
 DesmondTeleOP extends LinearOpMode {
 
     // This is a joke
-    final byte hoursLeft = 12;
+    final byte hoursYouHaveLeft = 12;
 
     // Drive system PIDF coefficients
-    public static final float NEW_P_DRIVE = 1.0F;
-    public static final float NEW_I_DRIVE = 0.2F;
-    public static final float NEW_D_DRIVE = 0.1F;
-    public static final float NEW_F_DRIVE = 10.0F;
+    float NEW_P_DRIVE = 1.0F;
+    float NEW_I_DRIVE = 0.2F;
+    float NEW_D_DRIVE = 0.1F;
+    float NEW_F_DRIVE = 10.0F;
 
     // driveTicksPerSecond = driveMotorRPM * driveMotorStepsPerRevolution / 60
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
     // 537.7 is a 312 RPM motor's encoder steps per revolution
     // Output is first cast to float, since the equation itself uses double precision
-    public static final float driveTicksPerSecond = (float) (312.0 * 537.7 / 60.0);
+    float driveTicksPerSecond = (float) (312.0 * 537.7 / 60.0);
 
     // liftStepsPerMM = liftMotorStepsPerRevolution / (liftPulleyPitchDiameter * PI)
     // Output is how many encoder steps per mm of lift height
-    public static final double liftStepsPerMM = 537.7 / (38.2 * Math.PI);
-    public static boolean isLiftHoming = false;
-    public static ElapsedTime runtime = new ElapsedTime();
-    public static final boolean useFieldCentric = false;
-    public static final boolean useDiscreteLift = true;
-    public static final short liftCurrentAlert = 2500;
-    public static final float driveSpeedLimit = 0.75F;
-    public static final float liftSpeedLimit = 0.75F;
+    double liftStepsPerMM = 537.7 / (38.2 * Math.PI);
+    boolean isLiftHoming = false;
+    ElapsedTime runtime = new ElapsedTime();
+    boolean useFieldCentric = false;
+    boolean useDiscreteLift = true;
+    short liftCurrentAlert = 2500;
+    float driveSpeedLimit = 0.75F;
+    float liftSpeedLimit = 0.75F;
 
     @Override
     public void runOpMode() throws InterruptedException {
