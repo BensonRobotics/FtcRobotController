@@ -13,7 +13,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 @Autonomous
 public class Auto extends LinearOpMode {
     double NEW_POS_P_DRIVE = 1.0;
-    double stepsPerMMDrive = 537.7 / (104.0 * Math.PI);
+    double driveStepsPerMM = 537.7 / (104.0 * Math.PI);
     DcMotorEx frontLeftMotor;
     DcMotorEx frontRightMotor;
     DcMotorEx backLeftMotor;
@@ -86,10 +86,10 @@ public class Auto extends LinearOpMode {
             double frontRightBackLeftMotors = driveDistance * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
 
             // Set all motor target positions
-            frontLeftMotor.setTargetPosition((int) (stepsPerMMDrive * frontLeftBackRightMotors + rotation));
-            backLeftMotor.setTargetPosition((int) (stepsPerMMDrive * frontRightBackLeftMotors + rotation));
-            frontRightMotor.setTargetPosition((int) (stepsPerMMDrive * frontRightBackLeftMotors - rotation));
-            backRightMotor.setTargetPosition((int) (stepsPerMMDrive * frontLeftBackRightMotors - rotation));
+            frontLeftMotor.setTargetPosition((int) (driveStepsPerMM * frontLeftBackRightMotors + rotation));
+            backLeftMotor.setTargetPosition((int) (driveStepsPerMM * frontRightBackLeftMotors + rotation));
+            frontRightMotor.setTargetPosition((int) (driveStepsPerMM * frontRightBackLeftMotors - rotation));
+            backRightMotor.setTargetPosition((int) (driveStepsPerMM * frontLeftBackRightMotors - rotation));
 
             // Tell all motors to run to target position
             frontRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
