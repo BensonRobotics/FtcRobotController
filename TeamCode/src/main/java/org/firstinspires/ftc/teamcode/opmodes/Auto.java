@@ -10,28 +10,6 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-/*
-Hi, Desi here. I was going to implement some fixes, but I was informed that Ed would be using
-this to teach some robotics members programming and that they would be working on the Auto.
-I do have some suggestions, though. For starters, since this autonomous will be running to
-a different position over and over again, it would be best to put the reset-setTarget-drive code
-inside a void, and call that void with new position parameters every time you want to move
-the robot. You could program the void to take in individual motor positions and power levels,
-or you could challenge yourself and have it intake an angle and power level, and have
-trigonometry calculate the motor positions and powers from there. It shouldn't be too hard to
-repurpose some Mecanum drive code into setting motor positions instead of powers. Another thing,
-when having the code only run through once, keep in mind that once it reaches the bottom, it
-doesn't loop back or anything, it actually stops the OpMode and kills all your motors. If you
-want it to ever wait until it fully reaches its previous destination, you can have it call the
-function, then trap the code in a while loop that is only running while any of the motors are
-busy, a boolean value that looks like motorName.isBusy() in your while condition, which,
-all together, would look like this: while (frontRightMotor.isBusy() || frontLeftMotor.isBusy() ||
-backRightMotor.isBusy() || backLeftMotor.isBusy()) {}
-This would keep the code held up there until all of the motors have reached their target, then
-it would proceed. You may also want to add a sleep(500);, which would have it hold for another
-half second, just to make sure all residual momentum is gone.
- */
-
 @Autonomous
 public class Auto extends LinearOpMode {
     double NEW_POS_P_DRIVE = 1.0;
