@@ -15,6 +15,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @TeleOp
 public class
 DesmondTeleOP extends LinearOpMode {
+
+    // This is a joke
+    final byte hoursLeft = 12;
+
+    // Drive system PIDF coefficients
     public static final float NEW_P_DRIVE = 1.0F;
     public static final float NEW_I_DRIVE = 0.2F;
     public static final float NEW_D_DRIVE = 0.1F;
