@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
 /*
 Hi, Desi here. I was going to implement some fixes, but I was informed that Ed would be using
 this to teach some robotics members programming and that they would be working on the Auto.
@@ -34,11 +36,12 @@ half second, just to make sure all residual momentum is gone.
 public class Auto extends LinearOpMode {
     public static final double NEW_POS_P_DRIVE = 1.0;
     public static final double stepsPerMMDrive = 537.7 / (104.0 * Math.PI);
-    public static double botHeading = 0;
     DcMotorEx frontLeftMotor;
     DcMotorEx frontRightMotor;
     DcMotorEx backLeftMotor;
     DcMotorEx backRightMotor;
+    IMU imu = hardwareMap.get(IMU.class, "imu");
+
 
     public void runOpMode(){
         // Declare our motors
@@ -71,8 +74,6 @@ public class Auto extends LinearOpMode {
         backLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
-        // Retrieve the IMU from the hardware map
-        IMU imu = hardwareMap.get(IMU.class, "imu");
         // Adjust the orientation parameters to match your robot
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
@@ -81,13 +82,21 @@ public class Auto extends LinearOpMode {
         imu.initialize(parameters);
 
         waitForStart();
+
     }
-    private void driveWithTrigonometry(double angle, double power, double distance) {
+    private void driveWithTrigonometry(double relativeX, double relativeY, double rotation, double power) {
+        // Get the robot rotation value
+        double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+        double driveAngle = Math.atan2(relativeX, relativeY);
+        double driveDistance = Math.hypot(relativeX, relativeY);
+        double frontLeftBackRightMotors = driveDistance * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
+        double frontRightBackLeftMotors = driveDistance * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
+
         // Set all motor target positions
-        frontLeftMotor.setTargetPosition(frontLeftBackRightPosition);
-        backLeftMotor.setTargetPosition(frontRightBackLeftPosition);
-        frontRightMotor.setTargetPosition(frontLeftBackRightPosition);
-        backRightMotor.setTargetPosition(frontRightBackLeftPosition);
+        frontLeftMotor.setTargetPosition((int) (stepsPerMMDrive * frontLeftBackRightMotors + rotation));
+        backLeftMotor.setTargetPosition((int) (stepsPerMMDrive * frontRightBackLeftMotors + rotation));
+        frontRightMotor.setTargetPosition((int) (stepsPerMMDrive * frontRightBackLeftMotors - rotation));
+        backRightMotor.setTargetPosition((int) (stepsPerMMDrive * frontLeftBackRightMotors - rotation));
 
         // Tell all motors to run to target position
         frontRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
