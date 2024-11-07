@@ -34,14 +34,15 @@ half second, just to make sure all residual momentum is gone.
 
 @Autonomous
 public class Auto extends LinearOpMode {
-    public static final double NEW_POS_P_DRIVE = 1.0;
-    public static final double stepsPerMMDrive = 537.7 / (104.0 * Math.PI);
+    double NEW_POS_P_DRIVE = 1.0;
+    double stepsPerMMDrive = 537.7 / (104.0 * Math.PI);
     DcMotorEx frontLeftMotor;
     DcMotorEx frontRightMotor;
     DcMotorEx backLeftMotor;
     DcMotorEx backRightMotor;
     IMU imu = hardwareMap.get(IMU.class, "imu");
-
+    double botHeading = 0;
+    boolean useFieldCentric = true;
 
     public void runOpMode() throws InterruptedException {
         // Declare our motors
@@ -93,8 +94,9 @@ public class Auto extends LinearOpMode {
         // Do the loop once, then keep looping until all motors are done
         // I love do-while loops
         do {
-            // Get the robot rotation value
-            double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            if (useFieldCentric) { // Get the robot rotation value, if using field centric
+                botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            }
             // Calculate motor positions
             double frontLeftBackRightMotors = driveDistance * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
             double frontRightBackLeftMotors = driveDistance * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
