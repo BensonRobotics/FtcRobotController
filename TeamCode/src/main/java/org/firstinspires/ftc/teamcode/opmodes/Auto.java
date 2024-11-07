@@ -43,7 +43,7 @@ public class Auto extends LinearOpMode {
     IMU imu = hardwareMap.get(IMU.class, "imu");
 
 
-    public void runOpMode(){
+    public void runOpMode() throws InterruptedException {
         // Declare our motors
         // Make sure your ID's match your configuration
         frontLeftMotor = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
