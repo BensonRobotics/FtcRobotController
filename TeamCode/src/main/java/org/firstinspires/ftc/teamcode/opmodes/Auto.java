@@ -84,8 +84,14 @@ public class Auto extends LinearOpMode {
 
         waitForStart();
 
+        driveWithTrigonometry(0,100,0,0.25);
+        wait(500);
+        driveWithTrigonometry(100,0,0,0.25);
+        wait(500);
+        driveWithTrigonometry(-100,-100,0,0.25);
+        wait(500);
     }
-    private void driveWithTrigonometry(double relativeX, double relativeY, double rotation, double power) {
+    private void driveWithTrigonometry(int relativeX, int relativeY, double rotation, double power) {
         // Calculate angle and hypotenuse
         double driveAngle = Math.atan2(relativeX, relativeY);
         double driveDistance = Math.hypot(relativeX, relativeY);
