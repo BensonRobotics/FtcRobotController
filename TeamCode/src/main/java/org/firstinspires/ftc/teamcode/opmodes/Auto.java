@@ -85,29 +85,37 @@ public class Auto extends LinearOpMode {
 
     }
     private void driveWithTrigonometry(double relativeX, double relativeY, double rotation, double power) {
-        // Get the robot rotation value
-        double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+        // Calculate angle and hypotenuse
         double driveAngle = Math.atan2(relativeX, relativeY);
         double driveDistance = Math.hypot(relativeX, relativeY);
-        double frontLeftBackRightMotors = driveDistance * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
-        double frontRightBackLeftMotors = driveDistance * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
 
-        // Set all motor target positions
-        frontLeftMotor.setTargetPosition((int) (stepsPerMMDrive * frontLeftBackRightMotors + rotation));
-        backLeftMotor.setTargetPosition((int) (stepsPerMMDrive * frontRightBackLeftMotors + rotation));
-        frontRightMotor.setTargetPosition((int) (stepsPerMMDrive * frontRightBackLeftMotors - rotation));
-        backRightMotor.setTargetPosition((int) (stepsPerMMDrive * frontLeftBackRightMotors - rotation));
+        // Run all the motors to target positions
+        // Do the loop once, then keep looping until all motors are done
+        // I love do-while loops
+        do {
+            // Get the robot rotation value
+            double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            // Calculate motor positions
+            double frontLeftBackRightMotors = driveDistance * Math.sin(driveAngle + botHeading + 0.25 * Math.PI);
+            double frontRightBackLeftMotors = driveDistance * -Math.sin(driveAngle + botHeading - 0.25 * Math.PI);
 
-        // Tell all motors to run to target position
-        frontRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        frontLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        backRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        backLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            // Set all motor target positions
+            frontLeftMotor.setTargetPosition((int) (stepsPerMMDrive * frontLeftBackRightMotors + rotation));
+            backLeftMotor.setTargetPosition((int) (stepsPerMMDrive * frontRightBackLeftMotors + rotation));
+            frontRightMotor.setTargetPosition((int) (stepsPerMMDrive * frontRightBackLeftMotors - rotation));
+            backRightMotor.setTargetPosition((int) (stepsPerMMDrive * frontLeftBackRightMotors - rotation));
 
-        // Set all motor power levels
-        frontRightMotor.setPower(power);
-        frontLeftMotor.setPower(power);
-        backRightMotor.setPower(power);
-        backLeftMotor.setPower(power);
+            // Tell all motors to run to target position
+            frontRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            frontLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            backRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            backLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+
+            // Set all motor power levels
+            frontRightMotor.setPower(power);
+            frontLeftMotor.setPower(power);
+            backRightMotor.setPower(power);
+            backLeftMotor.setPower(power);
+        } while (frontRightMotor.isBusy() || frontLeftMotor.isBusy() || backRightMotor.isBusy() || backLeftMotor.isBusy());
     }
 }
