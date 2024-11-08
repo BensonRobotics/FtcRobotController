@@ -48,10 +48,11 @@ public class Auto extends LinearOpMode {
         backLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
-        frontLeftMotor.setTargetPositionTolerance(20);
-        frontRightMotor.setTargetPositionTolerance(20);
-        backLeftMotor.setTargetPositionTolerance(20);
-        backRightMotor.setTargetPositionTolerance(20);
+        // Default is 5 ticks
+        frontLeftMotor.setTargetPositionTolerance(10);
+        frontRightMotor.setTargetPositionTolerance(10);
+        backLeftMotor.setTargetPositionTolerance(10);
+        backRightMotor.setTargetPositionTolerance(10);
 
         // Adjust the orientation parameters to match your robot
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
