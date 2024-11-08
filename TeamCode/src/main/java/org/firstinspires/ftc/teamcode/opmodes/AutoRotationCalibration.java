@@ -58,10 +58,15 @@ public class AutoRotationCalibration extends LinearOpMode {
             // Slowly rotate the robot until it reaches 90 degrees
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
             double headingError = 90 + botHeading;
-            frontRightMotor.setPower(0.25 * -headingError / 90);
-            frontLeftMotor.setPower(0.25 * headingError / 90);
-            backRightMotor.setPower(0.25 * -headingError / 90);
-            backLeftMotor.setPower(0.25 * headingError / 90);
+            double proportionalPower = 0.25 * headingError / 90;
+            double integralPower = 0;
+            double previousError = 0;
+            double derivativePower = 0;
+            integralPower += headingError * 0.1;
+            frontRightMotor.setPower(-(proportionalPower + integralPower));
+            frontLeftMotor.setPower(proportionalPower + integralPower);
+            backRightMotor.setPower(-(proportionalPower + integralPower));
+            backLeftMotor.setPower(proportionalPower + integralPower);
 
             // Gemini in Android Studio is insane
             // Report back the motor positions, heading, and heading error
