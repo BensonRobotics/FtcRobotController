@@ -20,6 +20,7 @@ public class Auto extends LinearOpMode {
     DcMotorEx backRightMotor;
     IMU imu;
     double botHeading = 0;
+    double accumulatedRotation = 0;
     boolean useFieldCentric = true;
 
     public void runOpMode() throws InterruptedException {
@@ -64,14 +65,15 @@ public class Auto extends LinearOpMode {
 
         waitForStart();
 
-        driveWithTrigonometry(0,500,0,0.25);
+        // Autonomous sequence
+        driveWithTrigonometry(0,500,90,0.25);
         sleep(500);
         driveWithTrigonometry(1000,0,0,0.25);
         sleep(500);
         driveWithTrigonometry(-1000,-500,0,0.25);
         sleep(500);
-    }
-    private void driveWithTrigonometry(int relativeX, int relativeY, double rotation, double power) {
+    } // End of code
+    private void driveWithTrigonometry(int relativeX, int relativeY, double angle, double power) {
         // Calculate angle and hypotenuse
         double driveAngle = Math.atan2(relativeX, relativeY);
         double driveDistance = Math.hypot(relativeX, relativeY);
@@ -90,14 +92,18 @@ public class Auto extends LinearOpMode {
         // I love do-while loops
         do {
             if (useFieldCentric) { // Get the robot rotation value, if using field centric
-                botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+                botHeading = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             }
             // Calculate motor positions
-            double frontLeftBackRightMotors = driveDistance * Math.sin(driveAngle + botHeading + (0.25 * Math.PI));
-            double frontRightBackLeftMotors = driveDistance * -Math.sin(driveAngle + botHeading - (0.25 * Math.PI));
+            double frontLeftBackRightMotors = driveDistance * Math.sin(driveAngle - botHeading + (0.25 * Math.PI));
+            double frontRightBackLeftMotors = driveDistance * -Math.sin(driveAngle - botHeading - (0.25 * Math.PI));
 
             frontRightBackLeftMotors *= driveStepsPerMM;
             frontLeftBackRightMotors *= driveStepsPerMM;
+
+            double headingError = Math.toRadians(angle) - botHeading;
+            double rotation = (headingError * 0.01) + accumulatedRotation;
+            accumulatedRotation = rotation;
 
             // Set all motor target positions
             frontLeftMotor.setTargetPosition((int) (frontLeftBackRightMotors + rotation));
