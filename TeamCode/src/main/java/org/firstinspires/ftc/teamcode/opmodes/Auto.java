@@ -13,7 +13,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 @Autonomous
 public class Auto extends LinearOpMode {
     double NEW_POS_P_DRIVE = 1.5;
-    double driveStepsPerMM = 537.7 / (103.0 * Math.PI);
+    double driveStepsPerMM = 537.7 / (104.0 * Math.PI);
     DcMotorEx frontLeftMotor;
     DcMotorEx frontRightMotor;
     DcMotorEx backLeftMotor;
@@ -75,8 +75,10 @@ public class Auto extends LinearOpMode {
         double driveAngle = Math.atan2(relativeX, relativeY);
         double driveDistance = Math.hypot(relativeX, relativeY);
 
+        // Don't ask me why this works
         driveDistance *= 1.5;
 
+        // Reset encoders
         frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -116,6 +118,7 @@ public class Auto extends LinearOpMode {
 
         } while (frontRightMotor.isBusy() || frontLeftMotor.isBusy() || backRightMotor.isBusy() || backLeftMotor.isBusy());
 
+        // Stop all motors
         frontRightMotor.setPower(0);
         frontLeftMotor.setPower(0);
         backRightMotor.setPower(0);
