@@ -52,21 +52,31 @@ public class AutoRotationCalibration extends LinearOpMode {
         imu.initialize(parameters);
         imu.resetYaw();
 
+        double previousError = 0;
+        double integralPower = 0;
+
         waitForStart();
 
-        while (opModeIsActive()) {
-            // Slowly rotate the robot until it reaches 90 degrees
+        while (opModeIsActive()) { // Slowly rotate the robot until it reaches 90 degrees
+            // Get robot heading
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            // Calculate the heading error
             double headingError = 90 + botHeading;
-            double proportionalPower = 0.25 * headingError / 90;
-            double integralPower = 0;
-            double previousError = 0;
-            double derivativePower = 0;
-            integralPower += headingError * 0.1;
-            frontRightMotor.setPower(-(proportionalPower + integralPower));
-            frontLeftMotor.setPower(proportionalPower + integralPower);
-            backRightMotor.setPower(-(proportionalPower + integralPower));
-            backLeftMotor.setPower(proportionalPower + integralPower);
+            // Calculate proportional power
+            double proportionalPower = 0.5 * headingError / 90;
+            // Calculate integral power
+            integralPower += headingError * 0.1 / 90;
+            // Calculate derivative power
+            double derivativePower = (headingError / previousError) * 0.1 / 90;
+            // Jot down the current error for next time
+            previousError = headingError;
+
+            // Add all the motor powers together to get the final power, run the motors at that
+            // Right side is negative to rotate instead of drive
+            frontRightMotor.setPower(-0.5 * (proportionalPower + integralPower + derivativePower));
+            frontLeftMotor.setPower(0.5 * proportionalPower + integralPower + derivativePower);
+            backRightMotor.setPower(-0.5 * (proportionalPower + integralPower + derivativePower));
+            backLeftMotor.setPower(0.5 * proportionalPower + integralPower + derivativePower);
 
             // Gemini in Android Studio is insane
             // Report back the motor positions, heading, and heading error
