@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -27,6 +28,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -35,7 +37,8 @@ import java.util.Objects;
 //This is a test from Desmond of the Github, Git, and Android Studio syncing
 
 @TeleOp
-public class NoahTeleOP extends LinearOpMode {
+public class
+NoahTeleOP extends LinearOpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotorEx frontLeftDrive = null;
@@ -128,6 +131,11 @@ public class NoahTeleOP extends LinearOpMode {
         /*April Tag Detection*/
         InitAprilTag();
 
+        /*Localization*/
+        Dictionary<String, Vector3D> currentRobotOrientationData = new Hashtable<>();
+        currentRobotOrientationData.put("position", new Vector3D(0, 0, 0));
+        currentRobotOrientationData.put("rotation", new Vector3D(0, 0, 0));
+
         /*Main loop */
 
         // Wait for the game to start (driver presses PLAY)
@@ -141,6 +149,9 @@ public class NoahTeleOP extends LinearOpMode {
         while (opModeIsActive()) {
             /*AprilTag stuff*/
             UpdateAprilTagTelemetry();
+            currentRobotOrientationData = UpdateRobotOrientationData(imu, currentRobotOrientationData);
+            telemetry.addData("Position estimate", currentRobotOrientationData.get("position"));
+            telemetry.addData("Yaw estimate", currentRobotOrientationData.get("rotation").getZ());
 
             // Get needed gamepad joystick values
             double leftStickY = ScaleStickValue(-gamepad1.left_stick_y);  // Note: pushing stick forward gives negative value
@@ -163,8 +174,6 @@ public class NoahTeleOP extends LinearOpMode {
             // Take an input vector from the joysticks and use it to move. Exponential scaling will need to be applied for better control.
 //          MoveWithFieldRelativeVector(velocity, robotAngleToField, rotation);
             MoveWithVector(velocity, rotation);
-
-            robotAngleToField = UpdateRobotAngleToField(imu);
         }
 
         visionPortal.close();
@@ -221,17 +230,35 @@ public class NoahTeleOP extends LinearOpMode {
 
     // Field oriented drive
 
-    // Update the robotAngleToField variable using the latest data from the gyro
-    public double UpdateRobotAngleToField(IMU imu) {
+    // Update all the orientation data using the most recent data from the IMU, AprilTag detection alg, and motor Encoders
+    public Dictionary<String, Vector3D> UpdateRobotOrientationData(IMU imu, Dictionary<String, Vector3D> orientationData) {
         // If the driver presses the reset orientation button, reset the Z axis on the IMU
         if (gamepad1.back) {
             telemetry.addData("Yaw", "Resetting\n");
             imu.resetYaw();
+            orientationData.put("rotation", new Vector3D(0, 0, 0));
+
+            telemetry.addData("Resetting position data", "...");
+            orientationData.put("position", new Vector3D(0, 0, 0));
+        }
+
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        if (currentDetections.size() >= 0) {
+            orientationData.put("position", GetPositionWithAprilTags(currentDetections));
+            orientationData.put("rotation", new Vector3D(0, 0, GetYawWithAprilTags(currentDetections)));
+
+            if (orientationData.get("rotation").getZ() == 0 && imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) != 0) {
+                imu.resetYaw();
+            }
         }
 
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.RADIANS));
-        return orientation.getYaw(AngleUnit.RADIANS);
+        orientationData.put("rotation", new Vector3D(orientation.getPitch(AngleUnit.RADIANS),
+                orientation.getRoll(AngleUnit.RADIANS), orientation.getYaw(AngleUnit.RADIANS)));
+
+
+        return orientationData;
     }
 
     // Move the robot using a Vector2 representing velocity as an input (relative to robot)
@@ -342,7 +369,7 @@ public class NoahTeleOP extends LinearOpMode {
         aprilTag = new AprilTagProcessor.Builder().
                 setDrawTagOutline(true)
                 .setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary())
-                .setOutputUnits(DistanceUnit.CM, AngleUnit.RADIANS)
+                .setOutputUnits(DistanceUnit.MM, AngleUnit.RADIANS)
                 .build();
 
         // Again just a guess for what value we'll want. According to the example program this should be able to detect a 2" tag from 6 feet away at 22 FPS
@@ -376,20 +403,54 @@ public class NoahTeleOP extends LinearOpMode {
     }
 
     private void UpdateAprilTagTelemetry() {
-        List<AprilTagDetection> currentdetections = aprilTag.getDetections();
-        telemetry.addData("# AprilTags Detected", currentdetections.size());
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        telemetry.addData("# AprilTags Detected", currentDetections.size());
 
         // Iterate through the list of detections and display the info for each one
-        for (AprilTagDetection detection : currentdetections) {
+        for (AprilTagDetection detection : currentDetections) {
             if (detection.metadata != null) {
                 telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (mm)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (rad)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (mm, rad, rad)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
             } else {
                 telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
                 telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
             }
         }
+    }
+
+    private Vector3D GetPositionWithAprilTags(List<AprilTagDetection> detections) {
+        List<Vector3D> positionEstimates = Collections.emptyList();
+        
+        for (AprilTagDetection detection : detections) {
+            positionEstimates.add(new Vector3D(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+        }
+        
+        return Vector3DAverage(positionEstimates);
+    }
+
+    private double GetYawWithAprilTags(List<AprilTagDetection> detections) {
+        double yawEstimateSum = 0.0;
+
+        for (AprilTagDetection detection : detections) {
+            yawEstimateSum += detection.ftcPose.yaw;
+        }
+
+        return (yawEstimateSum / detections.size());
+    }
+
+    private Vector3D Vector3DAverage(List<Vector3D> vectors) {
+        double xSum = 0;
+        double ySum = 0;
+        double zSum = 0;
+
+        for (Vector3D vector : vectors) {
+            xSum += vector.getX();
+            ySum += vector.getY();
+            zSum += vector.getZ();
+        }
+
+        return new Vector3D((xSum / vectors.size()), (ySum / vectors.size()), (zSum / vectors.size()));
     }
 }
