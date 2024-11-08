@@ -243,7 +243,7 @@ NoahTeleOP extends LinearOpMode {
         }
 
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-        if (currentDetections.size() >= 0) {
+        if (currentDetections.size() > 0) {
             orientationData.put("position", GetPositionWithAprilTags(currentDetections));
             orientationData.put("rotation", new Vector3D(0, 0, GetYawWithAprilTags(currentDetections)));
 

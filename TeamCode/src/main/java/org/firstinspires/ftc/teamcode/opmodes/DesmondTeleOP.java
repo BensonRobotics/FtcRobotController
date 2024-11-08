@@ -34,7 +34,7 @@ DesmondTeleOP extends LinearOpMode {
     double liftStepsPerMM = 537.7 / (38.2 * Math.PI);
     boolean isLiftHoming = false;
     ElapsedTime runtime = new ElapsedTime();
-    boolean useFieldCentric = false;
+    boolean useFieldCentric = true;
     boolean useDiscreteLift = true;
     short liftCurrentAlert = 2500;
     float driveSpeedLimit = 0.75F;
