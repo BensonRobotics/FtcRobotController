@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -31,6 +32,11 @@ public class AutoRotationCalibration extends LinearOpMode {
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         // Zero all motor encoders
         frontLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         frontRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -43,17 +49,18 @@ public class AutoRotationCalibration extends LinearOpMode {
                 RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
         // Without this, the REV Hub's orientation is assumed to be logo up USB forward
         imu.initialize(parameters);
+        imu.resetYaw();
 
         waitForStart();
 
         while (opModeIsActive()) {
-            // Slowly rotate the robot until it reaches 180 degrees
+            // Slowly rotate the robot until it reaches 90 degrees
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
-            double headingError = 180 - botHeading;
-            frontRightMotor.setPower(0.25 * -headingError / 180);
-            frontLeftMotor.setPower(0.25 * headingError / 180);
-            backRightMotor.setPower(0.25 * -headingError / 180);
-            backLeftMotor.setPower(0.25 * headingError / 180);
+            double headingError = 90 + botHeading;
+            frontRightMotor.setPower(0.25 * -headingError / 90);
+            frontLeftMotor.setPower(0.25 * headingError / 90);
+            backRightMotor.setPower(0.25 * -headingError / 90);
+            backLeftMotor.setPower(0.25 * headingError / 90);
 
             // Gemini in Android Studio is insane
             // Report back the motor positions, heading, and heading error
