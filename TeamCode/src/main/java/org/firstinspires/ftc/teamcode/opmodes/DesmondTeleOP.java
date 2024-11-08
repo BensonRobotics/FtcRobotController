@@ -18,7 +18,7 @@ DesmondTeleOP extends LinearOpMode {
     final byte hoursYouHaveLeft = 12;
 
     // Drive system PIDF coefficients
-    float NEW_P_DRIVE = 1.0F;
+    float NEW_P_DRIVE = 0.75F;
     float NEW_I_DRIVE = 0.2F;
     float NEW_D_DRIVE = 0.1F;
     float NEW_F_DRIVE = 10.0F;
