@@ -52,7 +52,7 @@ public class AutoRotationCalibration extends LinearOpMode {
         imu.initialize(parameters);
         imu.resetYaw();
 
-        double previousError = 0;
+        double previousError = 90;
         double integralPower = 0;
 
         waitForStart();
@@ -63,11 +63,11 @@ public class AutoRotationCalibration extends LinearOpMode {
             // Calculate the heading error
             double headingError = 90 + botHeading;
             // Calculate proportional power
-            double proportionalPower = 0.5 * headingError / 90;
+            double proportionalPower = (0.5 * headingError) / 90;
             // Calculate integral power
-            integralPower += headingError * 0.1 / 90;
+            integralPower += (headingError * 0.05) / 90;
             // Calculate derivative power
-            double derivativePower = (headingError / previousError) * 0.1 / 90;
+            double derivativePower = ((headingError - previousError) * 0.05) / 90;
             // Jot down the current error for next time
             previousError = headingError;
 
@@ -80,9 +80,9 @@ public class AutoRotationCalibration extends LinearOpMode {
 
             // Gemini in Android Studio is insane
             // Report back the motor positions, heading, and heading error
-            telemetry.addData("Right Motors", frontRightMotor.getCurrentPosition());
+            telemetry.addData("Right Motors' Average Position", (frontRightMotor.getCurrentPosition() + backRightMotor.getCurrentPosition()) / 2);
             telemetry.addLine();
-            telemetry.addData("Left Motors", frontLeftMotor.getCurrentPosition());
+            telemetry.addData("Left Motors' Average Position", (frontLeftMotor.getCurrentPosition() + backLeftMotor.getCurrentPosition()) / 2);
             telemetry.addLine();
             telemetry.addData("Heading", botHeading);
             telemetry.addLine();
