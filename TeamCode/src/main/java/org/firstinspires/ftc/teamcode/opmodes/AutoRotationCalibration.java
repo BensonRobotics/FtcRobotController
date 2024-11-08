@@ -65,9 +65,9 @@ public class AutoRotationCalibration extends LinearOpMode {
             // Calculate proportional power
             double proportionalPower = (0.5 * headingError) / 90;
             // Calculate integral power
-            integralPower += (headingError * 0.05) / 90;
+            integralPower += (headingError * 0.1) / 90;
             // Calculate derivative power
-            double derivativePower = ((headingError - previousError) * 0.05) / 90;
+            double derivativePower = ((headingError - previousError) * 0.1) / 90;
             // Jot down the current error for next time
             previousError = headingError;
 
