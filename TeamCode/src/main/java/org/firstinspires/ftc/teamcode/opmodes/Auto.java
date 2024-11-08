@@ -102,7 +102,7 @@ public class Auto extends LinearOpMode {
             frontLeftBackRightMotors *= driveStepsPerMM;
 
             double headingError = Math.toRadians(angle) - botHeading;
-            double rotation = (headingError * 0.01) + accumulatedRotation;
+            double rotation = (headingError * 0.1) + accumulatedRotation;
             accumulatedRotation = rotation;
 
             // Set all motor target positions
