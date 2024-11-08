@@ -103,7 +103,7 @@ DesmondTeleOP extends LinearOpMode {
         backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         liftMotor.setTargetPosition(0);
-        liftMotor.setTargetPositionTolerance(1);
+        liftMotor.setTargetPositionTolerance(5);
 
         // Make sure motors don't run from the get-go
         grabberServo.setPower(0);
