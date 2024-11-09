@@ -24,6 +24,7 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -231,34 +232,34 @@ NoahTeleOP extends LinearOpMode {
     // Field oriented drive
 
     // Update all the orientation data using the most recent data from the IMU, AprilTag detection alg, and motor Encoders
-    public Dictionary<String, Vector3D> UpdateRobotOrientationData(IMU imu, Dictionary<String, Vector3D> orientationData) {
+    public Dictionary<String, Vector3D> UpdateRobotOrientationData(IMU imu, Dictionary<String, Vector3D> localizationData) {
         // If the driver presses the reset orientation button, reset the Z axis on the IMU
         if (gamepad1.back) {
             telemetry.addData("Yaw", "Resetting\n");
             imu.resetYaw();
-            orientationData.put("rotation", new Vector3D(0, 0, 0));
+            localizationData.put("rotation", new Vector3D(0, 0, 0));
 
             telemetry.addData("Resetting position data", "...");
-            orientationData.put("position", new Vector3D(0, 0, 0));
+            localizationData.put("position", new Vector3D(0, 0, 0));
         }
 
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
         if (currentDetections.size() > 0) {
-            orientationData.put("position", GetPositionWithAprilTags(currentDetections));
-            orientationData.put("rotation", new Vector3D(0, 0, GetYawWithAprilTags(currentDetections)));
+            localizationData.put("position", GetPositionWithAprilTags(currentDetections));
+            //localizationData.put("rotation", new Vector3D(0, 0, GetYawWithAprilTags(currentDetections)));
 
-            if (orientationData.get("rotation").getZ() == 0 && imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) != 0) {
+            if (localizationData.get("rotation").getZ() == 0 && imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) != 0) {
                 imu.resetYaw();
             }
         }
 
         YawPitchRollAngles orientation = imu.getRobotYawPitchRollAngles();
         telemetry.addData("Yaw (Z)", "%.2f Deg. (Heading)", orientation.getYaw(AngleUnit.RADIANS));
-        orientationData.put("rotation", new Vector3D(orientation.getPitch(AngleUnit.RADIANS),
+        localizationData.put("rotation", new Vector3D(orientation.getPitch(AngleUnit.RADIANS),
                 orientation.getRoll(AngleUnit.RADIANS), orientation.getYaw(AngleUnit.RADIANS)));
 
 
-        return orientationData;
+        return localizationData;
     }
 
     // Move the robot using a Vector2 representing velocity as an input (relative to robot)
@@ -368,7 +369,7 @@ NoahTeleOP extends LinearOpMode {
         // Create the AprilTag processor - all these values are blind guesses as none of it has been tested yet
         aprilTag = new AprilTagProcessor.Builder().
                 setDrawTagOutline(true)
-                .setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary())
+                .setTagLibrary(AprilTagGameDatabase.getIntoTheDeepTagLibrary())
                 .setOutputUnits(DistanceUnit.MM, AngleUnit.RADIANS)
                 .build();
 
@@ -421,23 +422,33 @@ NoahTeleOP extends LinearOpMode {
     }
 
     private Vector3D GetPositionWithAprilTags(List<AprilTagDetection> detections) {
-        List<Vector3D> positionEstimates = Collections.emptyList();
-        
-        for (AprilTagDetection detection : detections) {
-            positionEstimates.add(new Vector3D(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-        }
-        
-        return Vector3DAverage(positionEstimates);
+//        List<Vector3D> positionEstimates = Collections.emptyList();
+//        telemetry.addData("detections[0]", detections.get(0));
+//
+//        for (AprilTagDetection detection : detections) {
+//            if (detection.metadata != null) {
+//                positionEstimates.add(new Vector3D(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+//            }
+//            telemetry.addData("!detections[0]", detection);
+//        }
+//
+//        return Vector3DAverage(positionEstimates);
+
+        return new Vector3D(0, 0, 0);
     }
 
     private double GetYawWithAprilTags(List<AprilTagDetection> detections) {
-        double yawEstimateSum = 0.0;
+//        double yawEstimateSum = 0.0;
+//
+//        for (AprilTagDetection detection : detections) {
+//            if (detection.metadata != null) {
+//                yawEstimateSum += detection.ftcPose.yaw;
+//            }
+//        }
+//
+//        return (yawEstimateSum / detections.size());
 
-        for (AprilTagDetection detection : detections) {
-            yawEstimateSum += detection.ftcPose.yaw;
-        }
-
-        return (yawEstimateSum / detections.size());
+        return 0.0;
     }
 
     private Vector3D Vector3DAverage(List<Vector3D> vectors) {
