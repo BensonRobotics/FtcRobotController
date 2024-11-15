@@ -130,6 +130,14 @@ DesmondTeleOP extends LinearOpMode {
             double rx = gamepad1.right_stick_x;
             double ry = -gamepad1.right_stick_y;
 
+            /*
+            Here's something you can use for acceleration or scaling or something
+            it's the hyperbolic tangent function, and it makes a nice s-curve
+            centered around 0,0. It is definitely more compact and faster than a piecewise quadratic
+            Here's the link if you want to mess around with it:
+            https://www.desmos.com/calculator/ixxmpzbbya
+             */
+
             // Calculate angle and magnitude from joystick values
             double driveAngle = Math.atan2(x, y);
             double driveMagnitude = Math.hypot(x, y);
