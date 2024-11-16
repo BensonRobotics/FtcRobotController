@@ -1,36 +1,52 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+/*
+Hi, Desi here. I was going to implement some fixes, but I was informed that Ed would be using
+this to teach some robotics members programming and that they would be working on the Auto.
+I do have some suggestions, though. For starters, since this autonomous will be running to
+a different position over and over again, it would be best to put the reset-setTarget-drive code
+inside a void, and call that void with new position parameters every time you want to move
+the robot. You could program the void to take in individual motor positions and power levels,
+or you could challenge yourself and have it intake an angle and power level, and have
+trigonometry calculate the motor positions and powers from there. It shouldn't be too hard to
+repurpose some Mecanum drive code into setting motor positions instead of powers. Another thing,
+when having the code only run through once, keep in mind that once it reaches the bottom, it
+doesn't loop back or anything, it actually stops the OpMode and kills all your motors. If you
+want it to ever wait until it fully reaches its previous destination, you can have it call the
+function, then trap the code in a while loop that is only running while any of the motors are
+busy, a boolean value that looks like motorName.isBusy() in your while condition, which,
+all together, would look like this: while (frontRightMotor.isBusy() || frontLeftMotor.isBusy() ||
+backRightMotor.isBusy() || backLeftMotor.isBusy()) {}
+This would keep the code held up there until all of the motors have reached their target, then
+it would proceed. You may also want to add a sleep(500);, which would have it hold for another
+half second, just to make sure all residual momentum is gone.
+ */
 
 @Autonomous
 public class Auto extends LinearOpMode {
-    double NEW_POS_P_DRIVE = 1.5;
-    double driveStepsPerMM = 537.7 / (104.0 * Math.PI);
-    DcMotorEx frontLeftMotor;
-    DcMotorEx frontRightMotor;
-    DcMotorEx backLeftMotor;
-    DcMotorEx backRightMotor;
-    IMU imu;
-    double botHeading = 0;
-    double accumulatedRotation = 0;
-    boolean useFieldCentric = true;
 
-    public void runOpMode() throws InterruptedException {
-        // Declare our devices
+    final int targetDistance = 2715; // number of clicks to move
+    final int shortDistance = 5; //number of clicks to move sideways
+    final int shortDistanceTwo = -5; ;
+    final double VELOCITY = 500.0; // number of clicks per second
+    public static final double NEW_POS_P_DRIVE = 1.0;
+
+    public void runOpMode(){
+        DcMotorEx frontLeftMotor;
+        DcMotorEx frontRightMotor;
+        DcMotorEx backLeftMotor;
+        DcMotorEx backRightMotor;
+        // Declare our motors
         // Make sure your ID's match your configuration
         frontLeftMotor = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
         frontRightMotor = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
         backLeftMotor = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightMotor = hardwareMap.get(DcMotorEx.class, "backRightMotor");
-        imu = hardwareMap.get(IMU.class, "imu");
 
         frontLeftMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
         frontRightMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
@@ -43,92 +59,96 @@ public class Auto extends LinearOpMode {
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        // Calculations to convert linear distance in mm to encoder steps
+        double stepsPerMMDrive = 537.7/104.0*Math.PI;
+        // Set targetSteps to distance in MM, converted to encoder steps
+        // (int) casts float value to int for rounding down
+        int targetSteps = (int) (stepsPerMMDrive*1000);
+
         // Zero all motor encoders
         frontLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         frontRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
-        // Default is 5 ticks
-        frontLeftMotor.setTargetPositionTolerance(10);
-        frontRightMotor.setTargetPositionTolerance(10);
-        backLeftMotor.setTargetPositionTolerance(10);
-        backRightMotor.setTargetPositionTolerance(10);
-
-        // Adjust the orientation parameters to match your robot
-        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
-        // Without this, the REV Hub's orientation is assumed to be logo up USB forward
-        imu.initialize(parameters);
-        imu.resetYaw();
-
         waitForStart();
 
-        // Autonomous sequence
-        driveWithTrigonometry(0,500,90,0.25);
-        sleep(500);
-        driveWithTrigonometry(1000,0,0,0.25);
-        sleep(500);
-        driveWithTrigonometry(-1000,-500,0,0.25);
-        sleep(500);
-    } // End of code
-    private void driveWithTrigonometry(int relativeX, int relativeY, double angle, double power) {
-        // Calculate angle and hypotenuse
-        double driveAngle = Math.atan2(relativeX, relativeY);
-        double driveDistance = Math.hypot(relativeX, relativeY);
+        //going backwards
+        frontLeftMotor.setTargetPosition(shortDistance);
+        backLeftMotor.setTargetPosition(shortDistanceTwo);
+        frontRightMotor.setTargetPosition(shortDistanceTwo);
+        backRightMotor.setTargetPosition(shortDistance);
 
-        // Don't ask me why this works
-        driveDistance *= 1.5;
+        //velocity set
+        frontLeftMotor.setVelocity(VELOCITY);
+        backLeftMotor.setVelocity(VELOCITY);
+        frontRightMotor.setVelocity(VELOCITY);
+        backRightMotor.setVelocity(VELOCITY);
 
-        // Reset encoders
-        frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        while ( opModeIsActive()          &&
+                frontLeftMotor.isBusy()   &&
+                backLeftMotor.isBusy()    &&
+                frontRightMotor.isBusy()  &&
+                backRightMotor.isBusy())
+        {
+            telemetry.addData(" frontleft position", frontLeftMotor.getCurrentPosition());
+            telemetry.addData(" frontright position", frontRightMotor.getCurrentPosition());
+            telemetry.addData("frontLeftMotor", "I'm here");
+            telemetry.addData("backleft position", backLeftMotor.getCurrentPosition());
+            telemetry.addData ( "backright position", backRightMotor.getCurrentPosition());
+            telemetry.update();
 
-        // Run all the motors to target positions
-        // Do the loop once, then keep looping until all motors are done
-        // I love do-while loops
-        do {
-            if (useFieldCentric) { // Get the robot rotation value, if using field centric
-                botHeading = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-            }
-            // Calculate motor positions
-            double frontLeftBackRightMotors = driveDistance * Math.sin(driveAngle - botHeading + (0.25 * Math.PI));
-            double frontRightBackLeftMotors = driveDistance * -Math.sin(driveAngle - botHeading - (0.25 * Math.PI));
+        }
 
-            frontRightBackLeftMotors *= driveStepsPerMM;
-            frontLeftBackRightMotors *= driveStepsPerMM;
+        // Set all motor target positions
+        frontLeftMotor.setTargetPosition(targetDistance);
+        backLeftMotor.setTargetPosition(targetDistance);
+        frontRightMotor.setTargetPosition(targetDistance);
+        backRightMotor.setTargetPosition(targetDistance);
 
-            double headingError = Math.toRadians(angle) - botHeading;
-            double rotation = (headingError * 0.1) + accumulatedRotation;
-            accumulatedRotation = rotation;
+        // Tell all motors to run to target position
+        frontRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        frontLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        backRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        backLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
-            // Set all motor target positions
-            frontLeftMotor.setTargetPosition((int) (frontLeftBackRightMotors + rotation));
-            backLeftMotor.setTargetPosition((int) (frontRightBackLeftMotors + rotation));
-            frontRightMotor.setTargetPosition((int) (frontRightBackLeftMotors - rotation));
-            backRightMotor.setTargetPosition((int) (frontLeftBackRightMotors - rotation));
+        // Set all motor power levels
+        frontLeftMotor.setVelocity(VELOCITY);
+        backLeftMotor.setVelocity(VELOCITY);
+        frontRightMotor.setVelocity(VELOCITY);
+        backRightMotor.setVelocity(VELOCITY);
 
-            // Tell all motors to run to target position
-            frontRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-            frontLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-            backRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-            backLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
-            // Set all motor power levels
-            frontRightMotor.setPower(power);
-            frontLeftMotor.setPower(power);
-            backRightMotor.setPower(power);
-            backLeftMotor.setPower(power);
+        //while (opModeIsActive()&&(frontLeftMotor.isBusy() || backLeftMotor.isBusy () || frontRightMotor.isBusy () || backRightMotor.isBusy ()))
+        while ( opModeIsActive()          &&
+                frontLeftMotor.isBusy()   &&
+                backLeftMotor.isBusy()    &&
+                frontRightMotor.isBusy()  &&
+                backRightMotor.isBusy())
+        {
+            telemetry.addData(" left position", frontLeftMotor.getCurrentPosition());
+            telemetry.addData(" right position", frontRightMotor.getCurrentPosition());
+            telemetry.addData("frontLeftMotor", "I'm here");
+            telemetry.update();
 
-        } while (frontRightMotor.isBusy() || frontLeftMotor.isBusy() || backRightMotor.isBusy() || backLeftMotor.isBusy());
+           // if (frontLeftMotor.getCurrentPosition() >
+                   // targetSteps)
+           // if (frontLeftMotor.getCurrentPosition()
+           // >=targetDistance)
+           // {
+           //     telemetry.addData("frontLeftMotor", "I'm here");
+           //     telemetry.update();
+           //     break;
+           // }
 
-        // Stop all motors
-        frontRightMotor.setPower(0);
-        frontLeftMotor.setPower(0);
-        backRightMotor.setPower(0);
-        backLeftMotor.setPower(0);
+        }
+
+        // Shuts everything down
+        frontLeftMotor.setVelocity(0);
+        backLeftMotor.setVelocity(0);
+        frontRightMotor.setVelocity(0);
+        backRightMotor.setVelocity(0);
+
     }
 }
+
