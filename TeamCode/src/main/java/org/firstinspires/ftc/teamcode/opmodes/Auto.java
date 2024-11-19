@@ -93,12 +93,18 @@ public class Auto extends LinearOpMode {
         {
             telemetry.addData(" frontleft position", frontLeftMotor.getCurrentPosition());
             telemetry.addData(" frontright position", frontRightMotor.getCurrentPosition());
-            telemetry.addData("frontLeftMotor", "I'm here");
+            telemetry.addData("frontLeftMotor", "I'm here yay");
             telemetry.addData("backleft position", backLeftMotor.getCurrentPosition());
             telemetry.addData ( "backright position", backRightMotor.getCurrentPosition());
             telemetry.update();
 
         }
+
+        //set them to zore again
+        frontLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        frontRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        backLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        backRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
         // Set all motor target positions
         frontLeftMotor.setTargetPosition(targetDistance);
@@ -126,9 +132,11 @@ public class Auto extends LinearOpMode {
                 frontRightMotor.isBusy()  &&
                 backRightMotor.isBusy())
         {
-            telemetry.addData(" left position", frontLeftMotor.getCurrentPosition());
-            telemetry.addData(" right position", frontRightMotor.getCurrentPosition());
-            telemetry.addData("frontLeftMotor", "I'm here");
+            telemetry.addData(" frontleft position", frontLeftMotor.getCurrentPosition());
+            telemetry.addData(" frontright position", frontRightMotor.getCurrentPosition());
+            telemetry.addData("frontLeftMotor", "I'm here yay");
+            telemetry.addData( "backleft position", backLeftMotor.getCurrentPosition());
+            telemetry.addData( "backright position", backRightMotor.getCurrentPosition());
             telemetry.update();
 
            // if (frontLeftMotor.getCurrentPosition() >
