@@ -31,8 +31,8 @@ half second, just to make sure all residual momentum is gone.
 public class Auto extends LinearOpMode {
 
     final int targetDistance = 2715; // number of clicks to move
-    final int shortDistance = 5; //number of clicks to move sideways
-    final int shortDistanceTwo = -5; ;
+    final int shortDistance = 250; //number of clicks to move sideways
+    final int shortDistanceTwo = -250; ;
     final double VELOCITY = 500.0; // number of clicks per second
     public static final double NEW_POS_P_DRIVE = 1.0;
 
@@ -48,10 +48,10 @@ public class Auto extends LinearOpMode {
         backLeftMotor = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightMotor = hardwareMap.get(DcMotorEx.class, "backRightMotor");
 
-        frontLeftMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
-        frontRightMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
-        backLeftMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
-        backRightMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
+        //frontLeftMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
+        //frontRightMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
+        //backLeftMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
+        //backRightMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
 
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
@@ -71,6 +71,8 @@ public class Auto extends LinearOpMode {
         backLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
+        //telemetry.addData(" I am here", 10 );
+       // telemetry.update();
         waitForStart();
 
         //going backwards
@@ -78,6 +80,11 @@ public class Auto extends LinearOpMode {
         backLeftMotor.setTargetPosition(shortDistanceTwo);
         frontRightMotor.setTargetPosition(shortDistanceTwo);
         backRightMotor.setTargetPosition(shortDistance);
+
+        frontRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        frontLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        backRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        backLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
         //velocity set
         frontLeftMotor.setVelocity(VELOCITY);
