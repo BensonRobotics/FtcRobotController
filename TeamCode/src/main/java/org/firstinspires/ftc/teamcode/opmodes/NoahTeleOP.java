@@ -36,7 +36,7 @@ import java.util.Hashtable;
 import java.util.Objects;
 
 //This is a test from Desmond of the Github, Git, and Android Studio syncing
-
+// testtttt
 @TeleOp
 public class
 NoahTeleOP extends LinearOpMode {
@@ -50,6 +50,8 @@ NoahTeleOP extends LinearOpMode {
     private CRServo grabberServo = null;
 
     private DcMotorEx liftMotor = null;
+
+    private DcMotorEx horizontalSlidemotor = null;
 
     // IMU sensor object
     IMU imu;
@@ -85,6 +87,8 @@ NoahTeleOP extends LinearOpMode {
 
         liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
 
+        horizontalSlidemotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
+
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
@@ -105,7 +109,11 @@ NoahTeleOP extends LinearOpMode {
         liftMotor.setTargetPosition(0);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+//        horizontalSlidemotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.);
+
         double liftMotorCurrentThreshold = 3000.0;
+
+        double slideMotorCurrentThreshold = 500.0;
 
         /* Orientation Variables */
 
@@ -146,6 +154,8 @@ NoahTeleOP extends LinearOpMode {
         int liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
         liftMotor.setTargetPosition(liftBottomPosition);
 
+        int horizontalSlideInPosition = GetSlideInPosition(slideMotorCurrentThreshold);
+
         // Run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             /*AprilTag stuff*/
@@ -172,6 +182,11 @@ NoahTeleOP extends LinearOpMode {
 
             UpdateLiftMotor(liftBottomPosition, liftMotorCurrentThreshold);
 
+            boolean dpadUp = gamepad1.dpad_up;
+            boolean dpadDown = gamepad1.dpad_down;
+
+            UpdateSlideMotor(dpadUp, dpadDown, slideMotorCurrentThreshold);
+
             // Take an input vector from the joysticks and use it to move. Exponential scaling will need to be applied for better control.
 //          MoveWithFieldRelativeVector(velocity, robotAngleToField, rotation);
             MoveWithVector(velocity, rotation);
@@ -188,7 +203,7 @@ NoahTeleOP extends LinearOpMode {
         // TPS(motorRPM) = (motorRPM / 60) * motorStepsPerRevolution
         // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
         // 537.7 is 312 RPM motor's encoder steps per revolution
-        double TPS312 = (312.0 / 60.0) * 537.7;
+        double TPS312 = (312.0 / 60.0) * 537.7 * 0.65;
 
         frontLeftDrive.setVelocity(frontLeft * TPS312);
         frontRightDrive.setVelocity(frontRight * TPS312);
@@ -275,6 +290,32 @@ NoahTeleOP extends LinearOpMode {
         grabberServo.setPower(servo1Power);
     }
 
+    // horizontal Slide
+    private void UpdateSlideMotor(boolean dpadUp, boolean dpadDown, double slideMotorCurrentThreshold) {
+        double horizontalSlideVelocity = 0;
+
+        if (dpadUp) {
+            horizontalSlideVelocity = 1;
+        } else if (dpadDown) {
+            horizontalSlideVelocity = -1;
+        }
+
+        if (IsOverloaded(horizontalSlidemotor, slideMotorCurrentThreshold)) {
+            horizontalSlidemotor.setPower(0.0);
+        } else {
+            horizontalSlidemotor.setPower(horizontalSlideVelocity);
+        }
+    }
+
+    private int GetSlideInPosition(double slideMotorCurrentThreshold) {
+        while (!IsOverloaded(liftMotor, slideMotorCurrentThreshold)) {
+            horizontalSlidemotor.setPower(-0.05);
+        }
+        horizontalSlidemotor.setPower(0.0);
+
+        telemetry.addData("slide in position: ", horizontalSlidemotor.getCurrentPosition());
+        return horizontalSlidemotor.getCurrentPosition();
+    }
 
     // Vertical Slide
 
@@ -283,15 +324,15 @@ NoahTeleOP extends LinearOpMode {
         ArrayList<Integer> liftPositions = new ArrayList<Integer>(3);
         liftPositions.add(bottomPosition);
         liftPositions.add(bottomPosition + 3000);
-        liftPositions.add(bottomPosition + 4400);
+        liftPositions.add(bottomPosition + 4200);
 
-        if (gamepad2.a || gamepad2.x || gamepad2.y) {
+        if (gamepad1.a || gamepad1.x || gamepad1.y) {
             // Since the variable is initialized to 0, and if we are running this code we know either a, x, or y has been pressed,
             // we can skip the conditional for one of the buttons, in this case a.
             int desiredPositionIndex = 0;
-            if (gamepad2.x) {
+            if (gamepad1.x) {
                 desiredPositionIndex = 1;
-            } else if (gamepad2.y) {
+            } else if (gamepad1.y) {
                 desiredPositionIndex = 2;
             }
 
@@ -299,7 +340,7 @@ NoahTeleOP extends LinearOpMode {
 
             liftMotor.setTargetPosition(desiredPosition);
             liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            liftMotor.setPower(0.5);
+            liftMotor.setPower(1.0);
 
             if (IsOverloaded(liftMotor, currentThreshold)) {
                 liftMotor.setPower(0.0);
@@ -314,13 +355,13 @@ NoahTeleOP extends LinearOpMode {
         telemetry.addData("liftMotorCurrent", liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
         telemetry.addData("Lift motor mode", liftMotor.getMode());
 
-        double rightStickY = -gamepad2.right_stick_y;
-        if (rightStickY != 0) {
-            liftMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-            liftMotor.setPower(rightStickY);
-        } else {
-            liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        }
+//        double rightStickY = -gamepad2.right_stick_y;
+//        if (rightStickY != 0) {
+//            liftMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+//            liftMotor.setPower(rightStickY);
+//        } else {
+//            liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        }
     }
 
     // Calibrate the lift by slowly running it into the bottom of it's travel, and detecting when the resistance on the motor reaches a certain
@@ -328,7 +369,7 @@ NoahTeleOP extends LinearOpMode {
     // is at the bottom of its travel. This is necessary because of the inevitable drift in the encoders.
     private int GetLiftBottomPosition(double currentThreshold) {
         while (!IsOverloaded(liftMotor, currentThreshold)) {
-            liftMotor.setPower(-0.05);
+            liftMotor.setPower(-0.2);
         }
         liftMotor.setPower(0.0);
 
