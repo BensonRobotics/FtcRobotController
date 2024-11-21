@@ -252,7 +252,7 @@ DesmondTeleOP extends LinearOpMode {
             // Linear slide code
             if (!useDiscreteSlide) { // If using joystick slide control
                 if (!(((slideMotor.getCurrentPosition() <= 0) && ry <= 0) ||
-                        ((slideMotor.getCurrentPosition() >= 10000) && ry >= 0))) { // If lift isn't running into a limit
+                        ((slideMotor.getCurrentPosition() >= 2500) && ry >= 0))) { // If lift isn't running into a limit
                     slideMotor.setVelocity(slideTicksPerSecond * ry);
                     isSlideRestricted = false;
                 } else { // If lift is running into a limit
