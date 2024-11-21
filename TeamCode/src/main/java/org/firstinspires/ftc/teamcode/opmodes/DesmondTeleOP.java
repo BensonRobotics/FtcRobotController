@@ -29,6 +29,9 @@ DesmondTeleOP extends LinearOpMode {
     // Output is first cast to float, since the equation itself uses double precision
     float driveTicksPerSecond = (float) (312.0 * 537.7 / 60.0);
 
+    // Same thing but for the linear slide motor
+    float slideTicksPerSecond = (float) (30.0 * 5281.1 / 60.0);
+
     // liftStepsPerMM = liftMotorStepsPerRevolution / (liftPulleyPitchDiameter * PI)
     // Output is how many encoder steps per mm of lift height
     double liftStepsPerMM = 537.7 / (38.2 * Math.PI);
@@ -36,6 +39,8 @@ DesmondTeleOP extends LinearOpMode {
     ElapsedTime runtime = new ElapsedTime();
     boolean useFieldCentric = true;
     boolean useDiscreteLift = true;
+    boolean useDiscreteSlide = false;
+    boolean isSlideRestricted;
     short liftCurrentAlert = 2500;
     float driveSpeedLimit = 0.75F;
     float liftSpeedLimit = 0.75F;
@@ -49,6 +54,7 @@ DesmondTeleOP extends LinearOpMode {
         DcMotorEx backLeftMotor;
         DcMotorEx backRightMotor;
         DcMotorEx liftMotor;
+        DcMotorEx slideMotor;
         CRServo grabberServo;
 
         // Assign our devices
@@ -58,9 +64,10 @@ DesmondTeleOP extends LinearOpMode {
         backLeftMotor = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightMotor = hardwareMap.get(DcMotorEx.class, "backRightMotor");
         liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
+        slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
         grabberServo = hardwareMap.get(CRServo.class, "grabberServo");
 
-        // Apply drive system PIDF coefficients
+        // Apply motor PIDF coefficients
         frontLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
         frontRightMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
         backLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
@@ -87,6 +94,7 @@ DesmondTeleOP extends LinearOpMode {
         frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Reset drive system motor encoders
@@ -94,6 +102,7 @@ DesmondTeleOP extends LinearOpMode {
         frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        slideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // Set drive motors to RUN_USING_ENCODER
@@ -168,7 +177,8 @@ DesmondTeleOP extends LinearOpMode {
             // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
             // Denominator is the largest motor power (absolute value) or 1
             // This ensures all the powers maintain the same ratio
-            double denominator = Math.max(Math.max(Math.max(Math.abs(frontRightPower),Math.abs(frontLeftPower)),Math.max(Math.abs(backRightPower),Math.abs(backLeftPower))),1);
+            double denominator = Math.max(Math.max(Math.max(Math.abs(frontRightPower),Math.abs(frontLeftPower)),
+                    Math.max(Math.abs(backRightPower),Math.abs(backLeftPower))),1);
             // CLEAVING TIME
             frontRightPower /= denominator;
             frontLeftPower /= denominator;
@@ -238,13 +248,29 @@ DesmondTeleOP extends LinearOpMode {
                 }
             }
 
+            // Linear slide code
+            if (!useDiscreteSlide) { // If using joystick slide control
+                if (!(((slideMotor.getCurrentPosition() <= 0) && ry <= 0) ||
+                        ((slideMotor.getCurrentPosition() >= 10000) && ry >= 0))) { // If lift isn't running into a limit
+                    slideMotor.setVelocity(slideTicksPerSecond * ry);
+                    isSlideRestricted = false;
+                } else { // If lift is running into a limit
+                    slideMotor.setVelocity(0);
+                    isSlideRestricted = true;
+                }
+            } else { // If using discrete slide control
+                // I will implement inverse kinematics, I swear
+
+            }
+
             // Grabber servo code. Super complicated.
-            // If you let go of right bumper, servo will stay running forward at a lower speed
+            // If you let go of right bumper, servo will stop
             // If you let go of left bumper, servo will stop
+            // Code arranged in latch formation in case you want either direction to latch
             if (gamepad1.right_bumper) {
                 grabberServo.setPower(1);
             } else if (grabberServo.getPower()>0){
-                grabberServo.setPower(0.25);
+                grabberServo.setPower(0);
             }
             if (gamepad1.left_bumper) {
                 grabberServo.setPower(-1);
@@ -260,6 +286,10 @@ DesmondTeleOP extends LinearOpMode {
             telemetry.addData("Lift Current (Milliamps):",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
             telemetry.addLine();
             telemetry.addData("Lift Homing:",isLiftHoming);
+            telemetry.addLine();
+            telemetry.addData("Slide Limited:", isSlideRestricted);
+            telemetry.addLine();
+            telemetry.addData("Slide Position", slideMotor.getCurrentPosition());
 
             telemetry.update();
         }
