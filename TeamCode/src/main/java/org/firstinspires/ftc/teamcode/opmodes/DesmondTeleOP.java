@@ -231,7 +231,7 @@ DesmondTeleOP extends LinearOpMode {
                         } else { // Once homing is finished
                             liftMotor.setPower(0);
                             liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                            liftMotor.setTargetPosition(0);
+                            liftMotor.setTargetPosition(5);
                             liftMotor.setCurrentAlert(liftCurrentAlert, CurrentUnit.MILLIAMPS);
                             isLiftHoming = false;
                         }
