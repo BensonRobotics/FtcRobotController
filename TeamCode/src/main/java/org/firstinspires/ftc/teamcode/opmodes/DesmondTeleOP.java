@@ -152,12 +152,6 @@ DesmondTeleOP extends LinearOpMode {
             double driveAngle = Math.atan2(x, y);
             double driveMagnitude = Math.hypot(x, y);
 
-            double turnAngle = Math.atan2(rx, ry);
-            double turnMagnitude = Math.hypot(rx, ry);
-
-            // Better way of setting speed limit
-            driveMagnitude = driveMagnitude * driveSpeedLimit;
-            rx = rx * driveSpeedLimit;
             // IMU Yaw reset button
             // This button choice was made so that it is hard to hit on accident
             if (gamepad1.back) {
@@ -167,15 +161,22 @@ DesmondTeleOP extends LinearOpMode {
             if (useFieldCentric) {
                 botHeading = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             }
+            double rotRX = rx * Math.cos(-botHeading) - ry * Math.sin(-botHeading);
+            double rotRY = rx * Math.sin(-botHeading) + ry * Math.cos(-botHeading);
+
+            // Better way of setting speed limit
+            driveMagnitude = driveMagnitude * driveSpeedLimit;
+            rotRX = rotRX * driveSpeedLimit;
+
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
             // https://www.desmos.com/calculator/3gzff5bzbn
             double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle - botHeading + 0.25 * Math.PI);
             double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle - botHeading - 0.25 * Math.PI);
-            double frontLeftPower = frontLeftBackRightMotors + rx;
-            double backLeftPower = frontRightBackLeftMotors + rx;
-            double frontRightPower = frontRightBackLeftMotors - rx;
-            double backRightPower = frontLeftBackRightMotors - rx;
+            double frontLeftPower = frontLeftBackRightMotors + rotRX;
+            double backLeftPower = frontRightBackLeftMotors + rotRX;
+            double frontRightPower = frontRightBackLeftMotors - rotRX;
+            double backRightPower = frontLeftBackRightMotors - rotRX;
 
             // The Great Cleaving approaches
             // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
@@ -257,9 +258,9 @@ DesmondTeleOP extends LinearOpMode {
 
             // Linear slide code
             if (!useDiscreteSlide) { // If using joystick slide control
-                if (!(((slideMotor.getCurrentPosition() <= 0) && ry <= 0) ||
-                        ((slideMotor.getCurrentPosition() >= 2500) && ry >= 0))) { // If lift isn't running into a limit
-                    slideMotor.setVelocity(slideTicksPerSecond * ry);
+                if (!(((slideMotor.getCurrentPosition() <= 0) && rotRY <= 0) ||
+                        ((slideMotor.getCurrentPosition() >= 2500) && rotRY >= 0))) { // If lift isn't running into a limit
+                    slideMotor.setVelocity(slideTicksPerSecond * rotRY);
                     isSlideRestricted = false;
                 } else { // If lift is running into a limit
                     slideMotor.setVelocity(0);
