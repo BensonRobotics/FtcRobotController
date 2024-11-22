@@ -152,6 +152,9 @@ DesmondTeleOP extends LinearOpMode {
             double driveAngle = Math.atan2(x, y);
             double driveMagnitude = Math.hypot(x, y);
 
+            double turnAngle = Math.atan2(rx, ry);
+            double turnMagnitude = Math.hypot(rx, ry);
+
             // Better way of setting speed limit
             driveMagnitude = driveMagnitude * driveSpeedLimit;
             rx = rx * driveSpeedLimit;
@@ -203,14 +206,14 @@ DesmondTeleOP extends LinearOpMode {
                 if (!isLiftHoming) {
                     if (gamepad1.a) {
                         // Bottom position
-                        liftMotor.setTargetPosition(0);
+                        liftMotor.setTargetPosition(5);
                     }
                     if (gamepad1.x) {
-                        // Height for clearing submersible rim
-                        liftMotor.setTargetPosition((int) (60 * liftStepsPerMM));
+                        //
+                        liftMotor.setTargetPosition((int) (300 * liftStepsPerMM));
                     }
                     if (gamepad1.y) {
-                        // Lower basket height
+                        //
                         liftMotor.setTargetPosition((int) (670 * liftStepsPerMM));
                     }
                     // Tell liftMotor to run to to target position at set speed
