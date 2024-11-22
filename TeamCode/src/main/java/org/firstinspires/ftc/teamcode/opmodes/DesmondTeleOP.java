@@ -112,7 +112,7 @@ DesmondTeleOP extends LinearOpMode {
         backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         slideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        liftMotor.setTargetPosition(0);
+        liftMotor.setTargetPosition(5);
         // Default is 5 ticks
         liftMotor.setTargetPositionTolerance(10);
 
@@ -196,6 +196,7 @@ DesmondTeleOP extends LinearOpMode {
             backRightMotor.setVelocity(backRightPower * driveTicksPerSecond);
 
             if (useLift) {
+                liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                 if (useDiscreteLift) { // If using discrete lift
                     // Lift homing button
                     if (gamepad1.start) {
