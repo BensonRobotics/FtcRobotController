@@ -161,8 +161,8 @@ DesmondTeleOP extends LinearOpMode {
             if (useFieldCentric) {
                 botHeading = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             }
-            double rotRX = rx * Math.cos(-botHeading) - ry * Math.sin(-botHeading);
-            double rotRY = rx * Math.sin(-botHeading) + ry * Math.cos(-botHeading);
+            double rotRX = rx * Math.cos(botHeading) - ry * Math.sin(botHeading);
+            double rotRY = rx * Math.sin(botHeading) + ry * Math.cos(botHeading);
 
             // Better way of setting speed limit
             driveMagnitude = driveMagnitude * driveSpeedLimit;
