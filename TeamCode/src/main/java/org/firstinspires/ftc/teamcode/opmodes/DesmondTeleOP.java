@@ -38,7 +38,7 @@ DesmondTeleOP extends LinearOpMode {
     boolean isLiftHoming = false;
     ElapsedTime runtime = new ElapsedTime();
     boolean useFieldCentric = true;
-    boolean useLift = false;
+    boolean useLift = true;
     boolean useDiscreteLift = true;
     boolean useDiscreteSlide = false;
     boolean isSlideRestricted;
@@ -96,7 +96,6 @@ DesmondTeleOP extends LinearOpMode {
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         slideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Reset drive system motor encoders
         frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
