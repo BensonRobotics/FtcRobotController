@@ -23,6 +23,8 @@ DesmondTeleOP extends LinearOpMode {
     float NEW_D_DRIVE = 0.1F;
     float NEW_F_DRIVE = 10.0F;
 
+    float NEW_P_ROTATION = 1.0F;
+
     // driveTicksPerSecond = driveMotorRPM * driveMotorStepsPerRevolution / 60
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
     // 537.7 is a 312 RPM motor's encoder steps per revolution
@@ -37,7 +39,8 @@ DesmondTeleOP extends LinearOpMode {
     double liftStepsPerMM = 537.7 / (38.2 * Math.PI);
     boolean isLiftHoming = false;
     ElapsedTime runtime = new ElapsedTime();
-    boolean useFieldCentric = true;
+    boolean useFieldCentricDrive = true;
+    boolean useFieldCentricRotate = true;
     boolean useLift = true;
     boolean useDiscreteLift = true;
     boolean useDiscreteSlide = false;
@@ -45,6 +48,8 @@ DesmondTeleOP extends LinearOpMode {
     short liftCurrentAlert = 2500;
     float driveSpeedLimit = 0.75F;
     float liftSpeedLimit = 0.75F;
+    double driveHeading = 0;
+    double rotationPower = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -125,8 +130,6 @@ DesmondTeleOP extends LinearOpMode {
         // Reset runtime variable, not used yet
         runtime.reset();
 
-        double botHeading = 0;
-
         // Play button is pressed
         waitForStart();
 
@@ -148,6 +151,8 @@ DesmondTeleOP extends LinearOpMode {
             https://www.desmos.com/calculator/ixxmpzbbya
              */
 
+            double botHeading = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+
             // Calculate angle and magnitude from joystick values
             double driveAngle = Math.atan2(x, y);
             double driveMagnitude = Math.hypot(x, y);
@@ -158,25 +163,32 @@ DesmondTeleOP extends LinearOpMode {
                 imu.resetYaw();
             }
             // Set botHeading to robot Yaw from IMU, if used
-            if (useFieldCentric) {
-                botHeading = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            if (useFieldCentricDrive) {
+                driveHeading = botHeading;
             }
-            double rotRX = rx * Math.cos(botHeading) - ry * Math.sin(botHeading);
-            double rotRY = rx * Math.sin(botHeading) + ry * Math.cos(botHeading);
+
+            if (useFieldCentricRotate) {
+                double rightStickAngle = Math.atan2(rx, ry);
+                double rightStickMagnitude = Math.hypot(rx, ry);
+                double rotationError = rightStickAngle - botHeading;
+                rotationPower = (rightStickMagnitude * rotationError * NEW_P_ROTATION) / Math.PI;
+            } else {
+                rotationPower = rx;
+            }
 
             // Better way of setting speed limit
-            driveMagnitude = driveMagnitude * driveSpeedLimit;
-            rotRX = rotRX * driveSpeedLimit;
+            driveMagnitude *= driveSpeedLimit;
+            rotationPower *= driveSpeedLimit;
 
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
             // https://www.desmos.com/calculator/3gzff5bzbn
-            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle - botHeading + 0.25 * Math.PI);
-            double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle - botHeading - 0.25 * Math.PI);
-            double frontLeftPower = frontLeftBackRightMotors + rotRX;
-            double backLeftPower = frontRightBackLeftMotors + rotRX;
-            double frontRightPower = frontRightBackLeftMotors - rotRX;
-            double backRightPower = frontLeftBackRightMotors - rotRX;
+            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle - driveHeading + 0.25 * Math.PI);
+            double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle - driveHeading - 0.25 * Math.PI);
+            double frontLeftPower = frontLeftBackRightMotors + rotationPower;
+            double backLeftPower = frontRightBackLeftMotors + rotationPower;
+            double frontRightPower = frontRightBackLeftMotors - rotationPower;
+            double backRightPower = frontLeftBackRightMotors - rotationPower;
 
             // The Great Cleaving approaches
             // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
