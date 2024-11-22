@@ -317,13 +317,15 @@ DesmondTeleOP extends LinearOpMode {
             telemetry.addLine();
             telemetry.addData("Lift Target:",liftMotor.getTargetPosition());
             telemetry.addLine();
-            telemetry.addData("Lift Current (Milliamps):",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
+            telemetry.addData("Lift Current:",liftMotor.getCurrent(CurrentUnit.MILLIAMPS));
             telemetry.addLine();
             telemetry.addData("Lift Homing:",isLiftHoming);
             telemetry.addLine();
             telemetry.addData("Slide Limited:", isSlideRestricted);
             telemetry.addLine();
-            telemetry.addData("Slide Position", slideMotor.getCurrentPosition());
+            telemetry.addData("Slide Position:", slideMotor.getCurrentPosition());
+            telemetry.addLine();
+            telemetry.addData("Slide Target:", slideMotor.getTargetPosition());
             telemetry.addLine();
             telemetry.addData("Slide Current:", slideMotor.getCurrent(CurrentUnit.MILLIAMPS));
 
