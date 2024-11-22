@@ -239,7 +239,7 @@ DesmondTeleOP extends LinearOpMode {
                     }
                 } else { // If not using discrete lift
                     // Lift is controlled by right stick Y axis
-                    // Engages RUN_TO_POSITION when slide stops moving for active position holding
+                    // Engages RUN_TO_POSITION when lift stops moving for active position holding
                     if (ry != 0) {
                         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                         liftMotor.setPower(liftSpeedLimit * ry);
@@ -249,7 +249,7 @@ DesmondTeleOP extends LinearOpMode {
                         liftMotor.setPower(liftSpeedLimit);
                     }
                     // Lift motor current trip, only if going up, to allow for potential hanging
-                    // Remember to tighten the belt on the viper slide to prevent skipping
+                    // Remember to tighten the belt on the lift to prevent skipping
                     if (liftMotor.isOverCurrent() && ry > 0) {
                         liftMotor.setPower(0);
                     }
@@ -257,10 +257,11 @@ DesmondTeleOP extends LinearOpMode {
             }
 
             // Linear slide code
-            if (!useDiscreteSlide) { // If using joystick slide control
-                if (!(((slideMotor.getCurrentPosition() <= 0) && rotRY <= 0) ||
-                        ((slideMotor.getCurrentPosition() >= 2500) && rotRY >= 0))) { // If lift isn't running into a limit
-                    slideMotor.setVelocity(slideTicksPerSecond * rotRY);
+            if (!useDiscreteSlide) { // If using analog slide control
+                double slidePower = gamepad1.right_trigger - gamepad1.left_trigger;
+                if (!(((slideMotor.getCurrentPosition() <= 0) && slidePower <= 0) ||
+                        ((slideMotor.getCurrentPosition() >= 2500) && slidePower >= 0))) { // If lift isn't running into a limit
+                    slideMotor.setVelocity(slideTicksPerSecond * slidePower);
                     isSlideRestricted = false;
                 } else { // If lift is running into a limit
                     slideMotor.setVelocity(0);
