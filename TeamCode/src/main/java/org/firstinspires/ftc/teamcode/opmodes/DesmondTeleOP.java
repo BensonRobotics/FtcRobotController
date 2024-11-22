@@ -38,6 +38,7 @@ DesmondTeleOP extends LinearOpMode {
     boolean isLiftHoming = false;
     ElapsedTime runtime = new ElapsedTime();
     boolean useFieldCentric = true;
+    boolean useLift = false;
     boolean useDiscreteLift = true;
     boolean useDiscreteSlide = false;
     boolean isSlideRestricted;
@@ -195,60 +196,62 @@ DesmondTeleOP extends LinearOpMode {
             frontRightMotor.setVelocity(frontRightPower * driveTicksPerSecond);
             backRightMotor.setVelocity(backRightPower * driveTicksPerSecond);
 
-            if (useDiscreteLift) { // If using discrete lift
-                // Lift homing button
-                if (gamepad1.start) {
-                    isLiftHoming = true;
-                }
-                // Lift motor height presets in MM from bottom position
-                // A for bottom, X for middle, Y for top
-                // Please comment what each height preset means
-                if (!isLiftHoming) {
-                    if (gamepad1.a) {
-                        // Bottom position
-                        liftMotor.setTargetPosition(5);
+            if (useLift) {
+                if (useDiscreteLift) { // If using discrete lift
+                    // Lift homing button
+                    if (gamepad1.start) {
+                        isLiftHoming = true;
                     }
-                    if (gamepad1.x) {
-                        //
-                        liftMotor.setTargetPosition((int) (300 * liftStepsPerMM));
-                    }
-                    if (gamepad1.y) {
-                        //
-                        liftMotor.setTargetPosition((int) (670 * liftStepsPerMM));
-                    }
-                    // Tell liftMotor to run to to target position at set speed
-                    liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    liftMotor.setPower(liftSpeedLimit);
+                    // Lift motor height presets in MM from bottom position
+                    // A for bottom, X for middle, Y for top
+                    // Please comment what each height preset means
+                    if (!isLiftHoming) {
+                        if (gamepad1.a) {
+                            // Bottom position
+                            liftMotor.setTargetPosition(5);
+                        }
+                        if (gamepad1.x) {
+                            //
+                            liftMotor.setTargetPosition((int) (300 * liftStepsPerMM));
+                        }
+                        if (gamepad1.y) {
+                            //
+                            liftMotor.setTargetPosition((int) (670 * liftStepsPerMM));
+                        }
+                        // Tell liftMotor to run to to target position at set speed
+                        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                        liftMotor.setPower(liftSpeedLimit);
 
-                } else { // If liftMotor is in fact homing
-                    // Lift homing code
-                    liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
-                    if (!liftMotor.isOverCurrent()) {
-                        liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                        liftMotor.setPower(-0.25);
-                    } else { // Once homing is finished
-                        liftMotor.setPower(0);
-                        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                        liftMotor.setTargetPosition(0);
-                        liftMotor.setCurrentAlert(liftCurrentAlert, CurrentUnit.MILLIAMPS);
-                        isLiftHoming = false;
+                    } else { // If liftMotor is in fact homing
+                        // Lift homing code
+                        liftMotor.setCurrentAlert(1500, CurrentUnit.MILLIAMPS);
+                        if (!liftMotor.isOverCurrent()) {
+                            liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                            liftMotor.setPower(-0.25);
+                        } else { // Once homing is finished
+                            liftMotor.setPower(0);
+                            liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                            liftMotor.setTargetPosition(0);
+                            liftMotor.setCurrentAlert(liftCurrentAlert, CurrentUnit.MILLIAMPS);
+                            isLiftHoming = false;
+                        }
                     }
-                }
-            } else { // If not using discrete lift
-                // Lift is controlled by right stick Y axis
-                // Engages RUN_TO_POSITION when slide stops moving for active position holding
-                if (ry != 0) {
-                    liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    liftMotor.setPower(liftSpeedLimit * ry);
-                } else if (liftMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
-                    liftMotor.setTargetPosition(liftMotor.getCurrentPosition());
-                    liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    liftMotor.setPower(liftSpeedLimit);
-                }
-                // Lift motor current trip, only if going up, to allow for potential hanging
-                // Remember to tighten the belt on the viper slide to prevent skipping
-                if (liftMotor.isOverCurrent() && ry > 0) {
-                    liftMotor.setPower(0);
+                } else { // If not using discrete lift
+                    // Lift is controlled by right stick Y axis
+                    // Engages RUN_TO_POSITION when slide stops moving for active position holding
+                    if (ry != 0) {
+                        liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                        liftMotor.setPower(liftSpeedLimit * ry);
+                    } else if (liftMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
+                        liftMotor.setTargetPosition(liftMotor.getCurrentPosition());
+                        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                        liftMotor.setPower(liftSpeedLimit);
+                    }
+                    // Lift motor current trip, only if going up, to allow for potential hanging
+                    // Remember to tighten the belt on the viper slide to prevent skipping
+                    if (liftMotor.isOverCurrent() && ry > 0) {
+                        liftMotor.setPower(0);
+                    }
                 }
             }
 
@@ -294,6 +297,8 @@ DesmondTeleOP extends LinearOpMode {
             telemetry.addData("Slide Limited:", isSlideRestricted);
             telemetry.addLine();
             telemetry.addData("Slide Position", slideMotor.getCurrentPosition());
+            telemetry.addLine();
+            telemetry.addData("Slide Current:", slideMotor.getCurrent(CurrentUnit.MILLIAMPS));
 
             telemetry.update();
         }
