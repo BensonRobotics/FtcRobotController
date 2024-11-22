@@ -48,6 +48,7 @@ DesmondTeleOP extends LinearOpMode {
     short liftCurrentAlert = 2500;
     float driveSpeedLimit = 0.75F;
     float liftSpeedLimit = 0.75F;
+    float slideSpeedLimit = 1F;
     double driveHeading = 0;
     double rotationPower = 0;
 
@@ -222,12 +223,10 @@ DesmondTeleOP extends LinearOpMode {
                         if (gamepad1.a) {
                             // Bottom position
                             liftMotor.setTargetPosition(5);
-                        }
-                        if (gamepad1.x) {
+                        } if (gamepad1.x) {
                             //
                             liftMotor.setTargetPosition((int) (300 * liftStepsPerMM));
-                        }
-                        if (gamepad1.y) {
+                        } if (gamepad1.y) {
                             //
                             liftMotor.setTargetPosition((int) (670 * liftStepsPerMM));
                         }
@@ -252,9 +251,10 @@ DesmondTeleOP extends LinearOpMode {
                 } else { // If not using discrete lift
                     // Lift is controlled by right stick Y axis
                     // Engages RUN_TO_POSITION when lift stops moving for active position holding
-                    if (ry != 0) {
+                    double liftPower = gamepad1.right_trigger - gamepad1.left_trigger;
+                    if (liftPower != 0) {
                         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                        liftMotor.setPower(liftSpeedLimit * ry);
+                        liftMotor.setPower(liftSpeedLimit * liftPower);
                     } else if (liftMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
                         liftMotor.setTargetPosition(liftMotor.getCurrentPosition());
                         liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -262,7 +262,7 @@ DesmondTeleOP extends LinearOpMode {
                     }
                     // Lift motor current trip, only if going up, to allow for potential hanging
                     // Remember to tighten the belt on the lift to prevent skipping
-                    if (liftMotor.isOverCurrent() && ry > 0) {
+                    if (liftMotor.isOverCurrent() && liftPower > 0) {
                         liftMotor.setPower(0);
                     }
                 }
@@ -272,16 +272,29 @@ DesmondTeleOP extends LinearOpMode {
             if (!useDiscreteSlide) { // If using analog slide control
                 double slidePower = gamepad1.right_trigger - gamepad1.left_trigger;
                 if (!(((slideMotor.getCurrentPosition() <= 0) && slidePower <= 0) ||
-                        ((slideMotor.getCurrentPosition() >= 2500) && slidePower >= 0))) { // If lift isn't running into a limit
-                    slideMotor.setVelocity(slideTicksPerSecond * slidePower);
+                        ((slideMotor.getCurrentPosition() >= 2500) && slidePower >= 0))) {
+                    // If lift isn't running into a limit
+                    slideMotor.setVelocity(slideTicksPerSecond * slidePower * slideSpeedLimit);
                     isSlideRestricted = false;
                 } else { // If lift is running into a limit
                     slideMotor.setVelocity(0);
                     isSlideRestricted = true;
                 }
             } else { // If using discrete slide control
-                // I will implement inverse kinematics, I swear
-
+                // 762mm is fully extended, in theory, please adjust based on measurements
+                if (gamepad1.a) {
+                    // Fully retracted
+                    slideMotor.setTargetPosition(5);
+                } if (gamepad1.x) {
+                    // 400mm out
+                    slideMotor.setTargetPosition((int) (1.5 * (90.0 - Math.acos(400.0 / 762.0))));
+                } if (gamepad1.y) {
+                    // 760mm out
+                    slideMotor.setTargetPosition((int) (1.5 * (90.0 - Math.acos(760.0 / 762.0))));
+                }
+                // Tell liftMotor to run to to target position at set speed
+                slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                slideMotor.setPower(slideSpeedLimit);
             }
 
             // Grabber servo code. Super complicated.
