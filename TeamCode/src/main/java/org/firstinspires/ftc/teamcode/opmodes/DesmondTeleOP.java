@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -127,6 +126,8 @@ DesmondTeleOP extends LinearOpMode {
         liftMotor.setTargetPosition(5);
         // Default is 5 ticks
         liftMotor.setTargetPositionTolerance(10);
+        // Limit servo motion to 0 - 175 degrees of 300 degrees maximum rotation
+        grabberPivot.scaleRange(0, (175.0 / 300.0));
 
         // Make sure motors don't run from the get-go
         grabberServo.setPower(0);
@@ -274,6 +275,29 @@ DesmondTeleOP extends LinearOpMode {
                 }
             }
 
+            // Grabber servo code.
+            // Code arranged in latch formation in case you want either direction to latch
+            if (gamepad1.right_bumper) { // When you press right bumper
+                grabberServo.setPower(1);
+            } else if (grabberServo.getPower()>0){ // When you let go of right bumper
+                grabberServo.setPower(0.1);
+            }
+            if (gamepad1.left_bumper) { // When you press left bumper
+                grabberServo.setPower(-1);
+            } else if (grabberServo.getPower()<0) { // When you let go of left bumper
+                grabberServo.setPower(0);
+            }
+
+            // Grabber pivot code.
+            // position 0 is down to floor, position 1 is 90 degrees up to sample transfer
+            // Also, horizontal slide cannot retract fully if grabberPivot is below 90 degrees
+            // I should make the horizontal slide retract button also raise grabberPivot to 90 degrees
+            if (gamepad1.dpad_up) {
+                grabberPivot.setPosition(0.5);
+            } else if (gamepad1.dpad_down) {
+                grabberPivot.setPosition(0);
+            }
+
             // Linear slide code
             if (!useDiscreteSlide) { // If using analog slide control
                 double slidePower = gamepad1.right_trigger - gamepad1.left_trigger;
@@ -286,37 +310,25 @@ DesmondTeleOP extends LinearOpMode {
                     slideMotor.setVelocity(0);
                     isSlideRestricted = true;
                 }
+                if (slidePower < 0) { // Bring grabber up for slide retraction
+                    grabberPivot.setPosition(0.5);
+                }
             } else { // If using discrete slide control
                 // DO NOT USE INVERSE KINEMATICS YET
                 // 688mm is fully extended, in theory, please adjust based on measurements
                 if (gamepad1.a) {
                     // Fully retracted
                     slideMotor.setTargetPosition(5);
-                } if (gamepad1.x) {
+                } else if (gamepad1.x) {
                     // 400mm out
                     slideMotor.setTargetPosition((int) (1.5 * (90.0 - Math.acos(400.0 / 688.0))));
-                } if (gamepad1.y) {
+                } else if (gamepad1.y) {
                     // 680mm out
                     slideMotor.setTargetPosition((int) (1.5 * (90.0 - Math.acos(680.0 / 688.0))));
                 }
                 // Tell liftMotor to run to to target position at set speed
                 slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 slideMotor.setPower(slideSpeedLimit);
-            }
-
-            // Grabber servo code. Super complicated.
-            // If you let go of right bumper, servo will stop
-            // If you let go of left bumper, servo will stop
-            // Code arranged in latch formation in case you want either direction to latch
-            if (gamepad1.right_bumper) {
-                grabberServo.setPower(1);
-            } else if (grabberServo.getPower()>0){
-                grabberServo.setPower(0);
-            }
-            if (gamepad1.left_bumper) {
-                grabberServo.setPower(-1);
-            } else if (grabberServo.getPower()<0) {
-                grabberServo.setPower(0);
             }
 
             // Telemetry
