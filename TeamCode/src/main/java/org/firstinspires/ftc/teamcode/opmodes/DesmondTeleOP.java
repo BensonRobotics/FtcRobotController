@@ -179,6 +179,11 @@ DesmondTeleOP extends LinearOpMode {
                 double rightStickAngle = Math.atan2(rx, ry);
                 double rightStickMagnitude = Math.hypot(rx, ry);
                 double rotationError = rightStickAngle - botHeading;
+                if (rotationError > Math.PI) {
+                    rotationError -= 2 * Math.PI;
+                } else if (rotationError < -Math.PI) {
+                    rotationError += 2 * Math.PI;
+                }
                 rotationPower = (rightStickMagnitude * rotationError * NEW_P_ROTATION) / Math.PI;
             } else {
                 rotationPower = rx;
@@ -186,17 +191,16 @@ DesmondTeleOP extends LinearOpMode {
 
             // Better way of setting speed limit
             driveMagnitude *= driveSpeedLimit;
-            rotationPower *= driveSpeedLimit;
 
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
             // https://www.desmos.com/calculator/3gzff5bzbn
             double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle - driveHeading + 0.25 * Math.PI);
             double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle - driveHeading - 0.25 * Math.PI);
-            double frontLeftPower = frontLeftBackRightMotors + rotationPower;
-            double backLeftPower = frontRightBackLeftMotors + rotationPower;
-            double frontRightPower = frontRightBackLeftMotors - rotationPower;
-            double backRightPower = frontLeftBackRightMotors - rotationPower;
+            double frontLeftPower = frontLeftBackRightMotors + Math.min(rotationPower, driveSpeedLimit);
+            double backLeftPower = frontRightBackLeftMotors + Math.min(rotationPower, driveSpeedLimit);
+            double frontRightPower = frontRightBackLeftMotors - Math.min(rotationPower, driveSpeedLimit);
+            double backRightPower = frontLeftBackRightMotors - Math.min(rotationPower, driveSpeedLimit);
 
             // The Great Cleaving approaches
             // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
