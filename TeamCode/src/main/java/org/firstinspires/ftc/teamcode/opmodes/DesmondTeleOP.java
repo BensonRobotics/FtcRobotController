@@ -10,6 +10,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
@@ -43,6 +45,8 @@ DesmondTeleOP extends LinearOpMode {
     boolean useFieldCentricRotate = true;
     boolean useLift = true;
     boolean useDiscreteLift = true;
+
+    // DO NOT USE INVERSE KINEMATICS YET
     boolean useDiscreteSlide = false;
     boolean isSlideRestricted;
     short liftCurrentAlert = 2500;
@@ -63,6 +67,7 @@ DesmondTeleOP extends LinearOpMode {
         DcMotorEx liftMotor;
         DcMotorEx slideMotor;
         CRServo grabberServo;
+        Servo grabberPivot;
 
         // Assign our devices
         // Make sure your ID's match your configuration
@@ -73,6 +78,7 @@ DesmondTeleOP extends LinearOpMode {
         liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
         slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
         grabberServo = hardwareMap.get(CRServo.class, "grabberServo");
+        grabberPivot = hardwareMap.get(Servo.class, "grabberPivot");
 
         // Apply motor PIDF coefficients
         frontLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
@@ -281,16 +287,17 @@ DesmondTeleOP extends LinearOpMode {
                     isSlideRestricted = true;
                 }
             } else { // If using discrete slide control
-                // 762mm is fully extended, in theory, please adjust based on measurements
+                // DO NOT USE INVERSE KINEMATICS YET
+                // 688mm is fully extended, in theory, please adjust based on measurements
                 if (gamepad1.a) {
                     // Fully retracted
                     slideMotor.setTargetPosition(5);
                 } if (gamepad1.x) {
                     // 400mm out
-                    slideMotor.setTargetPosition((int) (1.5 * (90.0 - Math.acos(400.0 / 762.0))));
+                    slideMotor.setTargetPosition((int) (1.5 * (90.0 - Math.acos(400.0 / 688.0))));
                 } if (gamepad1.y) {
-                    // 760mm out
-                    slideMotor.setTargetPosition((int) (1.5 * (90.0 - Math.acos(760.0 / 762.0))));
+                    // 680mm out
+                    slideMotor.setTargetPosition((int) (1.5 * (90.0 - Math.acos(680.0 / 688.0))));
                 }
                 // Tell liftMotor to run to to target position at set speed
                 slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
