@@ -197,10 +197,10 @@ DesmondTeleOP extends LinearOpMode {
             // https://www.desmos.com/calculator/3gzff5bzbn
             double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle - driveHeading + 0.25 * Math.PI);
             double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle - driveHeading - 0.25 * Math.PI);
-            double frontLeftPower = frontLeftBackRightMotors + Math.min(rotationPower, driveSpeedLimit);
-            double backLeftPower = frontRightBackLeftMotors + Math.min(rotationPower, driveSpeedLimit);
-            double frontRightPower = frontRightBackLeftMotors - Math.min(rotationPower, driveSpeedLimit);
-            double backRightPower = frontLeftBackRightMotors - Math.min(rotationPower, driveSpeedLimit);
+            double frontLeftPower = frontLeftBackRightMotors + Math.min(rotationPower, 1) * driveSpeedLimit;
+            double backLeftPower = frontRightBackLeftMotors + Math.min(rotationPower, 1) * driveSpeedLimit;
+            double frontRightPower = frontRightBackLeftMotors - Math.min(rotationPower, 1) * driveSpeedLimit;
+            double backRightPower = frontLeftBackRightMotors - Math.min(rotationPower, 1) * driveSpeedLimit;
 
             // The Great Cleaving approaches
             // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
