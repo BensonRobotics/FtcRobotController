@@ -38,6 +38,7 @@ DesmondTeleOP extends LinearOpMode {
     // liftStepsPerMM = liftMotorStepsPerRevolution / (liftPulleyPitchDiameter * PI)
     // Output is how many encoder steps per mm of lift height
     double liftStepsPerMM = 537.7 / (38.2 * Math.PI);
+    double slideStepsPerRadian = 5281.1 / (2 * Math.PI);
     boolean isLiftHoming = false;
     ElapsedTime runtime = new ElapsedTime();
     boolean useFieldCentricDrive = true;
@@ -325,10 +326,10 @@ DesmondTeleOP extends LinearOpMode {
                     slideMotor.setTargetPosition(5);
                 } else if (gamepad1.x) {
                     // 400mm out
-                    slideMotor.setTargetPosition((int) (1.5 * (90.0 - Math.acos(400.0 / 688.0))));
+                    slideMotor.setTargetPosition((int) (slideStepsPerRadian * 1.5 * ((Math.PI / 2) - Math.acos(400.0 / 688.0))));
                 } else if (gamepad1.y) {
                     // 680mm out
-                    slideMotor.setTargetPosition((int) (1.5 * (90.0 - Math.acos(680.0 / 688.0))));
+                    slideMotor.setTargetPosition((int) (slideStepsPerRadian * 1.5 * ((Math.PI / 2) - Math.acos(680.0 / 688.0))));
                 }
                 // Tell liftMotor to run to to target position at set speed
                 slideMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
