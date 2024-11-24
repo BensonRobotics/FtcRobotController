@@ -337,6 +337,10 @@ DesmondTeleOP extends LinearOpMode {
             }
 
             // Telemetry
+            telemetry.addData("Lift Enabled:",useLift);
+            telemetry.addLine();
+            telemetry.addData("Discrete Lift:",useDiscreteLift);
+            telemetry.addLine();
             telemetry.addData("Lift Height:",liftMotor.getCurrentPosition());
             telemetry.addLine();
             telemetry.addData("Lift Target:",liftMotor.getTargetPosition());
@@ -345,6 +349,8 @@ DesmondTeleOP extends LinearOpMode {
             telemetry.addLine();
             telemetry.addData("Lift Homing:",isLiftHoming);
             telemetry.addLine();
+            telemetry.addData("Discrete Slide:",useDiscreteSlide);
+            telemetry.addLine();
             telemetry.addData("Slide Limited:", isSlideRestricted);
             telemetry.addLine();
             telemetry.addData("Slide Position:", slideMotor.getCurrentPosition());
@@ -352,6 +358,8 @@ DesmondTeleOP extends LinearOpMode {
             telemetry.addData("Slide Target:", slideMotor.getTargetPosition());
             telemetry.addLine();
             telemetry.addData("Slide Current:", slideMotor.getCurrent(CurrentUnit.MILLIAMPS));
+            telemetry.addLine();
+
 
             telemetry.update();
         }
