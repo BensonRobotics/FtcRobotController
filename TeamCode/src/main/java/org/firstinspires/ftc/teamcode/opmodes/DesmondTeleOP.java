@@ -128,8 +128,8 @@ DesmondTeleOP extends LinearOpMode {
         liftMotor.setTargetPosition(5);
         // Default is 5 ticks
         liftMotor.setTargetPositionTolerance(10);
-        // Limit servo motion to 0 - 175 degrees of 300 degrees maximum rotation
-        grabberPivot.scaleRange(0, (180.0 / 300.0));
+        // Limit servo motion to 0 - 180 degrees of 360 degrees maximum rotation
+        grabberPivot.scaleRange(0, (180.0 / 360.0));
 
         // Make sure motors don't run from the get-go
         grabberServo.setPower(0);
