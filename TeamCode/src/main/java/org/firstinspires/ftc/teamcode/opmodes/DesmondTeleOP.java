@@ -91,6 +91,7 @@ DesmondTeleOP extends LinearOpMode {
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         grabberServo.setDirection(DcMotorSimple.Direction.REVERSE);
+        grabberPivot.setDirection(Servo.Direction.REVERSE);
 
         // Retrieve the IMU from the hardware map
         IMU imu = hardwareMap.get(IMU.class, "imu");
@@ -129,7 +130,7 @@ DesmondTeleOP extends LinearOpMode {
         // Default is 5 ticks
         liftMotor.setTargetPositionTolerance(10);
         // Limit servo motion to 0 - 180 degrees of 300 degrees maximum rotation
-        grabberPivot.scaleRange(0, (180.0 / 300.0));
+        grabberPivot.scaleRange(0, (195.0 / 300.0));
 
         // Make sure motors don't run from the get-go
         grabberServo.setPower(0);
