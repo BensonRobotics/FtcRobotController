@@ -287,7 +287,7 @@ DesmondTeleOP extends LinearOpMode {
             if (gamepad1.right_bumper) { // When you press right bumper
                 grabberServo.setPower(1);
             } else if (grabberServo.getPower()>0){ // When you let go of right bumper
-                grabberServo.setPower(0.1);
+                grabberServo.setPower(0);
             }
             if (gamepad1.left_bumper) { // When you press left bumper
                 grabberServo.setPower(-1);
