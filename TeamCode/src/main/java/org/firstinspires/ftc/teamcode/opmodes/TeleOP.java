@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
@@ -45,9 +46,11 @@ TeleOP extends LinearOpMode {
 
     private CRServo grabberServo = null;
 
+    private Servo grabberPivot = null;
+
     private DcMotorEx liftMotor = null;
 
-    private DcMotorEx horizontalSlidemotor = null;
+    private DcMotorEx horizontalSlideMotor = null;
 
     // IMU sensor object
     IMU imu;
@@ -86,9 +89,11 @@ TeleOP extends LinearOpMode {
         grabberServo = hardwareMap.get(CRServo.class, "grabberServo");
         grabberServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        grabberPivot = hardwareMap.get(Servo.class, "grabberPivot");
+
         liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
 
-        horizontalSlidemotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
+        horizontalSlideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -114,7 +119,7 @@ TeleOP extends LinearOpMode {
 
         double liftMotorCurrentThreshold = 3000.0;
 
-        double slideMotorCurrentThreshold = 1000.0;
+        double slideMotorCurrentThreshold = 2000.0;
 
         /* Orientation Variables */
 
@@ -136,6 +141,9 @@ TeleOP extends LinearOpMode {
         backRightDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
         backLeftDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
 
+        // Limit servo motion to 0 - 175 degrees of 300 degrees maximum rotation
+        grabberPivot.scaleRange(0, (175.0 / 300.0));
+
         double robotAngleToField = 0;
 
         /*April Tag Detection*/
@@ -156,6 +164,9 @@ TeleOP extends LinearOpMode {
         liftMotor.setTargetPosition(liftBottomPosition);
 
         int horizontalSlideInPosition = GetSlideInPosition(slideMotorCurrentThreshold);
+
+        // Yes I know this is terrible practice, but it works ( :
+        sleep(2000);
 
         // Run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -191,6 +202,10 @@ TeleOP extends LinearOpMode {
             // Take an input vector from the joysticks and use it to move. Exponential scaling will need to be applied for better control.
 //          MoveWithFieldRelativeVector(velocity, robotAngleToField, rotation);
             MoveWithVector(velocity, rotation);
+
+            if (gamepad1.start) {
+                horizontalSlideInPosition = GetSlideInPosition(slideMotorCurrentThreshold);
+            }
         }
 
         visionPortal.close();
@@ -226,8 +241,8 @@ TeleOP extends LinearOpMode {
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
             // https://www.desmos.com/calculator/3gzff5bzbn
-            double frontLeftBackRightMotors = velocity.Magnitude() * Math.sin(driveAngle + 0.25 * Math.PI);
-            double frontRightBackLeftMotors = velocity.Magnitude() * -Math.sin(driveAngle - 0.25 * Math.PI);
+            double frontLeftBackRightMotors = velocity.Magnitude() * Math.sin(driveAngle - 0.25 * Math.PI);
+            double frontRightBackLeftMotors = velocity.Magnitude() * Math.cos(driveAngle - 0.25 * Math.PI);
             double frontLeftPower = frontLeftBackRightMotors + Math.min(rotation, 1) * driveSpeedLimit;
             double backLeftPower = frontRightBackLeftMotors + Math.min(rotation, 1) * driveSpeedLimit;
             double frontRightPower = frontRightBackLeftMotors - Math.min(rotation, 1) * driveSpeedLimit;
@@ -296,41 +311,57 @@ TeleOP extends LinearOpMode {
     // Servo
     private void UpdateServos(double servo1Power) {
         grabberServo.setPower(servo1Power);
+
+        // Grabber pivot code.
+        // position 0 is down to floor, position 1 is 90 degrees up to sample transfer
+        // Also, horizontal slide cannot retract fully if grabberPivot is below 90 degrees
+        // I should make the horizontal slide retract button also raise grabberPivot to 90 degrees
+        if (gamepad1.dpad_up) {
+            grabberPivot.setPosition(0.5);
+        } else if (gamepad1.dpad_down) {
+            grabberPivot.setPosition(0.3);
+        }
     }
 
     // horizontal Slide
     private void UpdateSlideMotor(boolean dpadUp, boolean dpadDown, double slideMotorCurrentThreshold, int horizontalSlideInPosition) {
         double horizontalSlideVelocity = 0;
 
-        if (dpadUp) {
-            horizontalSlideVelocity = 1;
-        } else if (dpadDown) {
-            horizontalSlideVelocity = -1;
-        }
+        horizontalSlideVelocity = gamepad1.right_trigger - gamepad1.left_trigger;
 
         // Encoder based limits
-        if ((horizontalSlidemotor.getCurrentPosition() - 10) < horizontalSlideInPosition) {
+        if ((horizontalSlideMotor.getCurrentPosition() < horizontalSlideInPosition &&
+                horizontalSlideVelocity < 0) ||
+                (horizontalSlideMotor.getCurrentPosition() > (horizontalSlideInPosition + 2250) &&
+                        horizontalSlideVelocity > 0)) {
             horizontalSlideVelocity = 0;
-        } else if ((horizontalSlidemotor.getCurrentPosition() + 10) < (horizontalSlideInPosition + 500)) {
-            horizontalSlideVelocity = 0;
+            telemetry.addData("slideStopped < 0", 1);
         }
 
+        telemetry.addData("slidePosition", horizontalSlideMotor.getCurrentPosition());
+        telemetry.addData("targetSlideVelocity", horizontalSlideVelocity);
+
         // Backup current limit
-        if (IsOverloaded(horizontalSlidemotor, slideMotorCurrentThreshold)) {
-            horizontalSlidemotor.setPower(0.0);
+        if (IsOverloaded(horizontalSlideMotor, slideMotorCurrentThreshold)) {
+            horizontalSlideMotor.setPower(0.0);
         } else {
-            horizontalSlidemotor.setPower(horizontalSlideVelocity);
+            horizontalSlideMotor.setPower(horizontalSlideVelocity);
         }
     }
 
-    private int GetSlideInPosition(double slideMotorCurrentThreshold) {
-        while (!IsOverloaded(liftMotor, slideMotorCurrentThreshold)) {
-            horizontalSlidemotor.setPower(-0.05);
-        }
-        horizontalSlidemotor.setPower(0.0);
+    private int GetSlideInPosition(double slideMotorCurrentThreshold) throws InterruptedException {
+        horizontalSlideMotor.setPower(0);
+        grabberPivot.setPosition(0.5);
 
-        telemetry.addData("slide in position: ", horizontalSlidemotor.getCurrentPosition());
-        return horizontalSlidemotor.getCurrentPosition();
+        horizontalSlideMotor.setPower(-1);
+        while (!IsOverloaded(horizontalSlideMotor, slideMotorCurrentThreshold)) {
+            telemetry.addData("zeroing slide", 1);
+            updateTelemetry(telemetry);
+        }
+        horizontalSlideMotor.setPower(0.0);
+
+        telemetry.addData("slide in position: ", horizontalSlideMotor.getCurrentPosition());
+        return horizontalSlideMotor.getCurrentPosition();
     }
 
     // Vertical Slide
