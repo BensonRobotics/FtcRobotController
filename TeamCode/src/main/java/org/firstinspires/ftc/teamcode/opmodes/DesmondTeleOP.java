@@ -42,7 +42,7 @@ DesmondTeleOP extends LinearOpMode {
     boolean isLiftHoming = false;
     ElapsedTime runtime = new ElapsedTime();
     boolean useFieldCentricDrive = true;
-    boolean useFieldCentricRotate = true;
+    boolean useFieldCentricRotate = false;
     boolean useLift = true;
     boolean useDiscreteLift = true;
 
@@ -129,8 +129,6 @@ DesmondTeleOP extends LinearOpMode {
         liftMotor.setTargetPosition(5);
         // Default is 5 ticks
         liftMotor.setTargetPositionTolerance(10);
-        // Limit servo motion to 0 - 180 degrees of 300 degrees maximum rotation
-        grabberPivot.scaleRange(0, (195.0 / 300.0));
 
         // Make sure motors don't run from the get-go
         grabberServo.setPower(0);
@@ -300,7 +298,7 @@ DesmondTeleOP extends LinearOpMode {
             // Also, horizontal slide cannot retract fully if grabberPivot is below 90 degrees
             // I should make the horizontal slide retract button also raise grabberPivot to 90 degrees
             if (gamepad1.dpad_up) {
-                grabberPivot.setPosition(1);
+                grabberPivot.setPosition(0.75);
             } else if (gamepad1.dpad_down) {
                 grabberPivot.setPosition(0);
             }
@@ -318,7 +316,7 @@ DesmondTeleOP extends LinearOpMode {
                     isSlideRestricted = true;
                 }
                 if (slidePower < -0.5) { // Bring grabber up for slide retraction
-                    grabberPivot.setPosition(1);
+                    grabberPivot.setPosition(0.75);
                 }
             } else { // If using discrete slide control
                 // DO NOT USE INVERSE KINEMATICS YET
