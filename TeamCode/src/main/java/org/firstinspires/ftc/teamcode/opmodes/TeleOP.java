@@ -105,7 +105,6 @@ TeleOP extends LinearOpMode {
 
         liftMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
-
         frontLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         frontRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         backLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
@@ -115,9 +114,10 @@ TeleOP extends LinearOpMode {
         liftMotor.setTargetPosition(0);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-//        horizontalSlidemotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.);
+        horizontalSlideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        double liftMotorCurrentThreshold = 3000.0;
+
+        double liftMotorCurrentThreshold = 4000.0;
 
         double slideMotorCurrentThreshold = 2000.0;
 
@@ -144,8 +144,6 @@ TeleOP extends LinearOpMode {
         // Limit servo motion to 0 - 175 degrees of 300 degrees maximum rotation
         grabberPivot.scaleRange(0, (175.0 / 300.0));
 
-        double robotAngleToField = 0;
-
         /*April Tag Detection*/
         InitAprilTag();
 
@@ -163,10 +161,7 @@ TeleOP extends LinearOpMode {
         int liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
         liftMotor.setTargetPosition(liftBottomPosition);
 
-        int horizontalSlideInPosition = GetSlideInPosition(slideMotorCurrentThreshold);
-
-        // Yes I know this is terrible practice, but it works ( :
-        sleep(2000);
+        ZeroHorizontalSlideEncoder(slideMotorCurrentThreshold);
 
         // Run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -197,14 +192,14 @@ TeleOP extends LinearOpMode {
             boolean dpadUp = gamepad1.dpad_up;
             boolean dpadDown = gamepad1.dpad_down;
 
-            UpdateSlideMotor(dpadUp, dpadDown, slideMotorCurrentThreshold, horizontalSlideInPosition);
+            UpdateSlideMotor(dpadUp, dpadDown, slideMotorCurrentThreshold);
 
-            // Take an input vector from the joysticks and use it to move. Exponential scaling will need to be applied for better control.
-//          MoveWithFieldRelativeVector(velocity, robotAngleToField, rotation);
-            MoveWithVector(velocity, rotation);
+            // Take an input vector from the joysticks and use it to move.
+            telemetry.addData("robot angle to field", currentRobotOrientationData.get("rotation").getZ());
+            MoveWithFieldRelativeVector(velocity, currentRobotOrientationData.get("rotation").getZ(), rotation);
 
             if (gamepad1.start) {
-                horizontalSlideInPosition = GetSlideInPosition(slideMotorCurrentThreshold);
+                ZeroHorizontalSlideEncoder(slideMotorCurrentThreshold);
             }
         }
 
@@ -237,7 +232,7 @@ TeleOP extends LinearOpMode {
         // The if statement at the bottom just reduces the magnitude of the vector a little if one of the motor values exceeds the limit of 1
 
         if (!Objects.equals(velocity, new Vector2(0, 0)) || rotation != 0) {
-            double driveAngle = Math.atan2(velocity.y, velocity.x);
+            double driveAngle = Math.atan2(velocity.y, -velocity.x);
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
             // https://www.desmos.com/calculator/3gzff5bzbn
@@ -278,8 +273,8 @@ TeleOP extends LinearOpMode {
             imu.resetYaw();
             localizationData.put("rotation", new Vector3D(0, 0, 0));
 
-            telemetry.addData("Resetting position data", "...");
-            localizationData.put("position", new Vector3D(0, 0, 0));
+//            telemetry.addData("Resetting position data", "...");
+//            localizationData.put("position", new Vector3D(0, 0, 0));
         }
 
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
@@ -303,7 +298,8 @@ TeleOP extends LinearOpMode {
 
     // Move the robot using a Vector2 representing velocity as an input (relative to robot)
     private void MoveWithFieldRelativeVector(Vector2 velocity, double robotAngleToField, double rotation) {
-        Vector2 robotRelativeDirection = velocity.Rotate(robotAngleToField);
+        Vector2 robotRelativeDirection = velocity.Rotate(-robotAngleToField);
+        telemetry.addData("\nrobot relative direction\n", robotRelativeDirection.Value());
 
         MoveWithVector(robotRelativeDirection, rotation);
     }
@@ -324,44 +320,44 @@ TeleOP extends LinearOpMode {
     }
 
     // horizontal Slide
-    private void UpdateSlideMotor(boolean dpadUp, boolean dpadDown, double slideMotorCurrentThreshold, int horizontalSlideInPosition) {
+    private void UpdateSlideMotor(boolean dpadUp, boolean dpadDown, double slideMotorCurrentThreshold) {
         double horizontalSlideVelocity = 0;
 
         horizontalSlideVelocity = gamepad1.right_trigger - gamepad1.left_trigger;
 
         // Encoder based limits
-        if ((horizontalSlideMotor.getCurrentPosition() < horizontalSlideInPosition &&
-                horizontalSlideVelocity < 0) ||
-                (horizontalSlideMotor.getCurrentPosition() > (horizontalSlideInPosition + 2250) &&
-                        horizontalSlideVelocity > 0)) {
+        if ((horizontalSlideMotor.getCurrentPosition() <= 0 &&
+                horizontalSlideVelocity < 215) ||
+                (horizontalSlideMotor.getCurrentPosition() >= 2450 &&
+                        horizontalSlideVelocity > 0) || IsOverloaded(horizontalSlideMotor, slideMotorCurrentThreshold)) {
             horizontalSlideVelocity = 0;
-            telemetry.addData("slideStopped < 0", 1);
+            telemetry.addData("slideStopped", 1);
         }
 
         telemetry.addData("slidePosition", horizontalSlideMotor.getCurrentPosition());
         telemetry.addData("targetSlideVelocity", horizontalSlideVelocity);
 
-        // Backup current limit
-        if (IsOverloaded(horizontalSlideMotor, slideMotorCurrentThreshold)) {
-            horizontalSlideMotor.setPower(0.0);
-        } else {
-            horizontalSlideMotor.setPower(horizontalSlideVelocity);
-        }
+
+        horizontalSlideMotor.setPower(horizontalSlideVelocity);
     }
 
-    private int GetSlideInPosition(double slideMotorCurrentThreshold) throws InterruptedException {
+    private void ZeroHorizontalSlideEncoder(double slideMotorCurrentThreshold) throws InterruptedException {
         horizontalSlideMotor.setPower(0);
         grabberPivot.setPosition(0.5);
+        while (grabberPivot.getPosition() != 0.5) {
+            telemetry.addData("Homing grabber pivot", 1);
+        }
 
         horizontalSlideMotor.setPower(-1);
-        while (!IsOverloaded(horizontalSlideMotor, slideMotorCurrentThreshold)) {
+        while (!IsOverloaded(horizontalSlideMotor, slideMotorCurrentThreshold + 1000)) {
             telemetry.addData("zeroing slide", 1);
             updateTelemetry(telemetry);
         }
         horizontalSlideMotor.setPower(0.0);
 
         telemetry.addData("slide in position: ", horizontalSlideMotor.getCurrentPosition());
-        return horizontalSlideMotor.getCurrentPosition();
+        horizontalSlideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        horizontalSlideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     // Vertical Slide

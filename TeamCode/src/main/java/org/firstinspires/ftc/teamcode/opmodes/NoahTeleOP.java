@@ -99,6 +99,8 @@ NoahTeleOP extends LinearOpMode {
 
         liftMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
+        horizontalSlidemotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+
 
         frontLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         frontRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
@@ -108,6 +110,8 @@ NoahTeleOP extends LinearOpMode {
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftMotor.setTargetPosition(0);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        horizontalSlidemotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 //        horizontalSlidemotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.);
 
