@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-
 /*
 Hi, Desi here. I was going to implement some fixes, but I was informed that Ed would be using
 this to teach some robotics members programming and that they would be working on the Auto.
@@ -41,13 +40,16 @@ public class Auto extends LinearOpMode {
         DcMotorEx frontRightMotor;
         DcMotorEx backLeftMotor;
         DcMotorEx backRightMotor;
+        DcMotorEx slideMotor;
+        DcMotorEx liftMotor;
         // Declare our motors
         // Make sure your ID's match your configuration
         frontLeftMotor = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
         frontRightMotor = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
         backLeftMotor = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightMotor = hardwareMap.get(DcMotorEx.class, "backRightMotor");
-
+        slideMotor = hardwareMap.get(DcMotorEx.class,"slideMotor");
+        liftMotor = hardwareMap.get(DcMotorEx.class,"liftMotor");
         //frontLeftMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
         //frontRightMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
         //backLeftMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
@@ -70,6 +72,8 @@ public class Auto extends LinearOpMode {
         frontRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        slideMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
         //telemetry.addData(" I am here", 10 );
        // telemetry.update();
@@ -80,17 +84,23 @@ public class Auto extends LinearOpMode {
         backLeftMotor.setTargetPosition(shortDistance);
         frontRightMotor.setTargetPosition(shortDistance);
         backRightMotor.setTargetPosition(shortDistanceTwo);
+        slideMotor.setTargetPosition(shortDistance);
+        liftMotor.setTargetPosition(shortDistance);
 
         frontRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         frontLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         backRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         backLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        slideMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        liftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
         //velocity set
         frontLeftMotor.setVelocity(VELOCITY);
         backLeftMotor.setVelocity(VELOCITY);
         frontRightMotor.setVelocity(VELOCITY);
         backRightMotor.setVelocity(VELOCITY);
+        slideMotor.setVelocity(VELOCITY);
+        liftMotor.setVelocity(VELOCITY);
 
         while ( opModeIsActive()          &&
                 frontLeftMotor.isBusy()   &&
@@ -107,7 +117,7 @@ public class Auto extends LinearOpMode {
 
         }
 
-        //set them to zore again
+        //set them to zero again
         frontLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         frontRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -144,6 +154,8 @@ public class Auto extends LinearOpMode {
             telemetry.addData("frontLeftMotor", "I'm here yay");
             telemetry.addData( "backleft position", backLeftMotor.getCurrentPosition());
             telemetry.addData( "backright position", backRightMotor.getCurrentPosition());
+            telemetry.addData("slideMotor position", slideMotor.getCurrentPosition());
+            telemetry.addData("liftMotor position", liftMotor.getCurrentPosition()):
             telemetry.update();
 
            // if (frontLeftMotor.getCurrentPosition() >
