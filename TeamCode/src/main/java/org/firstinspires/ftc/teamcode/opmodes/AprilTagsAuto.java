@@ -1,5 +1,8 @@
+
+
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import com.qualcomm.hardware.dfrobot.HuskeyLens;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -26,10 +29,10 @@ it would proceed. You may also want to add a sleep(500);, which would have it ho
 half second, just to make sure all residual momentum is gone.
  */
 
-@Autonomous
-public class Auto extends LinearOpMode {
+@Autonomous(name="Robot: Auto Left", group="Robot")
+public class AprilTagsAuto extends LinearOpMode {
 
-    final int targetDistance = 2715; // number of clicks to move
+    final int targetDistance = -2715; // number of clicks to move
     final int shortDistance = 250; //number of clicks to move sideways
     final int shortDistanceTwo = -250; ;
     final double VELOCITY = 500.0; // number of clicks per second
@@ -76,7 +79,7 @@ public class Auto extends LinearOpMode {
         liftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
         //telemetry.addData(" I am here", 10 );
-       // telemetry.update();
+        // telemetry.update();
         waitForStart();
 
         //going backwards
@@ -155,18 +158,18 @@ public class Auto extends LinearOpMode {
             telemetry.addData( "backleft position", backLeftMotor.getCurrentPosition());
             telemetry.addData( "backright position", backRightMotor.getCurrentPosition());
             telemetry.addData("slideMotor position", slideMotor.getCurrentPosition());
-            telemetry.addData("liftMotor position", liftMotor.getCurrentPosition()):
+            telemetry.addData("liftMotor position", liftMotor.getCurrentPosition());
             telemetry.update();
 
-           // if (frontLeftMotor.getCurrentPosition() >
-                   // targetSteps)
-           // if (frontLeftMotor.getCurrentPosition()
-           // >=targetDistance)
-           // {
-           //     telemetry.addData("frontLeftMotor", "I'm here");
-           //     telemetry.update();
-           //     break;
-           //
+            // if (frontLeftMotor.getCurrentPosition() >
+            // targetSteps)
+            // if (frontLeftMotor.getCurrentPosition()
+            // >=targetDistance)
+            // {
+            //     telemetry.addData("frontLeftMotor", "I'm here");
+            //     telemetry.update();
+            //     break;
+            //
 
         }
 
@@ -178,4 +181,3 @@ public class Auto extends LinearOpMode {
 
     }
 }
-

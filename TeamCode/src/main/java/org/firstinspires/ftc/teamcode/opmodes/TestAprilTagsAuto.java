@@ -29,22 +29,10 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-Edward C. Epp
-December 2024
-
-Started as FIRST's SensorHuskyLens.java
-Modified to identify color objects.
-The program will turn and move toward them.
-Issue - It does not stop once it nolonger sees the target oject.
-
 */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.hardware.dfrobot.HuskyLens;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -60,10 +48,7 @@ import java.util.concurrent.TimeUnit;
  * detect a number of predefined objects and AprilTags in the 36h11 family, can
  * recognize colors, and can be trained to detect custom objects. See this website for
  * documentation: https://wiki.dfrobot.com/HUSKYLENS_V1.0_SKU_SEN0305_SEN0336
- *
- * For detailed instructions on how a HuskyLens is used in FTC, please see this tutorial:
- * https://ftc-docs.firstinspires.org/en/latest/devices/huskylens/huskylens.html
- *
+ * 
  * This sample illustrates how to detect AprilTags, but can be used to detect other types
  * of objects by changing the algorithm. It assumes that the HuskyLens is configured with
  * a name of "huskylens".
@@ -71,16 +56,11 @@ import java.util.concurrent.TimeUnit;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
-@Autonomous(name = "HuskyLens: Target a game piece ", group = "Sensor")
+@TeleOp(name = "Sensor: HuskyLens", group = "Sensor")
 @Disabled
+public class TestAprilTagsAuto extends LinearOpMode {
 
-public class SensorHuskyLensTarget extends LinearOpMode {
-
-    private final int READ_PERIOD    =   1;
-    private final int DISPLAY_X      = 320;
-    private final int OFFSET_X       =  25;
-    private final double MOTOR_POWER =   0.2;
-
+    private final int READ_PERIOD = 1;
 
     private HuskyLens huskyLens;
 
@@ -127,22 +107,18 @@ public class SensorHuskyLensTarget extends LinearOpMode {
          * Users, should, in general, explicitly choose the algorithm they want to use
          * within the OpMode by calling selectAlgorithm() and passing it one of the values
          * found in the enumeration HuskyLens.Algorithm.
-         *
-         * Other algorithm choices for FTC might be: OBJECT_RECOGNITION, COLOR_RECOGNITION or OBJECT_CLASSIFICATION.
          */
-        huskyLens.selectAlgorithm(HuskyLens.Algorithm.COLOR_RECOGNITION);
+        huskyLens.selectAlgorithm(HuskyLens.Algorithm.TAG_RECOGNITION);
 
         telemetry.update();
         waitForStart();
 
         /*
-         Recognize the color of some game pieces.
+         * Looking for AprilTags per the call to selectAlgorithm() above.  A handy grid
+         * for testing may be found at https://wiki.dfrobot.com/HUSKYLENS_V1.0_SKU_SEN0305_SEN0336#target_20.
+         *
+         * Note again that the device only recognizes the 36h11 family of tags out of the box.
          */
-
-        // fire up the motors
-        DcMotor leftMotor  = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
-        DcMotor rightMotor = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
-
         while(opModeIsActive()) {
             if (!rateLimit.hasExpired()) {
                 continue;
@@ -150,65 +126,21 @@ public class SensorHuskyLensTarget extends LinearOpMode {
             rateLimit.reset();
 
             /*
+             * All algorithms, except for LINE_TRACKING, return a list of Blocks where a
+             * Block represents the outline of a recognized object along with its ID number.
+             * ID numbers allow you to identify what the device saw.  See the HuskyLens documentation
+             * referenced in the header comment above for more information on IDs and how to
+             * assign them to objects.
+             *
              * Returns an empty array if no objects are seen.
              */
             HuskyLens.Block[] blocks = huskyLens.blocks();
-            telemetry.addData("Block count", blocks.length);
-
-            // look for the target block
-            boolean iSeeBlock = Boolean.FALSE;
+              telemetry.addData("Block count", blocks.length);
             for (int i = 0; i < blocks.length; i++) {
                 telemetry.addData("Block", blocks[i].toString());
-                telemetry.addData("ID: ", blocks[i].id);
-
-                iSeeBlock = Boolean.FALSE;
-                // Take action based on finding a target block
-                if (blocks[i].id == 1)
-                {
-                    iSeeBlock = Boolean.TRUE;
-                    // Turn left toward the target block
-                    if (blocks[i].x < DISPLAY_X / 2.2 - OFFSET_X)
-                    {
-                        telemetry.addData("Turn  Left","");
-                        leftMotor.setPower(MOTOR_POWER);
-                        rightMotor.setPower(MOTOR_POWER);
-                    }
-
-                    // Turn right toward the target block
-                    else if (blocks[i].x > DISPLAY_X / 2.0 + OFFSET_X)
-                    {
-                        telemetry.addData("turn Right","");
-                        leftMotor.setPower(-MOTOR_POWER);
-                        rightMotor.setPower(-MOTOR_POWER);
-                    }
-
-                    // Move forward toward the target block
-                    else
-                    {
-                        telemetry.addData("Forward","");
-                        leftMotor.setPower(-MOTOR_POWER);
-                        rightMotor.setPower(MOTOR_POWER);
-                    };
-                };
             }
 
             telemetry.update();
-
-            // Target block not seen so stop
-            /*
-            if (!iSeeBlock)
-            {
-                telemetry.addData("Can't see block","");
-                leftMotor.setPower(0);
-                rightMotor.setPower(0);
-            }
-            */
-
         }
-
-        // Done so stop
-        telemetry.addData("Stop","");
-        leftMotor.setPower(0);
-        rightMotor.setPower(0);
     }
 }
