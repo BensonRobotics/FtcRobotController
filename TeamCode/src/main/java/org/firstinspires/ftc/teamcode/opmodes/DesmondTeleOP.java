@@ -44,7 +44,7 @@ DesmondTeleOP extends LinearOpMode {
     boolean useFieldCentricDrive = true;
     boolean useFieldCentricRotate = false;
     boolean useLift = true;
-    boolean useDiscreteLift = true;
+    boolean useDiscreteLift = false;
 
     // DO NOT USE INVERSE KINEMATICS YET
     boolean useDiscreteSlide = false;
@@ -128,7 +128,7 @@ DesmondTeleOP extends LinearOpMode {
         slideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         liftMotor.setTargetPosition(5);
         // Default is 5 ticks
-        liftMotor.setTargetPositionTolerance(10);
+        liftMotor.setTargetPositionTolerance(20);
 
         // Make sure motors don't run from the get-go
         grabberServo.setPower(0);
