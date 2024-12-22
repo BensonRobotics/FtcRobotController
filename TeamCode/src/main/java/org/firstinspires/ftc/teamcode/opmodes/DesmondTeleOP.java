@@ -50,8 +50,8 @@ DesmondTeleOP extends LinearOpMode {
     boolean useDiscreteSlide = false;
     boolean isSlideRestricted;
     short liftCurrentAlert = 2500;
-    float driveSpeedLimit = 0.75F;
-    float liftSpeedLimit = 0.75F;
+    float driveSpeedLimit = 0.25F;
+    float liftSpeedLimit = 1F;
     float slideSpeedLimit = 1F;
     double driveHeading = 0;
     double rotationPower = 0;
