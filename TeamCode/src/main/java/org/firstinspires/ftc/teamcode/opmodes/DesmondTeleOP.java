@@ -44,7 +44,7 @@ DesmondTeleOP extends LinearOpMode {
     boolean useFieldCentricDrive = true;
     boolean useFieldCentricRotate = false;
     boolean useLift = true;
-    boolean useDiscreteLift = false;
+    boolean useDiscreteLift = true;
 
     // DO NOT USE INVERSE KINEMATICS YET
     boolean useDiscreteSlide = false;
