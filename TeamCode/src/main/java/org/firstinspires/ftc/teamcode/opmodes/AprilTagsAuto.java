@@ -2,7 +2,7 @@
 
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import com.qualcomm.hardware.dfrobot.HuskeyLens;
+import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
