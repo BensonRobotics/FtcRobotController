@@ -19,12 +19,12 @@ DesmondTeleOP extends LinearOpMode {
     final byte hoursYouHaveLeft = 12;
 
     // Drive system PIDF coefficients
-    float NEW_P_DRIVE = 0.75F;
+    float NEW_P_DRIVE = 0.75F
     float NEW_I_DRIVE = 0.2F;
     float NEW_D_DRIVE = 0.1F;
     float NEW_F_DRIVE = 10.0F;
 
-    float NEW_P_ROTATION = 5.0F;
+    float NEW_P_ROTATION = 10.0F;
 
     // driveTicksPerSecond = driveMotorRPM * driveMotorStepsPerRevolution / 60
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
@@ -201,10 +201,10 @@ DesmondTeleOP extends LinearOpMode {
             // https://www.desmos.com/calculator/3gzff5bzbn
             double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle - driveHeading + 0.25 * Math.PI);
             double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle - driveHeading - 0.25 * Math.PI);
-            double frontLeftPower = frontLeftBackRightMotors + Math.min(rotationPower, 1) * driveSpeedLimit;
-            double backLeftPower = frontRightBackLeftMotors + Math.min(rotationPower, 1) * driveSpeedLimit;
-            double frontRightPower = frontRightBackLeftMotors - Math.min(rotationPower, 1) * driveSpeedLimit;
-            double backRightPower = frontLeftBackRightMotors - Math.min(rotationPower, 1) * driveSpeedLimit;
+            double frontLeftPower = (frontLeftBackRightMotors + Math.min(rotationPower, 0.5)) * driveSpeedLimit;
+            double backLeftPower = (frontRightBackLeftMotors + Math.min(rotationPower, 0.5)) * driveSpeedLimit;
+            double frontRightPower = (frontRightBackLeftMotors - Math.min(rotationPower, 0.5)) * driveSpeedLimit;
+            double backRightPower = (frontLeftBackRightMotors - Math.min(rotationPower, 0.5)) * driveSpeedLimit;
 
             // The Great Cleaving approaches
             // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
