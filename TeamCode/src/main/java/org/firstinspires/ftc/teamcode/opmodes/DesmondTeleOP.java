@@ -24,7 +24,7 @@ DesmondTeleOP extends LinearOpMode {
     float NEW_D_DRIVE = 0.1F;
     float NEW_F_DRIVE = 10.0F;
 
-    float NEW_P_ROTATION = 5.0F;
+    float NEW_P_ROTATION = 10.0F;
 
     // driveTicksPerSecond = driveMotorRPM * driveMotorStepsPerRevolution / 60
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
@@ -42,7 +42,6 @@ DesmondTeleOP extends LinearOpMode {
     boolean isLiftHoming = false;
     ElapsedTime runtime = new ElapsedTime();
     boolean useFieldCentricDrive = true;
-    boolean useFieldCentricRotate = false;
     boolean useLift = true;
     boolean useDiscreteLift = true;
 
@@ -55,6 +54,8 @@ DesmondTeleOP extends LinearOpMode {
     float slideSpeedLimit = 1F;
     double driveHeading = 0;
     double rotationPower = 0;
+    boolean isMaintainingHeading = true;
+    double botHeadingMaintain = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -176,22 +177,23 @@ DesmondTeleOP extends LinearOpMode {
                 driveHeading = botHeading;
             }
 
-            if (useFieldCentricRotate) {
-                double rightStickAngle = Math.atan2(rx, ry);
-                double rightStickMagnitude = Math.hypot(rx, ry);
-                double rotationError = rightStickAngle - botHeading;
-                if (rotationError > Math.PI) {
-                    rotationError -= 2 * Math.PI;
-                } else if (rotationError < -Math.PI) {
-                    rotationError += 2 * Math.PI;
+            if (gamepad1.right_stick_x == 0) {
+                if (!isMaintainingHeading) {
+                    botHeadingMaintain = botHeading;
+                    isMaintainingHeading = true;
+                } else {
+                    double rotationError = botHeadingMaintain - botHeading;
+                    if (rotationError > Math.PI) {
+                        rotationError -= 2 * Math.PI;
+                    } else if (rotationError < -Math.PI) {
+                        rotationError += 2 * Math.PI;
+                    }
+                    rotationPower = (driveSpeedLimit * rotationError * NEW_P_ROTATION) / Math.PI;
                 }
-                rotationPower = (rightStickMagnitude * rotationError * NEW_P_ROTATION) / Math.PI;
             } else {
                 rotationPower = rx;
+                isMaintainingHeading = false;
             }
-
-            // Better way of setting speed limit
-            driveMagnitude *= driveSpeedLimit;
 
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
