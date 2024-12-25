@@ -24,7 +24,7 @@ DesmondTeleOP extends LinearOpMode {
     float NEW_D_DRIVE = 0.1F;
     float NEW_F_DRIVE = 10.0F;
 
-    float NEW_P_ROTATION = 10.0F;
+    float NEW_P_ROTATION = 5.0F;
 
     // driveTicksPerSecond = driveMotorRPM * driveMotorStepsPerRevolution / 60
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
@@ -171,6 +171,7 @@ DesmondTeleOP extends LinearOpMode {
             // This button choice was made so that it is hard to hit on accident
             if (gamepad1.back) {
                 imu.resetYaw();
+                botHeadingMaintain = 0;
             }
             // Set botHeading to robot Yaw from IMU, if used
             if (useFieldCentricDrive) {
