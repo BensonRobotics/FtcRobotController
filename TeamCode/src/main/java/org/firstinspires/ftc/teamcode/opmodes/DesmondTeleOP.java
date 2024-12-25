@@ -24,7 +24,7 @@ DesmondTeleOP extends LinearOpMode {
     float NEW_D_DRIVE = 0.1F;
     float NEW_F_DRIVE = 10.0F;
 
-    float NEW_P_ROTATION = 2.0F;
+    float NEW_P_ROTATION = 5.0F;
 
     // driveTicksPerSecond = driveMotorRPM * driveMotorStepsPerRevolution / 60
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
@@ -50,7 +50,7 @@ DesmondTeleOP extends LinearOpMode {
     boolean useDiscreteSlide = false;
     boolean isSlideRestricted;
     short liftCurrentAlert = 2500;
-    float driveSpeedLimit = 0.5F;
+    float driveSpeedLimit = 1F;
     float liftSpeedLimit = 1F;
     float slideSpeedLimit = 1F;
     double driveHeading = 0;
