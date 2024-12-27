@@ -19,7 +19,7 @@ DesmondTeleOP extends LinearOpMode {
     final byte hoursYouHaveLeft = 12;
 
     // Drive system PIDF coefficients
-    float NEW_P_DRIVE = 0.75F
+    float NEW_P_DRIVE = 0.75F;
     float NEW_I_DRIVE = 0.2F;
     float NEW_D_DRIVE = 0.1F;
     float NEW_F_DRIVE = 10.0F;
@@ -56,6 +56,7 @@ DesmondTeleOP extends LinearOpMode {
     double rotationPower = 0;
     boolean isMaintainingHeading = true;
     double botHeadingMaintain = 0;
+    float headingMaintainSpeedLimit = 0.25F;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -189,22 +190,22 @@ DesmondTeleOP extends LinearOpMode {
                     } else if (rotationError < -Math.PI) {
                         rotationError += 2 * Math.PI;
                     }
-                    rotationPower = (driveSpeedLimit * rotationError * NEW_P_ROTATION) / Math.PI;
+                    rotationPower = Math.min((driveSpeedLimit * rotationError * NEW_P_ROTATION) / Math.PI, headingMaintainSpeedLimit);
                 }
             } else {
-                rotationPower = rx;
+                rotationPower = rx * driveSpeedLimit;
                 isMaintainingHeading = false;
             }
 
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
             // https://www.desmos.com/calculator/3gzff5bzbn
-            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle - driveHeading + 0.25 * Math.PI);
-            double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle - driveHeading - 0.25 * Math.PI);
-            double frontLeftPower = (frontLeftBackRightMotors + Math.min(rotationPower, 0.5)) * driveSpeedLimit;
-            double backLeftPower = (frontRightBackLeftMotors + Math.min(rotationPower, 0.5)) * driveSpeedLimit;
-            double frontRightPower = (frontRightBackLeftMotors - Math.min(rotationPower, 0.5)) * driveSpeedLimit;
-            double backRightPower = (frontLeftBackRightMotors - Math.min(rotationPower, 0.5)) * driveSpeedLimit;
+            double frontLeftBackRightMotors = driveSpeedLimit * driveMagnitude * Math.sin(driveAngle - driveHeading + 0.25 * Math.PI);
+            double frontRightBackLeftMotors = driveSpeedLimit * driveMagnitude * -Math.sin(driveAngle - driveHeading - 0.25 * Math.PI);
+            double frontLeftPower = frontLeftBackRightMotors + rotationPower;
+            double backLeftPower = frontRightBackLeftMotors + rotationPower;
+            double frontRightPower = frontRightBackLeftMotors - rotationPower;
+            double backRightPower = frontLeftBackRightMotors - rotationPower;
 
             // The Great Cleaving approaches
             // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
