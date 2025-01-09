@@ -24,7 +24,7 @@ DesmondTeleOP extends LinearOpMode {
     float NEW_D_DRIVE = 0.1F;
     float NEW_F_DRIVE = 10.0F;
 
-    float NEW_P_ROTATION = 2.0F;
+    float NEW_P_ROTATION = 5.0F;
 
     // driveTicksPerSecond = driveMotorRPM * driveMotorStepsPerRevolution / 60
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
@@ -42,7 +42,6 @@ DesmondTeleOP extends LinearOpMode {
     boolean isLiftHoming = false;
     ElapsedTime runtime = new ElapsedTime();
     boolean useFieldCentricDrive = true;
-    boolean useFieldCentricRotate = false;
     boolean useLift = true;
     boolean useDiscreteLift = true;
 
@@ -50,11 +49,13 @@ DesmondTeleOP extends LinearOpMode {
     boolean useDiscreteSlide = false;
     boolean isSlideRestricted;
     short liftCurrentAlert = 2500;
-    float driveSpeedLimit = 0.75F;
-    float liftSpeedLimit = 0.75F;
+    float driveSpeedLimit = 1F;
+    float liftSpeedLimit = 1F;
     float slideSpeedLimit = 1F;
     double driveHeading = 0;
     double rotationPower = 0;
+    boolean isMaintainingHeading = true;
+    double botHeadingMaintain = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -128,7 +129,7 @@ DesmondTeleOP extends LinearOpMode {
         slideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         liftMotor.setTargetPosition(5);
         // Default is 5 ticks
-        liftMotor.setTargetPositionTolerance(10);
+        liftMotor.setTargetPositionTolerance(20);
 
         // Make sure motors don't run from the get-go
         grabberServo.setPower(0);
@@ -170,28 +171,30 @@ DesmondTeleOP extends LinearOpMode {
             // This button choice was made so that it is hard to hit on accident
             if (gamepad1.back) {
                 imu.resetYaw();
+                botHeadingMaintain = 0;
             }
             // Set botHeading to robot Yaw from IMU, if used
             if (useFieldCentricDrive) {
                 driveHeading = botHeading;
             }
 
-            if (useFieldCentricRotate) {
-                double rightStickAngle = Math.atan2(rx, ry);
-                double rightStickMagnitude = Math.hypot(rx, ry);
-                double rotationError = rightStickAngle - botHeading;
-                if (rotationError > Math.PI) {
-                    rotationError -= 2 * Math.PI;
-                } else if (rotationError < -Math.PI) {
-                    rotationError += 2 * Math.PI;
+            if (gamepad1.right_stick_x == 0) {
+                if (!isMaintainingHeading) {
+                    botHeadingMaintain = botHeading;
+                    isMaintainingHeading = true;
+                } else {
+                    double rotationError = botHeadingMaintain - botHeading;
+                    if (rotationError > Math.PI) {
+                        rotationError -= 2 * Math.PI;
+                    } else if (rotationError < -Math.PI) {
+                        rotationError += 2 * Math.PI;
+                    }
+                    rotationPower = (driveSpeedLimit * rotationError * NEW_P_ROTATION) / Math.PI;
                 }
-                rotationPower = (rightStickMagnitude * rotationError * NEW_P_ROTATION) / Math.PI;
             } else {
                 rotationPower = rx;
+                isMaintainingHeading = false;
             }
-
-            // Better way of setting speed limit
-            driveMagnitude *= driveSpeedLimit;
 
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot

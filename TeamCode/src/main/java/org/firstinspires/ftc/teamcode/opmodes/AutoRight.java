@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
@@ -28,10 +28,14 @@ it would proceed. You may also want to add a sleep(500);, which would have it ho
 half second, just to make sure all residual momentum is gone.
  */
 
-@Autonomous
-public class Auto extends LinearOpMode {
+@Autonomous(name="Robot: Auto Right", group="Robot")
+public class AutoRight extends LinearOpMode {
 
-    final int targetDistance = 2715; // number of clicks to move
+    final
+    int targetDistance = -2715; // number of clicks to move to left, to get samples
+    int shortDistanceA = -250;
+    int shortDistanceTwoA = 250;
+    int targetDistanceTwo = 2715; // number of clicks to move
     final int shortDistance = 250; //number of clicks to move sideways
     final int shortDistanceTwo = -250; ;
     final double VELOCITY = 500.0; // number of clicks per second
@@ -42,15 +46,14 @@ public class Auto extends LinearOpMode {
         DcMotorEx frontRightMotor;
         DcMotorEx backLeftMotor;
         DcMotorEx backRightMotor;
+        //DcMotorEx grabberMotor;
         // Declare our motors
         // Make sure your ID's match your configuration
         frontLeftMotor = hardwareMap.get(DcMotorEx.class, "frontLeftMotor");
         frontRightMotor = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
         backLeftMotor = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightMotor = hardwareMap.get(DcMotorEx.class, "backRightMotor");
-
-        ColorSensor colorSensor;
-        colorSensor = hardwareMap.get(ColorSensor.class, "colorSensor");
+        //grabberMotor = hardwareMap.get(DcMotorEx.class, "grabberMotor");
 
         //frontLeftMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
         //frontRightMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
@@ -77,6 +80,28 @@ public class Auto extends LinearOpMode {
 
         //telemetry.addData(" I am here", 10 );
        // telemetry.update();
+        waitForStart();
+
+        //turning left
+        frontLeftMotor.setTargetPosition(shortDistanceTwoA);
+        backLeftMotor.setTargetPosition(shortDistanceA);
+        frontRightMotor.setTargetPosition(shortDistanceA);
+        backRightMotor.setTargetPosition(shortDistanceTwoA);
+
+        frontRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        backLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        backRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        backLeftMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+
+        //velocity set
+
+        frontLeftMotor.setVelocity(VELOCITY);
+        backLeftMotor.setVelocity(VELOCITY);
+        frontRightMotor.setVelocity(VELOCITY);
+        backRightMotor.setVelocity(VELOCITY);
+
+        while ( opModeIsActive())
+
         waitForStart();
 
         //going backwards
@@ -118,10 +143,10 @@ public class Auto extends LinearOpMode {
         backRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
         // Set all motor target positions
-        frontLeftMotor.setTargetPosition(targetDistance);
-        backLeftMotor.setTargetPosition(targetDistance);
-        frontRightMotor.setTargetPosition(targetDistance);
-        backRightMotor.setTargetPosition(targetDistance);
+        frontLeftMotor.setTargetPosition(targetDistanceTwo);
+        backLeftMotor.setTargetPosition(targetDistanceTwo);
+        frontRightMotor.setTargetPosition(targetDistanceTwo);
+        backRightMotor.setTargetPosition(targetDistanceTwo);
 
         // Tell all motors to run to target position
         frontRightMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
@@ -158,7 +183,7 @@ public class Auto extends LinearOpMode {
            //     telemetry.addData("frontLeftMotor", "I'm here");
            //     telemetry.update();
            //     break;
-           // }
+           //
 
         }
 
