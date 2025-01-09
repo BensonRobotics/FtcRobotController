@@ -86,8 +86,8 @@ TeleOP extends LinearOpMode {
         backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightDrive = hardwareMap.get(DcMotorEx.class, "backRightMotor");
 
-        grabberServo = hardwareMap.get(CRServo.class, "grabberServo");
-        grabberServo.setDirection(DcMotorSimple.Direction.REVERSE);
+//        grabberServo = hardwareMap.get(CRServo.class, "grabberServo");
+//        grabberServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         grabberPivot = hardwareMap.get(Servo.class, "grabberPivot");
 
@@ -158,8 +158,11 @@ TeleOP extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
+        telemetry.addData("ready to zero slide", 1);
+        updateTelemetry(telemetry);
         int liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
         liftMotor.setTargetPosition(liftBottomPosition);
+        
 
         ZeroHorizontalSlideEncoder(slideMotorCurrentThreshold);
 
@@ -184,8 +187,8 @@ TeleOP extends LinearOpMode {
             telemetry.addData("velocity:", (velocity.Value()));
             updateTelemetry(telemetry);
 
-            double grabberServoPower = ScaleStickValue(gamepad2.right_stick_y);
-            UpdateServos(grabberServoPower);
+//            double grabberServoPower = ScaleStickValue(gamepad2.right_stick_y);
+//            UpdateServos(grabberServoPower);
 
             UpdateLiftMotor(liftBottomPosition, liftMotorCurrentThreshold);
 
@@ -200,6 +203,8 @@ TeleOP extends LinearOpMode {
 
             if (gamepad1.start) {
                 ZeroHorizontalSlideEncoder(slideMotorCurrentThreshold);
+            } else if (gamepad1.back) {
+                liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
             }
         }
 
@@ -342,20 +347,22 @@ TeleOP extends LinearOpMode {
     }
 
     private void ZeroHorizontalSlideEncoder(double slideMotorCurrentThreshold) throws InterruptedException {
+        telemetry.addData("zeroing             slide", 1);
+        updateTelemetry(telemetry);
         horizontalSlideMotor.setPower(0);
-        grabberPivot.setPosition(0.5);
-        while (grabberPivot.getPosition() != 0.5) {
-            telemetry.addData("Homing grabber pivot", 1);
-        }
+//        grabberPivot.setPosition(0.5);
+//        while (grabberPivot.getPosition() != 0.5) {
+//            telemetry.addData("Homing grabber pivot", 1);
+//        }
 
         horizontalSlideMotor.setPower(-1);
-        while (!IsOverloaded(horizontalSlideMotor, slideMotorCurrentThreshold + 1000)) {
+        while (!IsOverloaded(horizontalSlideMotor, slideMotorCurrentThreshold)) {
             telemetry.addData("zeroing slide", 1);
             updateTelemetry(telemetry);
         }
-        horizontalSlideMotor.setPower(0.0);
+        horizontalSlideMotor.setPower(0);
 
-        telemetry.addData("slide in position: ", horizontalSlideMotor.getCurrentPosition());
+        telemetry.addData("slide in position ", horizontalSlideMotor.getCurrentPosition());
         horizontalSlideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         horizontalSlideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
@@ -366,7 +373,7 @@ TeleOP extends LinearOpMode {
     private void UpdateLiftMotor(int bottomPosition, double currentThreshold) {
         ArrayList<Integer> liftPositions = new ArrayList<Integer>(3);
         liftPositions.add(bottomPosition);
-        liftPositions.add(bottomPosition + 3000);
+        liftPositions.add(bottomPosition + 2000);
         liftPositions.add(bottomPosition + 4200);
 
         if (gamepad1.a || gamepad1.x || gamepad1.y) {
@@ -412,7 +419,9 @@ TeleOP extends LinearOpMode {
     // is at the bottom of its travel. This is necessary because of the inevitable drift in the encoders.
     private int GetLiftBottomPosition(double currentThreshold) {
         while (!IsOverloaded(liftMotor, currentThreshold)) {
-            liftMotor.setPower(-0.2);
+            liftMotor.setPower(-0.5);
+            telemetry.addData("zeroing lift", 1);
+            updateTelemetry(telemetry);
         }
         liftMotor.setPower(0.0);
 

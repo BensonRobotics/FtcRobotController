@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
@@ -47,6 +48,9 @@ public class Auto extends LinearOpMode {
         frontRightMotor = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
         backLeftMotor = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightMotor = hardwareMap.get(DcMotorEx.class, "backRightMotor");
+
+        ColorSensor colorSensor;
+        colorSensor = hardwareMap.get(ColorSensor.class, "colorSensor");
 
         //frontLeftMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
         //frontRightMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
@@ -107,7 +111,7 @@ public class Auto extends LinearOpMode {
 
         }
 
-        //set them to zore again
+        //set them to zero again
         frontLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         frontRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
