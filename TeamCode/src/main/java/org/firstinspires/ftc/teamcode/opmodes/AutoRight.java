@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -41,7 +42,7 @@ public class AutoRight extends LinearOpMode {
     final double VELOCITY = 500.0; // number of clicks per second
     public static final double NEW_POS_P_DRIVE = 1.0;
 
-    public void runOpMode(){
+    public void runOpMode() {
         DcMotorEx frontLeftMotor;
         DcMotorEx frontRightMotor;
         DcMotorEx backLeftMotor;
@@ -53,6 +54,9 @@ public class AutoRight extends LinearOpMode {
         frontRightMotor = hardwareMap.get(DcMotorEx.class, "frontRightMotor");
         backLeftMotor = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightMotor = hardwareMap.get(DcMotorEx.class, "backRightMotor");
+
+        ColorSensor colorSensor;
+        colorSensor = hardwareMap.get(ColorSensor.class, "colorSensor");
         //grabberMotor = hardwareMap.get(DcMotorEx.class, "grabberMotor");
 
         //frontLeftMotor.setPositionPIDFCoefficients(NEW_POS_P_DRIVE);
@@ -67,10 +71,10 @@ public class AutoRight extends LinearOpMode {
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Calculations to convert linear distance in mm to encoder steps
-        double stepsPerMMDrive = 537.7/104.0*Math.PI;
+        double stepsPerMMDrive = 537.7 / 104.0 * Math.PI;
         // Set targetSteps to distance in MM, converted to encoder steps
         // (int) casts float value to int for rounding down
-        int targetSteps = (int) (stepsPerMMDrive*1000);
+        int targetSteps = (int) (stepsPerMMDrive * 1000);
 
         // Zero all motor encoders
         frontLeftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -79,7 +83,7 @@ public class AutoRight extends LinearOpMode {
         backRightMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
         //telemetry.addData(" I am here", 10 );
-       // telemetry.update();
+        // telemetry.update();
         waitForStart();
 
         //turning left
@@ -100,9 +104,9 @@ public class AutoRight extends LinearOpMode {
         frontRightMotor.setVelocity(VELOCITY);
         backRightMotor.setVelocity(VELOCITY);
 
-        while ( opModeIsActive())
 
         waitForStart();
+
 
         //going backwards
         frontLeftMotor.setTargetPosition(shortDistanceTwo);
@@ -121,7 +125,7 @@ public class AutoRight extends LinearOpMode {
         frontRightMotor.setVelocity(VELOCITY);
         backRightMotor.setVelocity(VELOCITY);
 
-        while ( opModeIsActive()          &&
+        while (opModeIsActive()          &&
                 frontLeftMotor.isBusy()   &&
                 backLeftMotor.isBusy()    &&
                 frontRightMotor.isBusy()  &&
