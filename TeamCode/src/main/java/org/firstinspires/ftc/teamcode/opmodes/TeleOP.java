@@ -8,7 +8,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -44,9 +43,9 @@ TeleOP extends LinearOpMode {
     private DcMotorEx backLeftDrive = null;
     private DcMotorEx backRightDrive = null;
 
-    private CRServo grabberServo = null;
+    private Servo grabberServo = null;
 
-    private Servo grabberPivot = null;
+    private Servo armPivotServo = null;
 
     private DcMotorEx liftMotor = null;
 
@@ -86,10 +85,9 @@ TeleOP extends LinearOpMode {
         backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightDrive = hardwareMap.get(DcMotorEx.class, "backRightMotor");
 
-        grabberServo = hardwareMap.get(CRServo.class, "grabberServo");
-        grabberServo.setDirection(DcMotorSimple.Direction.REVERSE);
+        grabberServo = hardwareMap.get(Servo.class, "grabberServo");
 
-        grabberPivot = hardwareMap.get(Servo.class, "grabberPivot");
+        armPivotServo = hardwareMap.get(Servo.class, "armPivotServo");
 
         liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
 
@@ -142,7 +140,7 @@ TeleOP extends LinearOpMode {
         backLeftDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
 
         // Limit servo motion to 0 - 175 degrees of 300 degrees maximum rotation
-        grabberPivot.scaleRange(0, (175.0 / 300.0));
+        armPivotServo.scaleRange(0, (175.0 / 300.0));
 
         /*April Tag Detection*/
         InitAprilTag();
@@ -158,8 +156,11 @@ TeleOP extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
+        telemetry.addData("ready to zero slide", 1);
+        updateTelemetry(telemetry);
         int liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
         liftMotor.setTargetPosition(liftBottomPosition);
+        
 
         ZeroHorizontalSlideEncoder(slideMotorCurrentThreshold);
 
@@ -177,15 +178,15 @@ TeleOP extends LinearOpMode {
             double rightStickY = ScaleStickValue(-gamepad1.right_stick_y);  // Note: pushing stick forward gives negative value
             double rightStickX = ScaleStickValue(gamepad1.right_stick_x);
 
-            Vector2 velocity = new Vector2(leftStickX, leftStickY);
+            Vector2 velocity = new Vector2(leftStickX, -leftStickY);
 
             double rotation = rightStickX;
 
             telemetry.addData("velocity:", (velocity.Value()));
             updateTelemetry(telemetry);
 
-            double grabberServoPower = ScaleStickValue(gamepad2.right_stick_y);
-            UpdateServos(grabberServoPower);
+            double grabberServoPosition = ScaleStickValue(gamepad2.right_stick_y);
+            UpdateServos(grabberServoPosition);
 
             UpdateLiftMotor(liftBottomPosition, liftMotorCurrentThreshold);
 
@@ -200,6 +201,8 @@ TeleOP extends LinearOpMode {
 
             if (gamepad1.start) {
                 ZeroHorizontalSlideEncoder(slideMotorCurrentThreshold);
+            } else if (gamepad1.back) {
+                liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
             }
         }
 
@@ -306,16 +309,17 @@ TeleOP extends LinearOpMode {
 
     // Servo
     private void UpdateServos(double servo1Power) {
-        grabberServo.setPower(servo1Power);
+//        grabberServo.setPosition(servo1Power);
+        telemetry.addData("Grabber Position", grabberServo.getPosition());
 
         // Grabber pivot code.
         // position 0 is down to floor, position 1 is 90 degrees up to sample transfer
         // Also, horizontal slide cannot retract fully if grabberPivot is below 90 degrees
         // I should make the horizontal slide retract button also raise grabberPivot to 90 degrees
         if (gamepad1.dpad_up) {
-            grabberPivot.setPosition(0.5);
+            armPivotServo.setPosition(1.2);
         } else if (gamepad1.dpad_down) {
-            grabberPivot.setPosition(0.3);
+            armPivotServo.setPosition(1);
         }
     }
 
@@ -342,20 +346,22 @@ TeleOP extends LinearOpMode {
     }
 
     private void ZeroHorizontalSlideEncoder(double slideMotorCurrentThreshold) throws InterruptedException {
+        telemetry.addData("zeroing             slide", 1);
+        updateTelemetry(telemetry);
         horizontalSlideMotor.setPower(0);
-        grabberPivot.setPosition(0.5);
-        while (grabberPivot.getPosition() != 0.5) {
-            telemetry.addData("Homing grabber pivot", 1);
-        }
+//        grabberPivot.setPosition(0.5);
+//        while (grabberPivot.getPosition() != 0.5) {
+//            telemetry.addData("Homing grabber pivot", 1);
+//        }
 
         horizontalSlideMotor.setPower(-1);
-        while (!IsOverloaded(horizontalSlideMotor, slideMotorCurrentThreshold + 1000)) {
+        while (!IsOverloaded(horizontalSlideMotor, slideMotorCurrentThreshold)) {
             telemetry.addData("zeroing slide", 1);
             updateTelemetry(telemetry);
         }
-        horizontalSlideMotor.setPower(0.0);
+        horizontalSlideMotor.setPower(0);
 
-        telemetry.addData("slide in position: ", horizontalSlideMotor.getCurrentPosition());
+        telemetry.addData("slide in position ", horizontalSlideMotor.getCurrentPosition() + 30);
         horizontalSlideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         horizontalSlideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
@@ -366,7 +372,7 @@ TeleOP extends LinearOpMode {
     private void UpdateLiftMotor(int bottomPosition, double currentThreshold) {
         ArrayList<Integer> liftPositions = new ArrayList<Integer>(3);
         liftPositions.add(bottomPosition);
-        liftPositions.add(bottomPosition + 3000);
+        liftPositions.add(bottomPosition + 2000);
         liftPositions.add(bottomPosition + 4200);
 
         if (gamepad1.a || gamepad1.x || gamepad1.y) {
@@ -412,7 +418,9 @@ TeleOP extends LinearOpMode {
     // is at the bottom of its travel. This is necessary because of the inevitable drift in the encoders.
     private int GetLiftBottomPosition(double currentThreshold) {
         while (!IsOverloaded(liftMotor, currentThreshold)) {
-            liftMotor.setPower(-0.2);
+            liftMotor.setPower(-0.5);
+            telemetry.addData("zeroing lift", 1);
+            updateTelemetry(telemetry);
         }
         liftMotor.setPower(0.0);
 
