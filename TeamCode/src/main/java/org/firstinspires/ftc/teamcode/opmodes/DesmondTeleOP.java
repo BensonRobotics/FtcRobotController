@@ -24,7 +24,7 @@ DesmondTeleOP extends LinearOpMode {
     float NEW_D_DRIVE = 0.1F;
     float NEW_F_DRIVE = 10.0F;
 
-    float NEW_P_ROTATION = 5.0F;
+    float NEW_P_ROTATION = 10.0F;
 
     // driveTicksPerSecond = driveMotorRPM * driveMotorStepsPerRevolution / 60
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
@@ -56,6 +56,9 @@ DesmondTeleOP extends LinearOpMode {
     double rotationPower = 0;
     boolean isMaintainingHeading = true;
     double botHeadingMaintain = 0;
+    float headingMaintainSpeedLimit = 0.25F;
+
+    boolean useFieldCentricRotation = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -67,8 +70,10 @@ DesmondTeleOP extends LinearOpMode {
         DcMotorEx backRightMotor;
         DcMotorEx liftMotor;
         DcMotorEx slideMotor;
-        CRServo grabberServo;
+        Servo grabberServo;
         Servo grabberPivot;
+        Servo intakePivot;
+        CRServo intakeServo;
 
         // Assign our devices
         // Make sure your ID's match your configuration
@@ -78,8 +83,10 @@ DesmondTeleOP extends LinearOpMode {
         backRightMotor = hardwareMap.get(DcMotorEx.class, "backRightMotor");
         liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
         slideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
-        grabberServo = hardwareMap.get(CRServo.class, "grabberServo");
+        grabberServo = hardwareMap.get(Servo.class, "grabberServo");
         grabberPivot = hardwareMap.get(Servo.class, "grabberPivot");
+        intakePivot = hardwareMap.get(Servo.class, "intakePivot");
+        intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
 
         // Apply motor PIDF coefficients
         frontLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
@@ -91,7 +98,7 @@ DesmondTeleOP extends LinearOpMode {
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        grabberServo.setDirection(DcMotorSimple.Direction.REVERSE);
+        grabberServo.setDirection(Servo.Direction.REVERSE);
         grabberPivot.setDirection(Servo.Direction.REVERSE);
 
         // Retrieve the IMU from the hardware map
@@ -130,9 +137,6 @@ DesmondTeleOP extends LinearOpMode {
         liftMotor.setTargetPosition(5);
         // Default is 5 ticks
         liftMotor.setTargetPositionTolerance(20);
-
-        // Make sure motors don't run from the get-go
-        grabberServo.setPower(0);
 
         // Set lift motor current trip
         liftMotor.setCurrentAlert(liftCurrentAlert, CurrentUnit.MILLIAMPS);
@@ -178,7 +182,7 @@ DesmondTeleOP extends LinearOpMode {
                 driveHeading = botHeading;
             }
 
-            if (gamepad1.right_stick_x == 0) {
+            if (gamepad1.right_stick_x == 0 && useFieldCentricRotation) {
                 if (!isMaintainingHeading) {
                     botHeadingMaintain = botHeading;
                     isMaintainingHeading = true;
@@ -189,22 +193,22 @@ DesmondTeleOP extends LinearOpMode {
                     } else if (rotationError < -Math.PI) {
                         rotationError += 2 * Math.PI;
                     }
-                    rotationPower = (driveSpeedLimit * rotationError * NEW_P_ROTATION) / Math.PI;
+                    rotationPower = Math.min((driveSpeedLimit * rotationError * NEW_P_ROTATION) / Math.PI, headingMaintainSpeedLimit);
                 }
             } else {
-                rotationPower = rx;
+                rotationPower = rx * driveSpeedLimit;
                 isMaintainingHeading = false;
             }
 
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
             // https://www.desmos.com/calculator/3gzff5bzbn
-            double frontLeftBackRightMotors = driveMagnitude * Math.sin(driveAngle - driveHeading + 0.25 * Math.PI);
-            double frontRightBackLeftMotors = driveMagnitude * -Math.sin(driveAngle - driveHeading - 0.25 * Math.PI);
-            double frontLeftPower = frontLeftBackRightMotors + Math.min(rotationPower, 1) * driveSpeedLimit;
-            double backLeftPower = frontRightBackLeftMotors + Math.min(rotationPower, 1) * driveSpeedLimit;
-            double frontRightPower = frontRightBackLeftMotors - Math.min(rotationPower, 1) * driveSpeedLimit;
-            double backRightPower = frontLeftBackRightMotors - Math.min(rotationPower, 1) * driveSpeedLimit;
+            double frontLeftBackRightMotors = driveSpeedLimit * driveMagnitude * Math.sin(driveAngle - driveHeading + 0.25 * Math.PI);
+            double frontRightBackLeftMotors = driveSpeedLimit * driveMagnitude * -Math.sin(driveAngle - driveHeading - 0.25 * Math.PI);
+            double frontLeftPower = frontLeftBackRightMotors + rotationPower;
+            double backLeftPower = frontRightBackLeftMotors + rotationPower;
+            double frontRightPower = frontRightBackLeftMotors - rotationPower;
+            double backRightPower = frontLeftBackRightMotors - rotationPower;
 
             // The Great Cleaving approaches
             // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
@@ -286,24 +290,20 @@ DesmondTeleOP extends LinearOpMode {
             // Grabber servo code.
             // Code arranged in latch formation in case you want either direction to latch
             if (gamepad1.right_bumper) { // When you press right bumper
-                grabberServo.setPower(1);
-            } else if (grabberServo.getPower()>0){ // When you let go of right bumper
-                grabberServo.setPower(0);
-            }
-            if (gamepad1.left_bumper) { // When you press left bumper
-                grabberServo.setPower(-1);
-            } else if (grabberServo.getPower()<0) { // When you let go of left bumper
-                grabberServo.setPower(0);
+                intakeServo.setPower(1);
+            } else if (gamepad1.left_bumper) { // When you press left bumper
+                intakeServo.setPower(-1);
+            } else { // When you don't press either bumper
+                intakeServo.setPower(0);
             }
 
             // Grabber pivot code.
             // position 0 is down to floor, position 1 is 90 degrees up to sample transfer
             // Also, horizontal slide cannot retract fully if grabberPivot is below 90 degrees
-            // I should make the horizontal slide retract button also raise grabberPivot to 90 degrees
             if (gamepad1.dpad_up) {
-                grabberPivot.setPosition(0.75);
+                grabberPivot.setPosition(0.6761);
             } else if (gamepad1.dpad_down) {
-                grabberPivot.setPosition(0);
+                grabberPivot.setPosition(0.4639);
             }
 
             // Linear slide code
@@ -317,9 +317,6 @@ DesmondTeleOP extends LinearOpMode {
                 } else { // If lift is running into a limit
                     slideMotor.setVelocity(0);
                     isSlideRestricted = true;
-                }
-                if (slidePower < -0.5) { // Bring grabber up for slide retraction
-                    grabberPivot.setPosition(0.75);
                 }
             } else { // If using discrete slide control
                 // DO NOT USE INVERSE KINEMATICS YET

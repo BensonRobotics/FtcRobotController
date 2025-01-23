@@ -86,8 +86,8 @@ import java.util.concurrent.TimeUnit;
  */
 
 @TeleOp(name="Omni Drive To AprilTag", group = "Concept")
-//@Disabled
-public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
+@Disabled
+public class RobotAutoDrivetoAprilTagOmni extends LinearOpMode
 {
     // Adjust these numbers to suit your robot.
     final double DESIRED_DISTANCE = 12.0; //  this is how close the camera should get to the target (inches)
@@ -130,7 +130,7 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
         leftFrontDrive  = hardwareMap.get(DcMotor.class, "frontLeftMotor");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "frontRightMotor");
         leftBackDrive  = hardwareMap.get(DcMotor.class, "backLeftMotor");
-        rightBackDrive = hardwareMap.get(DcMotor.class, "backRightMotor");
+        rightBackDrive = hardwareMap.get(DcMotor.class, "backLeftMotor");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // When run, this OpMode should start both motors driving forward. So adjust these two lines based on your first test drive.
@@ -187,8 +187,7 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
             }
 
             // If Left Bumper is being pressed, AND we have found the desired target, Drive to target Automatically .
-            if (true && targetFound) {
-               // if (gamepad1.left_bumper && targetFound) {
+            if (gamepad1.left_bumper && targetFound) {
 
                 // Determine heading, range and Yaw (tag image rotation) error so we can use them to control the robot automatically.
                 double  rangeError      = (desiredTag.ftcPose.range - DESIRED_DISTANCE);
@@ -215,7 +214,6 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
             moveRobot(drive, strafe, turn);
             sleep(10);
         }
-        moveRobot(0.0,0.0,0.45);
     }
 
     /**
@@ -251,11 +249,8 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
         rightFrontDrive.setPower(rightFrontPower);
         leftBackDrive.setPower(leftBackPower);
         rightBackDrive.setPower(rightBackPower);
-
     }
-    public void turnRobot(double x, double y, double yaw) {
 
-    }
     /**
      * Initialize the AprilTag processor.
      */
