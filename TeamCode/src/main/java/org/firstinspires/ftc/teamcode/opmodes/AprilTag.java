@@ -85,7 +85,7 @@ import java.util.concurrent.TimeUnit;
  *
  */
 
-@TeleOp(name="Omni Drive To AprilTag 2", group = "Concept")
+@TeleOp(name="Omni Drive To AprilTag", group = "Concept")
 //@Disabled
 public class AprilTag extends LinearOpMode
 {

@@ -322,19 +322,19 @@ public class TeleOP extends LinearOpMode {
         telemetry.addData("Intake Pivot", intakePivot.getPosition());
 
 
-        if (gamepad2.a) {
-            intakePivot.setPosition(0.942); // down
-            grabberPivot.setPosition(0.62); //neutral
-            grabberServo.setPosition(0.79); //open
-        } else if (gamepad2.x) {
-            intakePivot.setPosition("transfer"); //transfer
-            grabberPivot.setPosition("transfer"); //transfer
-            grabberServo.setPosition("closed"); //closed
-        } else if (gamepad2.y) {
-            intakePivot.setPosition("down"); //down
-            grabberPivot.setPosition("depo"); //depo
-            grabberServo.setPosition("open"); //open
-        }
+//        if (gamepad2.a) {
+//            intakePivot.setPosition(0.942); // down
+//            grabberPivot.setPosition(0.62); //neutral
+//            grabberServo.setPosition(0.79); //open
+//        } else if (gamepad2.x) {
+//            intakePivot.setPosition("transfer"); //transfer
+//            grabberPivot.setPosition("transfer"); //transfer
+//            grabberServo.setPosition("closed"); //closed
+//        } else if (gamepad2.y) {
+//            intakePivot.setPosition("down"); //down
+//            grabberPivot.setPosition("depo"); //depo
+//            grabberServo.setPosition("open"); //open
+//        }
 
         // Grabber pivot code.
         // position 0 is down to floor, position 1 is 90 degrees up to sample transfer

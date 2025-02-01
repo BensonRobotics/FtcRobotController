@@ -85,8 +85,8 @@ import java.util.concurrent.TimeUnit;
  *
  */
 
-@TeleOp(name="Omni Drive To AprilTag", group = "Concept")
-@Disabled
+@TeleOp(name="Omni Drive To AprilTag 2", group = "Concept")
+//@Disabled
 public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
 {
     // Adjust these numbers to suit your robot.
@@ -130,13 +130,13 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
         leftFrontDrive  = hardwareMap.get(DcMotor.class, "frontLeftMotor");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "frontRightMotor");
         leftBackDrive  = hardwareMap.get(DcMotor.class, "backLeftMotor");
-        rightBackDrive = hardwareMap.get(DcMotor.class, "backLeftMotor");
+        rightBackDrive = hardwareMap.get(DcMotor.class, "backRightMotor");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // When run, this OpMode should start both motors driving forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
-        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
-        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
