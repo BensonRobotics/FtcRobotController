@@ -29,10 +29,10 @@
 
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -85,9 +85,9 @@ import java.util.concurrent.TimeUnit;
  *
  */
 
-@TeleOp(name="Omni Drive To AprilTag 2", group = "Concept")
+@TeleOp(name="Omni Drive To AprilTag 3", group = "Concept")
 //@Disabled
-public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
+public class RobotAutoDriveToAprilTagOmni2 extends LinearOpMode
 {
     // Adjust these numbers to suit your robot.
     final double DESIRED_DISTANCE = 12.0; //  this is how close the camera should get to the target (inches)
@@ -109,7 +109,7 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
     private DcMotor rightBackDrive   = null;  //  Used to control the right back drive wheel
 
     private static final boolean USE_WEBCAM = true;  // Set true to use a webcam, or false for a phone camera
-    private static final int DESIRED_TAG_ID = -1;     // Choose the tag you want to approach or set to -1 for ANY tag.
+    private static final int DESIRED_TAG_ID = 16;     // Choose the tag you want to approach or set to -1 for ANY tag.
     private VisionPortal visionPortal;               // Used to manage the video source.
     private AprilTagProcessor aprilTag;              // Used for managing the AprilTag detection process.
     private AprilTagDetection desiredTag = null;     // Used to hold the data for a detected AprilTag
@@ -137,8 +137,8 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
         leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
 
         if (USE_WEBCAM)
             setManualExposure(6, 250);  // Use low exposure time to reduce motion blur
@@ -148,6 +148,8 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
         telemetry.addData(">", "Touch START to start OpMode");
         telemetry.update();
         waitForStart();
+        // moveRobot(0.5,0.0,0.0);
+        //sleep(5000);
 
         while (opModeIsActive())
         {
@@ -156,11 +158,13 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
 
             // Step through the list of detected tags and look for a matching tag
             List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+            //telemetry.addData(">", "Loaded currentDetections");
+            //telemetry.update();
             for (AprilTagDetection detection : currentDetections) {
                 // Look to see if we have size info on this tag.
                 if (detection.metadata != null) {
                     //  Check to see if we want to track towards this tag.
-                    if ((DESIRED_TAG_ID < 0) || (detection.id == DESIRED_TAG_ID)) {
+                    if ((true) || (detection.id == DESIRED_TAG_ID)) {
                         // Yes, we want to use this tag.
                         targetFound = true;
                         desiredTag = detection;
@@ -177,7 +181,7 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
 
             // Tell the driver what we see, and what to do.
             if (targetFound) {
-                telemetry.addData("\n>","HOLD Left-Bumper to Drive to Target\n");
+                //telemetry.addData("\n>","HOLD Left-Bumper to Drive to Target\n");
                 telemetry.addData("Found", "ID %d (%s)", desiredTag.id, desiredTag.metadata.name);
                 telemetry.addData("Range",  "%5.1f inches", desiredTag.ftcPose.range);
                 telemetry.addData("Bearing","%3.0f degrees", desiredTag.ftcPose.bearing);
@@ -187,27 +191,32 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
             }
 
             // If Left Bumper is being pressed, AND we have found the desired target, Drive to target Automatically .
-            if (gamepad1.left_bumper && targetFound) {
+               if (true && targetFound) {  // ** JCD **
+               //if (gamepad1.left_bumper && targetFound) {
+                    // Determine heading, range and Yaw (tag image rotation) error so we can use them to control the robot automatically.
+                    double  rangeError      = (desiredTag.ftcPose.range - DESIRED_DISTANCE);
+                    double  headingError    = (desiredTag.ftcPose.bearing - DESIRED_DISTANCE);
+                    double  yawError        = (desiredTag.ftcPose.yaw - DESIRED_DISTANCE);
 
-                // Determine heading, range and Yaw (tag image rotation) error so we can use them to control the robot automatically.
-                double  rangeError      = (desiredTag.ftcPose.range - DESIRED_DISTANCE);
-                double  headingError    = desiredTag.ftcPose.bearing;
-                double  yawError        = desiredTag.ftcPose.yaw;
+                    //if (rangeError, headingError, yawError  ), get (DESIRED_DISTANCE) then (drive, turn, strafe = 0)
 
-                // Use the speed and turn "gains" to calculate how we want the robot to move.
-                drive  = Range.clip(rangeError * SPEED_GAIN, -MAX_AUTO_SPEED, MAX_AUTO_SPEED);
-                turn   = Range.clip(headingError * TURN_GAIN, -MAX_AUTO_TURN, MAX_AUTO_TURN) ;
-                strafe = Range.clip(-yawError * STRAFE_GAIN, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE);
+                    // Use the speed and turn "gains" to calculate how we want the robot to move.
+                    drive  = Range.clip(rangeError * SPEED_GAIN, -MAX_AUTO_SPEED, MAX_AUTO_SPEED);
+                    turn   = Range.clip(headingError * TURN_GAIN, -MAX_AUTO_TURN, MAX_AUTO_TURN) ;
+                    strafe = Range.clip(-yawError * STRAFE_GAIN, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE);
 
-                telemetry.addData("Auto","Drive %5.2f, Strafe %5.2f, Turn %5.2f ", drive, strafe, turn);
-            } else {
+                    telemetry.addData("Auto","Drive %5.2f, Strafe %5.2f, Turn %5.2f ", drive, strafe, turn);
+                } else {
 
-                // drive using manual POV Joystick mode.  Slow things down to make the robot more controlable.
-                drive  = - MAX_AUTO_SPEED / 2.0;  // Reduce drive rate to 50%.
-                strafe = - MAX_AUTO_STRAFE / 2.0;  // Reduce strafe rate to 50%.
-                turn   = - MAX_AUTO_TURN / 3.0;  // Reduce turn rate to 33%.
-                telemetry.addData("Manual","Drive %5.2f, Strafe %5.2f, Turn %5.2f ", drive, strafe, turn);
-            }
+                    // drive using manual POV Joystick mode.  Slow things down to make the robot more controlable.
+                   // drive  = - MAX_AUTO_SPEED / 2.0;  // Reduce drive rate to 50%.
+                    // strafe = - 0.0 / 2.0;  // Reduce strafe rate to 50%.  **JCD**
+                    // turn   = - 0.0 / 3.0;  // Reduce turn rate to 33%.  **JCD**
+                    //strafe = - MAX_AUTO_STRAFE / 2.0;  // Reduce strafe rate to 50%.
+                    //turn   = - MAX_AUTO_TURN / 3.0;  // Reduce turn rate to 33%.
+                    telemetry.addData("Manual","Drive %5.2f, Strafe %5.2f, Turn %5.2f ", drive, strafe, turn);
+                }
+
             telemetry.update();
 
             // Apply desired axes motions to the drivetrain.
@@ -215,6 +224,7 @@ public class RobotAutoDriveToAprilTagOmni extends LinearOpMode
             sleep(10);
         }
     }
+
 
     /**
      * Move robot according to desired axes motions
