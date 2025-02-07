@@ -85,7 +85,7 @@ import java.util.concurrent.TimeUnit;
  *
  */
 
-@TeleOp(name="Omni Drive To AprilTag 3", group = "Concept")
+@TeleOp(name="Omni Drive To AprilTag 2", group = "Concept")
 //@Disabled
 public class RobotAutoDriveToAprilTagOmni2 extends LinearOpMode
 {
@@ -120,6 +120,9 @@ public class RobotAutoDriveToAprilTagOmni2 extends LinearOpMode
         double  drive           = 0;        // Desired forward power/speed (-1 to +1)
         double  strafe          = 0;        // Desired strafe power/speed (-1 to +1)
         double  turn            = 0;        // Desired turning power/speed (-1 to +1)
+        double  rangeError      = 0;
+        double  headingError    = 0;
+        double  yawError        = 0;
 
         // Initialize the Apriltag Detection process
         initAprilTag();
@@ -191,12 +194,12 @@ public class RobotAutoDriveToAprilTagOmni2 extends LinearOpMode
             }
 
             // If Left Bumper is being pressed, AND we have found the desired target, Drive to target Automatically .
-               if (true && targetFound) {  // ** JCD **
+               if (targetFound) {  // ** JCD **
                //if (gamepad1.left_bumper && targetFound) {
                     // Determine heading, range and Yaw (tag image rotation) error so we can use them to control the robot automatically.
-                    double  rangeError      = (desiredTag.ftcPose.range - DESIRED_DISTANCE);
-                    double  headingError    = (desiredTag.ftcPose.bearing - DESIRED_DISTANCE);
-                    double  yawError        = (desiredTag.ftcPose.yaw - DESIRED_DISTANCE);
+                    rangeError      = (desiredTag.ftcPose.range - DESIRED_DISTANCE);
+                    headingError    = (desiredTag.ftcPose.bearing - DESIRED_DISTANCE);
+                    yawError        = (desiredTag.ftcPose.yaw - DESIRED_DISTANCE);
 
                     //if (rangeError, headingError, yawError  ), get (DESIRED_DISTANCE) then (drive, turn, strafe = 0)
 
@@ -206,15 +209,13 @@ public class RobotAutoDriveToAprilTagOmni2 extends LinearOpMode
                     strafe = Range.clip(-yawError * STRAFE_GAIN, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE);
 
                     telemetry.addData("Auto","Drive %5.2f, Strafe %5.2f, Turn %5.2f ", drive, strafe, turn);
+                    telemetry.addData("    ","rangeError %5.2f, yawError %5.2f, headingError %5.2f ", rangeError, yawError, headingError);
                 } else {
-
-                    // drive using manual POV Joystick mode.  Slow things down to make the robot more controlable.
-                   // drive  = - MAX_AUTO_SPEED / 2.0;  // Reduce drive rate to 50%.
-                    // strafe = - 0.0 / 2.0;  // Reduce strafe rate to 50%.  **JCD**
-                    // turn   = - 0.0 / 3.0;  // Reduce turn rate to 33%.  **JCD**
-                    //strafe = - MAX_AUTO_STRAFE / 2.0;  // Reduce strafe rate to 50%.
-                    //turn   = - MAX_AUTO_TURN / 3.0;  // Reduce turn rate to 33%.
-                    telemetry.addData("Manual","Drive %5.2f, Strafe %5.2f, Turn %5.2f ", drive, strafe, turn);
+                    // stop the 'bot.
+                    drive  = - 0.0;  // **JCD**
+                    strafe = - 0.0;  //  **JCD**
+                    turn   = - 0.0;  //   **JCD**
+                    telemetry.addData("No Tag","Drive %5.2f, Strafe %5.2f, Turn %5.2f ", drive, strafe, turn);
                 }
 
             telemetry.update();
@@ -223,6 +224,7 @@ public class RobotAutoDriveToAprilTagOmni2 extends LinearOpMode
             moveRobot(drive, strafe, turn);
             sleep(10);
         }
+
     }
 
 
