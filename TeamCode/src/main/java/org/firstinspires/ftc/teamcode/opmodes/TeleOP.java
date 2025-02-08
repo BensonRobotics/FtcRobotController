@@ -135,7 +135,7 @@ public class TeleOP extends LinearOpMode {
 
         double liftMotorCurrentThreshold = 3000.0;
 
-        double slideMotorCurrentThreshold = 3000.0;
+        double slideMotorCurrentThreshold = 2000.0;
 
         /* Orientation Variables */
 
@@ -229,6 +229,10 @@ public class TeleOP extends LinearOpMode {
             }
             if (isLiftHoming) {
                 GetLiftBottomPosition(liftMotorCurrentThreshold);
+            }
+
+            if (horizontalSlideMotor.getCurrent(CurrentUnit.MILLIAMPS) > slideMotorCurrentThreshold) {
+                horizontalSlideMotor.setPower(0);
             }
         }
 
@@ -442,7 +446,7 @@ public class TeleOP extends LinearOpMode {
         if ((horizontalSlideMotor.getCurrentPosition() <= 0 &&
                 horizontalSlideVelocity < 0) ||
                 (horizontalSlideMotor.getCurrentPosition() >= 2450 &&
-                        horizontalSlideVelocity > 0) || IsOverloaded(horizontalSlideMotor, slideMotorCurrentThreshold)) {
+                        horizontalSlideVelocity > 0)) {
             horizontalSlideVelocity = 0;
             telemetry.addData("slideStopped", 1);
         }
