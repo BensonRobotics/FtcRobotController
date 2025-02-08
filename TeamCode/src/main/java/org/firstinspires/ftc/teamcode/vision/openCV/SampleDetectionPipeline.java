@@ -1,14 +1,25 @@
-package org.firstinspires.ftc.teamcode.vision;
+package org.firstinspires.ftc.teamcode.vision.openCV;
 
+import static org.firstinspires.ftc.vision.opencv.ColorSpace.YCrCb;
+
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvPipeline;
 
+import java.util.Vector;
 
-class SampleDetectionPipeline extends OpenCvPipeline {
+
+public class SampleDetectionPipeline extends OpenCvPipeline {
     boolean viewportPaused;
+
+    double[] latestResults = {-999, -999};
+
+    Mat YCrCb = new Mat();
+    Mat Cb = new Mat();
+
 
     /*
      * NOTE: if you wish to use additional Mat objects in your processing pipeline, it is
@@ -33,23 +44,23 @@ class SampleDetectionPipeline extends OpenCvPipeline {
         /*
          * Draw a simple box around the middle 1/2 of the entire frame
          */
-        Imgproc.rectangle(
-                input,
-                new Point(
-                        input.cols()/4f,
-                        input.rows()/4f),
-                new Point(
-                        input.cols()*(3f/4f),
-                        input.rows()*(3f/4f)),
-                new Scalar(0, 255, 0), 4);
+        inputToCb(input);
 
 
+        // Find ~3 closest areas of high yellow intensity, then look at those areas and determine what orientation the samples within them are in,
+        // then find the most optimally orientated one and get its field coordinates and rotation, and store them to the latestResults variable
 
-        /**
-         * NOTE: to see how to get data from your pipeline to your OpMode as well as how
-         * to change which stage of the pipeline is rendered to the viewport when it is
-         * tapped, please see {@link PipelineStageSwitchingExample}
-         */
-        return input;
+
+        return Cb;
     }
+
+    void inputToCb(Mat input)
+    {
+        Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
+        Core.extractChannel(YCrCb, Cb, 2);
+    }
+
+//    public Vector2 getLatestResult() {
+//        return latestResult;
+//    }
 }

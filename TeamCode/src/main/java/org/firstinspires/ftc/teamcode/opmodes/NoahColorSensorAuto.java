@@ -53,6 +53,10 @@ public class NoahColorSensorAuto extends LinearOpMode {
     private DcMotorEx frontRightDrive = null;
     private DcMotorEx backLeftDrive = null;
     private DcMotorEx backRightDrive = null;
+    private ElapsedTime runtime = new ElapsedTime();
+
+    double driveTicksPerSecond = (312.0 * 537.7 / 60.0);
+
 
     private NormalizedColorSensor colorSensor = null;
 
@@ -70,20 +74,19 @@ public class NoahColorSensorAuto extends LinearOpMode {
 
         waitForStart();
 
-        int sleepTime = 0;
         boolean inZone = false;
 
-        int i = 0;
         while (opModeIsActive()) {
-            if (i == 0) {
-                velocity.x = 0.6;
+            telemetry.addData("backleftdrive", backLeftDrive.getCurrentPosition());
+            telemetry.addData("in zone", inZone);
+            telemetry.update();
 
-                sleepTime = 1000;
-            } else if (i > 0 && inZone == false) {
-                velocity.y = 0.6;
+            if (backLeftDrive.getCurrentPosition() < 350) {
+                velocity.x = 0.3;
+                velocity.y = 0;
+            } else if (runtime.milliseconds() < 3000 && inZone == false) {
                 velocity.x = 0;
-
-                sleepTime = 0;
+                velocity.y = 0.1;
             }
 
             if (inZone) {
@@ -100,8 +103,6 @@ public class NoahColorSensorAuto extends LinearOpMode {
             }
 
             MoveWithVector(velocity, rotation);
-
-            sleep(sleepTime);
         }
     }
 
@@ -123,34 +124,47 @@ public class NoahColorSensorAuto extends LinearOpMode {
         backRightDrive.setVelocity(backRight * TPS312);
     }
 
-    // Move the robot using a Vector2 representing velocity as an input (relative to robot)
     private void MoveWithVector(Vector2 velocity, double rotation) {
-        // This (almost) copy pasted code from Gavin's tutorial video uses trig to figure out the individual motor values that will combine to a desired velocity vector.
-        // It rotates the vector by -45°, which results in its components (the legs of the triangle) being oriented at right angles to the robot.
-        // Then, it divides each of the components by the max of the two components to gain more speed in certain directions,
-        // and multiplies these x and y components by the magnitude of the desired vector.
-        // The if statement at the bottom just reduces the magnitude of the vector a little if one of the motor values exceeds the limit of 1
-
+    // This (almost) copy pasted code from Gavin's tutorial video uses trig to figure out the individual motor values that will combine to a desired velocity vector.
+    // It rotates the vector by -45°, which results in its components (the legs of the triangle) being oriented at right angles to the robot.
+    // Then, it divides each of the components by the max of the two components to gain more speed in certain directions,
+    // and multiplies these x and y components by the magnitude of the desired vector.
+    // The if statement at the bottom just reduces the magnitude of the vector a little if one of the motor values exceeds the limit of 1
         if (!Objects.equals(velocity, new Vector2(0, 0)) || rotation != 0) {
-            double sin = Math.sin(Math.atan2(velocity.y, velocity.x) - Math.PI / 4);
-            double cos = Math.cos(Math.atan2(velocity.y, velocity.x) - Math.PI / 4);
-            double xComponent = velocity.Magnitude() * cos;
-            double yComponent = velocity.Magnitude() * sin;
-            double max = Math.max(Math.abs(sin), Math.abs(cos));
+            double driveAngle = Math.atan2(velocity.y, -velocity.x);
+            // The evil code for calculating motor powers
+            // Desmos used to troubleshoot directions without robot
+            // https://www.desmos.com/calculator/3gzff5bzbn
+            double frontLeftBackRightMotors = velocity.Magnitude() * Math.sin(driveAngle - 0.25 * Math.PI);
+            double frontRightBackLeftMotors = velocity.Magnitude() * Math.cos(driveAngle - 0.25 * Math.PI);
+            double frontLeftPower = frontLeftBackRightMotors + Math.min(rotation, 1);
+            double backLeftPower = frontRightBackLeftMotors + Math.min(rotation, 1);
+            double frontRightPower = frontRightBackLeftMotors - Math.min(rotation, 1);
+            double backRightPower = frontLeftBackRightMotors - Math.min(rotation, 1);
 
-            double frontLeftMotorVelocity = xComponent / max + rotation;
-            double frontRightMotorVelocity = yComponent / max - rotation;
-            double backLeftMotorVelocity = yComponent / max + rotation;
-            double backRightMotorVelocity = xComponent / max - rotation;
+            // The Great Cleaving approaches
+            // Forgive me for what I'm about to do, I took a melatonin an hour ago and I want to collapse onto my bed at this point
+            // Denominator is the largest motor power (absolute value) or 1
+            // This ensures all the powers maintain the same ratio
+            double denominator = Math.max(Math.max(Math.max(Math.abs(frontRightPower), Math.abs(frontLeftPower)),
+                    Math.max(Math.abs(backRightPower), Math.abs(backLeftPower))), 1);
 
-            if ((velocity.Magnitude() + Math.abs(rotation)) > 1) {
-                frontLeftMotorVelocity /= velocity.Magnitude() - rotation;
-                frontRightMotorVelocity /= velocity.Magnitude() - rotation;
-                backLeftMotorVelocity /= velocity.Magnitude() - rotation;
-                backRightMotorVelocity /= velocity.Magnitude() - rotation;
-            }
+            // CLEAVING TIME
+            frontRightPower /= denominator;
+            frontLeftPower /= denominator;
+            backRightPower /= denominator;
+            backLeftPower /= denominator;
 
-            MoveRobotWithMotorPowers(frontLeftMotorVelocity, frontRightMotorVelocity, backLeftMotorVelocity, backRightMotorVelocity);
+            telemetry.addData("FL", frontLeftDrive.getVelocity());
+            telemetry.addData("FR", frontRightDrive.getVelocity());
+            telemetry.addData("BL", backLeftDrive.getVelocity());
+            telemetry.addData("BR", backRightDrive.getVelocity());
+
+            // Set motor velocities, converted from (-1 to 1) to (-driveTicksPerSecond to driveTicksPerSecond)
+            frontLeftDrive.setVelocity(frontLeftPower * driveTicksPerSecond);
+            backLeftDrive.setVelocity(backLeftPower * driveTicksPerSecond);
+            frontRightDrive.setVelocity(frontRightPower * driveTicksPerSecond);
+            backRightDrive.setVelocity(backRightPower * driveTicksPerSecond);
         }
     }
 }
