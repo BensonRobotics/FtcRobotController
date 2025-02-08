@@ -324,23 +324,36 @@ public class TeleOP extends LinearOpMode {
         telemetry.addData("Grabber Pivot", grabberPivot.getPosition());
         telemetry.addData("Intake Pivot", intakePivot.getPosition());
 
+        // intakePivot positions:
+        // 0.6711 is (position)
+        // 0.9606 is (position)
+        // 0.672 is (position)
 
-        if (gamepad2.b) {
+        // grabberPivot positions:
+        // 0.5522 is (position)
+        // 0.8328 is (position)
+
+        // grabberServo positions:
+        // 0.79 is (position)
+        // 0.9015 is (position)
+        // 0.81 is (position)
+
+        if (gamepad2.b) { // (What does this do)
             currentTransferState = 0;
             intakePivot.setPosition(0.6711); // sub barrier clear / transfer
             grabberPivot.setPosition(0.5522); // transfer
             grabberServo.setPosition(0.81); // transfer
-        } else if (gamepad2.a) {
+        } else if (gamepad2.a) { // (What does this do)
             currentTransferState = 1;
             intakePivot.setPosition(0.9606); // down
             grabberPivot.setPosition(0.5522); // neutral
             grabberServo.setPosition(0.79); // open
-        } else if (gamepad2.x) {
+        } else if (gamepad2.x) { // (What does this do)
             currentTransferState = 2;
             intakePivot.setPosition(0.6711); // sub barrier clear / transfer
             grabberPivot.setPosition(0.5522); // transfer
             grabberServo.setPosition(0.9015); // closed
-        } else if (gamepad2.y) {
+        } else if (gamepad2.y) { // (What does this do)
             currentTransferState = 3;
             intakePivot.setPosition(0.672); // down
             grabberPivot.setPosition(0.8328); // depo
