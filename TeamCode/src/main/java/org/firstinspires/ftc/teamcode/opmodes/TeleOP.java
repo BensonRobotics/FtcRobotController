@@ -65,7 +65,7 @@ public class TeleOP extends LinearOpMode {
     double liftMotorCurrentThreshold;
     int liftBottomPosition;
 
-    double driveSpeedLimit = 1F;
+    double driveSpeedLimit = 0.75F;
 
     /*April Tag Detection*/
     private static final boolean USE_WEBCAM = true;
@@ -205,7 +205,7 @@ public class TeleOP extends LinearOpMode {
 
             Vector2 velocity = new Vector2(leftStickX, leftStickY);
 
-            double rotation = rightStickX;
+            double rotation = rightStickX * driveSpeedLimit;
 
             telemetry.addData("velocity:", (velocity.Value()));
             updateTelemetry(telemetry);
@@ -331,6 +331,7 @@ public class TeleOP extends LinearOpMode {
         telemetry.addData("Intake Pivot", intakePivot.getPosition());
 
         if (gamepad2.b) {
+            transferAutoSequence = false;
             if ((horizontalSlideMotor.getCurrentPosition() < 267) && grabberPivot.getPosition() == 0.5522) {
                 horizontalSlideMotor.setTargetPosition(267);
                 horizontalSlideMotor.setPower(1);
@@ -342,6 +343,7 @@ public class TeleOP extends LinearOpMode {
             grabberPivot.setPosition(0.5522); // transfer standby
             grabberServo.setPosition(0.81); // transfer standby
         } else if (gamepad2.a) {
+            transferAutoSequence = false;
             if ((horizontalSlideMotor.getCurrentPosition() < 267) && grabberPivot.getPosition() == 0.5522) {
                 horizontalSlideMotor.setTargetPosition(267);
                 horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
@@ -374,6 +376,7 @@ public class TeleOP extends LinearOpMode {
         } else {
             gamepad2xDebouncing = false;
             if (gamepad2.y) {
+                transferAutoSequence = false;
                 currentTransferState = 3;
                 intakePivot.setPosition(0.9606); // down (It may be better to leave this up until the driver presses A again,
                 // but I think maybe the intake should go down in the x sequence as the claw goes up, so that way it's out of the way; I'll just set this as down for now)
