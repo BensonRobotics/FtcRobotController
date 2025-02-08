@@ -22,6 +22,7 @@ public class ServoTest extends LinearOpMode {
         intakePivot = hardwareMap.get(Servo.class, "intakePivot");
 
         Dictionary<Integer, Servo> servos = new Hashtable<>();
+        servos.put(0, intakePivot);
         servos.put(1, grabberServo);
         servos.put(2, grabberPivot);
         servos.put(3, intakePivot);
@@ -30,12 +31,14 @@ public class ServoTest extends LinearOpMode {
 
         waitForStart();
 
+        grabberPivot.setPosition(0.5524);
+
         boolean bumperPressed = true;
         while (opModeIsActive()) {
             if (gamepad1.left_bumper && servoIndex < servos.size() && !bumperPressed) {
                 servoIndex += 1;
                 bumperPressed = true;
-            } else if (gamepad1.right_bumper && servoIndex > 1 && !bumperPressed) {
+            } else if (gamepad1.right_bumper && servoIndex > 0 && !bumperPressed) {
                 servoIndex -= 1;
                 bumperPressed = true;
             }
@@ -50,9 +53,15 @@ public class ServoTest extends LinearOpMode {
 
             Servo selectedServo = servos.get(servoIndex);
 
-            if (gamepad1.dpad_up) {
+            if (servoIndex == 0) {
+                intakeServo.setPower(gamepad1.left_stick_x);
+            } else {
+                intakeServo.setPower(0);
+            }
+
+            if (gamepad1.dpad_up && servoIndex > 0) {
                 selectedServo.setPosition(selectedServo.getPosition() + 0.001);
-            } else if (gamepad1.dpad_down) {
+            } else if (gamepad1.dpad_down && servoIndex > 0) {
                 selectedServo.setPosition(selectedServo.getPosition() - 0.001);
             }
         }

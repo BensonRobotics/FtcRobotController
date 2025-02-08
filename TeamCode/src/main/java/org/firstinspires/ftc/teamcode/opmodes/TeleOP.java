@@ -75,6 +75,7 @@ public class TeleOP extends LinearOpMode {
 
     double driveTicksPerSecond = (312.0 * 537.7 / 60.0);
 
+    int currentTransferState = 0;
 
     public void runOpMode() throws InterruptedException{
         telemetry.addData("Status", "Initialized");
@@ -88,12 +89,9 @@ public class TeleOP extends LinearOpMode {
         backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightDrive = hardwareMap.get(DcMotorEx.class, "backRightMotor");
 
-        grabberServo = hardwareMap.get(Servo.class, "grabberServo");
-
+        grabberServo = hardwareMap.get(Servo .class, "grabberServo");
         grabberPivot = hardwareMap.get(Servo.class, "grabberPivot");
-
-        intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
-
+        intakeServo = hardwareMap.get(CRServo .class, "intakeServo");
         intakePivot = hardwareMap.get(Servo.class, "intakePivot");
 
         liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
@@ -146,9 +144,6 @@ public class TeleOP extends LinearOpMode {
         backRightDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
         backLeftDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfNew);
 
-        // Limit servo motion to 0 - 175 degrees of 300 degrees maximum rotation
-        grabberPivot.scaleRange(0, (175.0 / 300.0));
-
         /*April Tag Detection*/
         InitAprilTag();
 
@@ -163,6 +158,10 @@ public class TeleOP extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
+        grabberServo.setPosition(0.7889);
+        grabberPivot.setPosition(0.7811);
+        intakePivot.setPosition(0.9455);
+
         telemetry.addData("ready to zero slide", 1);
         updateTelemetry(telemetry);
         int liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
@@ -173,6 +172,10 @@ public class TeleOP extends LinearOpMode {
 
         // Run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            if (runtime.milliseconds() > 500 && runtime.milliseconds() < 600) {
+                grabberPivot.setPosition(0.5389);
+            }
+
             /*AprilTag stuff*/
             UpdateAprilTagTelemetry();
             currentRobotOrientationData = UpdateRobotOrientationData(imu, currentRobotOrientationData);
@@ -322,19 +325,27 @@ public class TeleOP extends LinearOpMode {
         telemetry.addData("Intake Pivot", intakePivot.getPosition());
 
 
-//        if (gamepad2.a) {
-//            intakePivot.setPosition(0.942); // down
-//            grabberPivot.setPosition(0.62); //neutral
-//            grabberServo.setPosition(0.79); //open
-//        } else if (gamepad2.x) {
-//            intakePivot.setPosition("transfer"); //transfer
-//            grabberPivot.setPosition("transfer"); //transfer
-//            grabberServo.setPosition("closed"); //closed
-//        } else if (gamepad2.y) {
-//            intakePivot.setPosition("down"); //down
-//            grabberPivot.setPosition("depo"); //depo
-//            grabberServo.setPosition("open"); //open
-//        }
+        if (gamepad2.b) {
+            currentTransferState = 0;
+            intakePivot.setPosition(0.6711); // sub barrier clear / transfer
+            grabberPivot.setPosition(0.5522); // transfer
+            grabberServo.setPosition(0.81); // transfer
+        } else if (gamepad2.a) {
+            currentTransferState = 1;
+            intakePivot.setPosition(0.9606); // down
+            grabberPivot.setPosition(0.5522); // neutral
+            grabberServo.setPosition(0.79); // open
+        } else if (gamepad2.x) {
+            currentTransferState = 2;
+            intakePivot.setPosition(0.6711); // sub barrier clear / transfer
+            grabberPivot.setPosition(0.5522); // transfer
+            grabberServo.setPosition(0.9015); // closed
+        } else if (gamepad2.y) {
+            currentTransferState = 3;
+            intakePivot.setPosition(0.672); // down
+            grabberPivot.setPosition(0.8328); // depo
+            grabberServo.setPosition(0.9015); // open
+        }
 
         // Grabber pivot code.
         // position 0 is down to floor, position 1 is 90 degrees up to sample transfer
@@ -346,7 +357,7 @@ public class TeleOP extends LinearOpMode {
 //            intakePivot.setPosition(1);
 //        }
 //
-//        intakeServo.setPower(ScaleStickValue(-gamepad2.right_stick_y));
+        intakeServo.setPower(ScaleStickValue(-gamepad2.right_stick_y));
 //
 //        if (gamepad2.left_stick_x > 0.8) {
 //            grabberServo.setPosition(0.87);
@@ -413,7 +424,7 @@ public class TeleOP extends LinearOpMode {
         liftPositions.add(bottomPosition + 2000);
         liftPositions.add(bottomPosition + 4200);
 
-        if (gamepad2.a || gamepad2.x || gamepad2.y) {
+        if (gamepad1.a || gamepad1.x || gamepad1.y) {
             // Since the variable is initialized to 0, and if we are running this code we know either a, x, or y has been pressed,
             // we can skip the conditional for one of the buttons, in this case a.
             int desiredPositionIndex = 0;
