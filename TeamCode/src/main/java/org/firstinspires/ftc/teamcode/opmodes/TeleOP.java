@@ -312,26 +312,27 @@ public class TeleOP extends LinearOpMode {
             currentTransferState = 0;
             // Check if slide is too far in, if so, extend it to a safe distance before raising the intake
             intakePivot.setPosition(0.6711); // sub barrier clear / transfer
-            grabberPivot.setPosition(0.5522); // transfer
-            grabberServo.setPosition(0.81); // transfer
+            grabberPivot.setPosition(0.5522); // transfer standby
+            grabberServo.setPosition(0.81); // transfer standby
         } else if (gamepad2.a) {
             currentTransferState = 1;
             intakePivot.setPosition(0.9606); // down
-            grabberPivot.setPosition(0.5522); // neutral
-            grabberServo.setPosition(0.79); // open
+            grabberPivot.setPosition(0.5522); // transfer standby
+            grabberServo.setPosition(0.81); // transfer standby
         } else if (gamepad2.x) {
             currentTransferState = 2;
             // Check if slide is too far in, if so, extend it to a safe distance before raising the intake
             intakePivot.setPosition(0.6711); // sub barrier clear / transfer
             grabberPivot.setPosition(0.5522); // transfer
-            grabberServo.setPosition(0.81); // closed
+            grabberServo.setPosition(0.81); // open
             // Bring slide in to transfer position, running intake in reverse to eject extra samples, then close claw (0.9015),
             // bring slide out enough that claw can clear intake, then bring claw up to the depo position, and bring slide back in all the way.
         } else if (gamepad2.y) {
             currentTransferState = 3;
-            intakePivot.setPosition(0.6711); // down
+            intakePivot.setPosition(0.9606); // down (It may be better to leave this up until the driver presses A again,
+            // but I think maybe the intake should go down in the x sequence as the claw goes up, so that way it's out of the way; I'll just set this as down for now)
             grabberPivot.setPosition(0.8328); // depo
-            grabberServo.setPosition(0.9015); // open
+            grabberServo.setPosition(0.6); // open
         }
 
         intakeServo.setPower(ScaleStickValue(-gamepad2.right_stick_y));
@@ -344,7 +345,7 @@ public class TeleOP extends LinearOpMode {
         //  Grabber pivot up / depo : currently unknown, probably somewhere close to 0.8?
         //  Grabber open / ready for transfer : 0.81
         //  Grabber closed : 0.9015 (this might be a bit tight, but it doesn't hurt)
-        //  Grabber wide open / depo : 0.9015 (the regular open / transfer position would probably work just fine here but I guess it doesn't hurt to open it extra wide here)
+        //  Grabber wide open / depo : 0.6 (the regular open / transfer position would probably work just fine here but I guess it doesn't hurt to open it extra wide here)
         //  Remember, to set up place the grabber arm over the raised intake and open the claw all the way
 
 
