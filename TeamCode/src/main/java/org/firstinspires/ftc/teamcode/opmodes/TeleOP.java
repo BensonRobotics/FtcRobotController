@@ -89,14 +89,14 @@ public class TeleOP extends LinearOpMode {
         backLeftDrive = hardwareMap.get(DcMotorEx.class, "backLeftMotor");
         backRightDrive = hardwareMap.get(DcMotorEx.class, "backRightMotor");
 
+        liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
+
+        horizontalSlideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
+
         grabberServo = hardwareMap.get(Servo .class, "grabberServo");
         grabberPivot = hardwareMap.get(Servo.class, "grabberPivot");
         intakeServo = hardwareMap.get(CRServo .class, "intakeServo");
         intakePivot = hardwareMap.get(Servo.class, "intakePivot");
-
-        liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
-
-        horizontalSlideMotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -159,21 +159,23 @@ public class TeleOP extends LinearOpMode {
         runtime.reset();
 
         grabberServo.setPosition(0.7889);
-        grabberPivot.setPosition(0.7811);
+        grabberPivot.setPosition(0.7911);
         intakePivot.setPosition(0.9455);
 
         telemetry.addData("ready to zero slide", 1);
         updateTelemetry(telemetry);
+
         int liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
         liftMotor.setTargetPosition(liftBottomPosition);
-        
 
         ZeroHorizontalSlideEncoder(slideMotorCurrentThreshold);
 
         // Run until the end of the match (driver presses STOP)
+        boolean grabberPivotHomed = false;
         while (opModeIsActive()) {
-            if (runtime.milliseconds() > 500 && runtime.milliseconds() < 600) {
-                grabberPivot.setPosition(0.5389);
+            if (runtime.milliseconds() > 500 && !grabberPivotHomed) {
+                grabberPivot.setPosition(0.5522);
+                grabberPivotHomed = true;
             }
 
             /*AprilTag stuff*/
@@ -183,27 +185,23 @@ public class TeleOP extends LinearOpMode {
             telemetry.addData("Yaw estimate", currentRobotOrientationData.get("rotation").getZ());
 
             // Get needed gamepad joystick values
-            double leftStickY = ScaleStickValue(gamepad1.left_stick_y);  // Note: pushing stick forward gives negative value
+            double leftStickY = ScaleStickValue(-gamepad1.left_stick_y);  // Note: pushing stick forward gives negative value
             double leftStickX = ScaleStickValue(gamepad1.left_stick_x);
             double rightStickY = ScaleStickValue(-gamepad1.right_stick_y);  // Note: pushing stick forward gives negative value
             double rightStickX = ScaleStickValue(gamepad1.right_stick_x);
 
-            Vector2 velocity = new Vector2(leftStickX, -leftStickY);
+            Vector2 velocity = new Vector2(leftStickX, leftStickY);
 
             double rotation = rightStickX;
 
             telemetry.addData("velocity:", (velocity.Value()));
             updateTelemetry(telemetry);
 
-            double grabberServoPosition = ScaleStickValue(gamepad2.right_stick_y);
-            UpdateServos(grabberServoPosition);
+            UpdateServos();
 
             UpdateLiftMotor(liftBottomPosition, liftMotorCurrentThreshold);
 
-            boolean dpadUp = gamepad1.dpad_up;
-            boolean dpadDown = gamepad1.dpad_down;
-
-            UpdateSlideMotor(dpadUp, dpadDown, slideMotorCurrentThreshold);
+            UpdateSlideMotor(slideMotorCurrentThreshold);
 
             // Take an input vector from the joysticks and use it to move.
             telemetry.addData("robot angle to field", currentRobotOrientationData.get("rotation").getZ());
@@ -222,19 +220,13 @@ public class TeleOP extends LinearOpMode {
 
     // Main Drive Code
 
-    // Move robot using 4 motor velocity/power values with domains from -1 to 1
-    private void MoveRobotWithMotorPowers(double frontLeft, double frontRight, double backLeft, double backRight) {
-        // TPS(motorRPM) = (motorRPM / 60) * motorStepsPerRevolution
-        // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
-        // 537.7 is 312 RPM motor's encoder steps per revolution
-        double TPS312 = (312.0 / 60.0) * 537.7 * 0.65;
+    // Move the robot using a Vector2 representing velocity as an input (relative to robot)
+    private void MoveWithFieldRelativeVector(Vector2 velocity, double robotAngleToField, double rotation) {
+        Vector2 robotRelativeDirection = velocity.Rotate(-robotAngleToField);
+        telemetry.addData("\nrobot relative direction\n", robotRelativeDirection.Value());
 
-        frontLeftDrive.setVelocity(frontLeft * TPS312);
-        frontRightDrive.setVelocity(frontRight * TPS312);
-        backLeftDrive.setVelocity(backLeft * TPS312);
-        backRightDrive.setVelocity(backRight * TPS312);
+        MoveWithVector(robotRelativeDirection, rotation);
     }
-
 
     // Move the robot using a Vector2 representing velocity as an input (relative to robot)
     private void MoveWithVector(Vector2 velocity, double rotation) {
@@ -309,56 +301,52 @@ public class TeleOP extends LinearOpMode {
         return localizationData;
     }
 
-    // Move the robot using a Vector2 representing velocity as an input (relative to robot)
-    private void MoveWithFieldRelativeVector(Vector2 velocity, double robotAngleToField, double rotation) {
-        Vector2 robotRelativeDirection = velocity.Rotate(-robotAngleToField);
-        telemetry.addData("\nrobot relative direction\n", robotRelativeDirection.Value());
-
-        MoveWithVector(robotRelativeDirection, rotation);
-    }
-
     // Servo
-    private void UpdateServos(double servo1Power) {
+    private void UpdateServos() {
 //        grabberServo.setPosition(servo1Power);
         telemetry.addData("Grabber Position", grabberServo.getPosition());
         telemetry.addData("Grabber Pivot", grabberPivot.getPosition());
         telemetry.addData("Intake Pivot", intakePivot.getPosition());
 
-        // intakePivot positions:
-        // 0.6711 is (position)
-        // 0.9606 is (position)
-        // 0.672 is (position)
-
-        // grabberPivot positions:
-        // 0.5522 is (position)
-        // 0.8328 is (position)
-
-        // grabberServo positions:
-        // 0.79 is (position)
-        // 0.9015 is (position)
-        // 0.81 is (position)
-
-        if (gamepad2.b) { // (What does this do)
+        if (gamepad2.b) {
             currentTransferState = 0;
+            // Check if slide is too far in, if so, extend it to a safe distance before raising the intake
             intakePivot.setPosition(0.6711); // sub barrier clear / transfer
             grabberPivot.setPosition(0.5522); // transfer
             grabberServo.setPosition(0.81); // transfer
-        } else if (gamepad2.a) { // (What does this do)
+        } else if (gamepad2.a) {
             currentTransferState = 1;
             intakePivot.setPosition(0.9606); // down
             grabberPivot.setPosition(0.5522); // neutral
             grabberServo.setPosition(0.79); // open
-        } else if (gamepad2.x) { // (What does this do)
+        } else if (gamepad2.x) {
             currentTransferState = 2;
+            // Check if slide is too far in, if so, extend it to a safe distance before raising the intake
             intakePivot.setPosition(0.6711); // sub barrier clear / transfer
             grabberPivot.setPosition(0.5522); // transfer
-            grabberServo.setPosition(0.9015); // closed
-        } else if (gamepad2.y) { // (What does this do)
+            grabberServo.setPosition(0.81); // closed
+            // Bring slide in to transfer position, running intake in reverse to eject extra samples, then close claw (0.9015),
+            // bring slide out enough that claw can clear intake, then bring claw up to the depo position, and bring slide back in all the way.
+        } else if (gamepad2.y) {
             currentTransferState = 3;
-            intakePivot.setPosition(0.672); // down
+            intakePivot.setPosition(0.6711); // down
             grabberPivot.setPosition(0.8328); // depo
             grabberServo.setPosition(0.9015); // open
         }
+
+        intakeServo.setPower(ScaleStickValue(-gamepad2.right_stick_y));
+
+        // Servo position reference:
+        //  Intake pivot up (transfer and barrier clear) : 0.6711
+        //  Intake pivot down (ground level) : 0.9606
+        //  Grabber pivot initial position : 0.7911
+        //  Grabber pivot standby / transfer position : 0.5522
+        //  Grabber pivot up / depo : currently unknown, probably somewhere close to 0.8?
+        //  Grabber open / ready for transfer : 0.81
+        //  Grabber closed : 0.9015 (this might be a bit tight, but it doesn't hurt)
+        //  Grabber wide open / depo : 0.9015 (the regular open / transfer position would probably work just fine here but I guess it doesn't hurt to open it extra wide here)
+        //  Remember, to set up place the grabber arm over the raised intake and open the claw all the way
+
 
         // Grabber pivot code.
         // position 0 is down to floor, position 1 is 90 degrees up to sample transfer
@@ -370,7 +358,6 @@ public class TeleOP extends LinearOpMode {
 //            intakePivot.setPosition(1);
 //        }
 //
-        intakeServo.setPower(ScaleStickValue(-gamepad2.right_stick_y));
 //
 //        if (gamepad2.left_stick_x > 0.8) {
 //            grabberServo.setPosition(0.87);
@@ -386,14 +373,14 @@ public class TeleOP extends LinearOpMode {
     }
 
     // horizontal Slide
-    private void UpdateSlideMotor(boolean dpadUp, boolean dpadDown, double slideMotorCurrentThreshold) {
+    private void UpdateSlideMotor(double slideMotorCurrentThreshold) {
         double horizontalSlideVelocity = 0;
 
         horizontalSlideVelocity = gamepad2.right_trigger - gamepad2.left_trigger;
 
         // Encoder based limits
         if ((horizontalSlideMotor.getCurrentPosition() <= 0 &&
-                horizontalSlideVelocity < 215) ||
+                horizontalSlideVelocity < 0) ||
                 (horizontalSlideMotor.getCurrentPosition() >= 2450 &&
                         horizontalSlideVelocity > 0) || IsOverloaded(horizontalSlideMotor, slideMotorCurrentThreshold)) {
             horizontalSlideVelocity = 0;
@@ -458,7 +445,9 @@ public class TeleOP extends LinearOpMode {
             }
         }
 
-        if (IsOverloaded(liftMotor, currentThreshold)) {
+        if (!IsOverloaded(liftMotor, currentThreshold)) {
+            liftMotor.setPower(1.0);
+        } else {
             liftMotor.setPower(0.0);
         }
 
@@ -493,11 +482,11 @@ public class TeleOP extends LinearOpMode {
 
     // Input
     private double ScaleStickValue(double stickValue) {
-        int speedDenominator = 2;
+        int speedDenominator = 1;
         if (stickValue < 0) {
-            stickValue = -NonlinearInterpolate(0, 1, -stickValue, 1.1);
+            stickValue = -NonlinearInterpolate(0, 1, -stickValue, 1.2);
         } else {
-            stickValue = NonlinearInterpolate(0, 1, stickValue, 1.1);
+            stickValue = NonlinearInterpolate(0, 1, stickValue, 1.2);
         }
         return stickValue / speedDenominator;
     }
