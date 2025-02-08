@@ -108,6 +108,13 @@ public class TeleOP extends LinearOpMode {
 
         liftMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
+        horizontalSlideMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        frontLeftDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        frontRightDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        backLeftDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        backRightDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+
         frontLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         frontRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         backLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
@@ -118,7 +125,6 @@ public class TeleOP extends LinearOpMode {
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         horizontalSlideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
 
         double liftMotorCurrentThreshold = 3000.0;
 
@@ -151,6 +157,8 @@ public class TeleOP extends LinearOpMode {
         Dictionary<String, Vector3D> currentRobotOrientationData = new Hashtable<>();
         currentRobotOrientationData.put("position", new Vector3D(0, 0, 0));
         currentRobotOrientationData.put("rotation", new Vector3D(0, 0, 0));
+
+        boolean transferAutoSequence = false;
 
         /*Main loop */
 
@@ -309,17 +317,32 @@ public class TeleOP extends LinearOpMode {
         telemetry.addData("Intake Pivot", intakePivot.getPosition());
 
         if (gamepad2.b) {
+            if ((horizontalSlideMotor.getCurrentPosition() < 100 /* 100 is a PLACEHOLDER!!!*/) && grabberPivot.getPosition() == 0.5522) {
+                horizontalSlideMotor.setTargetPosition(100);
+                horizontalSlideMotor.setPower(1);
+                horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            }
             currentTransferState = 0;
             // Check if slide is too far in, if so, extend it to a safe distance before raising the intake
             intakePivot.setPosition(0.6711); // sub barrier clear / transfer
             grabberPivot.setPosition(0.5522); // transfer standby
             grabberServo.setPosition(0.81); // transfer standby
         } else if (gamepad2.a) {
+            if ((horizontalSlideMotor.getCurrentPosition() < 100 /* 100 is a PLACEHOLDER!!!*/) && grabberPivot.getPosition() == 0.5522) {
+                horizontalSlideMotor.setTargetPosition(100);
+                horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                horizontalSlideMotor.setPower(1);
+            }
             currentTransferState = 1;
             intakePivot.setPosition(0.9606); // down
             grabberPivot.setPosition(0.5522); // transfer standby
             grabberServo.setPosition(0.81); // transfer standby
         } else if (gamepad2.x) {
+            if ((horizontalSlideMotor.getCurrentPosition() < 100 /* 100 is a PLACEHOLDER!!!*/) && grabberPivot.getPosition() == 0.5522) {
+                horizontalSlideMotor.setTargetPosition(100);
+                horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                horizontalSlideMotor.setPower(1);
+            }
             currentTransferState = 2;
             // Check if slide is too far in, if so, extend it to a safe distance before raising the intake
             intakePivot.setPosition(0.6711); // sub barrier clear / transfer
@@ -327,6 +350,11 @@ public class TeleOP extends LinearOpMode {
             grabberServo.setPosition(0.81); // open
             // Bring slide in to transfer position, running intake in reverse to eject extra samples, then close claw (0.9015),
             // bring slide out enough that claw can clear intake, then bring claw up to the depo position, and bring slide back in all the way.
+            intakeServo.setPower(-0.75); // Spit out double samples to avoid penalty
+            horizontalSlideMotor.setTargetPosition(0);
+            horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            horizontalSlideMotor.setPower(1);
+
         } else if (gamepad2.y) {
             currentTransferState = 3;
             intakePivot.setPosition(0.9606); // down (It may be better to leave this up until the driver presses A again,
@@ -336,6 +364,21 @@ public class TeleOP extends LinearOpMode {
         }
 
         intakeServo.setPower(ScaleStickValue(-gamepad2.right_stick_y));
+
+        if (currentTransferState == 3 && !horizontalSlideMotor.isBusy()) {
+            grabberServo.setPosition(0 /*GRAB SAMPLE PLACEHOLDER*/);
+            double grabSampleTimeOld = runtime.milliseconds();
+            if (runtime.milliseconds() - grabSampleTimeOld > 500) { // Sample has been grabbed
+                horizontalSlideMotor.setTargetPosition(100);
+                horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                horizontalSlideMotor.setPower(1);
+                intakePivot.setPosition(0.9606); // down
+            }
+        }
+
+        if (!horizontalSlideMotor.isBusy()) {
+            horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        }
 
         // Servo position reference:
         //  Intake pivot up (transfer and barrier clear) : 0.6711
@@ -411,7 +454,7 @@ public class TeleOP extends LinearOpMode {
         }
         horizontalSlideMotor.setPower(0);
 
-        telemetry.addData("slide in position ", horizontalSlideMotor.getCurrentPosition() + 30);
+        telemetry.addData("slide in position ", horizontalSlideMotor.getCurrentPosition());
         horizontalSlideMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         horizontalSlideMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
