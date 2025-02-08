@@ -77,6 +77,12 @@ public class TeleOP extends LinearOpMode {
 
     int currentTransferState = 0;
 
+    boolean transferAutoSequence = false;
+
+    boolean gamepad2xDebouncing = false;
+
+    boolean isLiftHoming = false;
+
     public void runOpMode() throws InterruptedException{
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -114,6 +120,7 @@ public class TeleOP extends LinearOpMode {
         frontRightDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backLeftDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         backRightDrive.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
         frontLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         frontRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
@@ -128,7 +135,7 @@ public class TeleOP extends LinearOpMode {
 
         double liftMotorCurrentThreshold = 3000.0;
 
-        double slideMotorCurrentThreshold = 2000.0;
+        double slideMotorCurrentThreshold = 3000.0;
 
         /* Orientation Variables */
 
@@ -158,8 +165,6 @@ public class TeleOP extends LinearOpMode {
         currentRobotOrientationData.put("position", new Vector3D(0, 0, 0));
         currentRobotOrientationData.put("rotation", new Vector3D(0, 0, 0));
 
-        boolean transferAutoSequence = false;
-
         /*Main loop */
 
         // Wait for the game to start (driver presses PLAY)
@@ -173,7 +178,7 @@ public class TeleOP extends LinearOpMode {
         telemetry.addData("ready to zero slide", 1);
         updateTelemetry(telemetry);
 
-        int liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
+        int liftBottomPosition = 0;
         liftMotor.setTargetPosition(liftBottomPosition);
 
         ZeroHorizontalSlideEncoder(slideMotorCurrentThreshold);
@@ -209,7 +214,9 @@ public class TeleOP extends LinearOpMode {
 
             UpdateLiftMotor(liftBottomPosition, liftMotorCurrentThreshold);
 
-            UpdateSlideMotor(slideMotorCurrentThreshold);
+            if (!transferAutoSequence) {
+                UpdateSlideMotor(slideMotorCurrentThreshold);
+            }
 
             // Take an input vector from the joysticks and use it to move.
             telemetry.addData("robot angle to field", currentRobotOrientationData.get("rotation").getZ());
@@ -218,7 +225,10 @@ public class TeleOP extends LinearOpMode {
             if (gamepad1.start) {
                 ZeroHorizontalSlideEncoder(slideMotorCurrentThreshold);
             } else if (gamepad1.back) {
-                liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
+                isLiftHoming = true;
+            }
+            if (isLiftHoming) {
+                GetLiftBottomPosition(liftMotorCurrentThreshold);
             }
         }
 
@@ -317,8 +327,8 @@ public class TeleOP extends LinearOpMode {
         telemetry.addData("Intake Pivot", intakePivot.getPosition());
 
         if (gamepad2.b) {
-            if ((horizontalSlideMotor.getCurrentPosition() < 100 /* 100 is a PLACEHOLDER!!!*/) && grabberPivot.getPosition() == 0.5522) {
-                horizontalSlideMotor.setTargetPosition(100);
+            if ((horizontalSlideMotor.getCurrentPosition() < 267) && grabberPivot.getPosition() == 0.5522) {
+                horizontalSlideMotor.setTargetPosition(267);
                 horizontalSlideMotor.setPower(1);
                 horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
             }
@@ -328,8 +338,8 @@ public class TeleOP extends LinearOpMode {
             grabberPivot.setPosition(0.5522); // transfer standby
             grabberServo.setPosition(0.81); // transfer standby
         } else if (gamepad2.a) {
-            if ((horizontalSlideMotor.getCurrentPosition() < 100 /* 100 is a PLACEHOLDER!!!*/) && grabberPivot.getPosition() == 0.5522) {
-                horizontalSlideMotor.setTargetPosition(100);
+            if ((horizontalSlideMotor.getCurrentPosition() < 267) && grabberPivot.getPosition() == 0.5522) {
+                horizontalSlideMotor.setTargetPosition(267);
                 horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
                 horizontalSlideMotor.setPower(1);
             }
@@ -337,9 +347,11 @@ public class TeleOP extends LinearOpMode {
             intakePivot.setPosition(0.9606); // down
             grabberPivot.setPosition(0.5522); // transfer standby
             grabberServo.setPosition(0.81); // transfer standby
-        } else if (gamepad2.x) {
-            if ((horizontalSlideMotor.getCurrentPosition() < 100 /* 100 is a PLACEHOLDER!!!*/) && grabberPivot.getPosition() == 0.5522) {
-                horizontalSlideMotor.setTargetPosition(100);
+        } else if (gamepad2.x && !gamepad2xDebouncing) {
+            gamepad2xDebouncing = true;
+            transferAutoSequence = true;
+            if ((horizontalSlideMotor.getCurrentPosition() < 267) && grabberPivot.getPosition() == 0.5522) {
+                horizontalSlideMotor.setTargetPosition(267);
                 horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
                 horizontalSlideMotor.setPower(1);
             }
@@ -355,24 +367,28 @@ public class TeleOP extends LinearOpMode {
             horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
             horizontalSlideMotor.setPower(1);
 
-        } else if (gamepad2.y) {
-            currentTransferState = 3;
-            intakePivot.setPosition(0.9606); // down (It may be better to leave this up until the driver presses A again,
-            // but I think maybe the intake should go down in the x sequence as the claw goes up, so that way it's out of the way; I'll just set this as down for now)
-            grabberPivot.setPosition(0.8328); // depo
-            grabberServo.setPosition(0.6); // open
+        } else {
+            gamepad2xDebouncing = false;
+            if (gamepad2.y) {
+                currentTransferState = 3;
+                intakePivot.setPosition(0.9606); // down (It may be better to leave this up until the driver presses A again,
+                // but I think maybe the intake should go down in the x sequence as the claw goes up, so that way it's out of the way; I'll just set this as down for now)
+                grabberPivot.setPosition(0.8328); // depo
+                grabberServo.setPosition(0.6); // open
+            }
         }
 
         intakeServo.setPower(ScaleStickValue(-gamepad2.right_stick_y));
 
-        if (currentTransferState == 3 && !horizontalSlideMotor.isBusy()) {
-            grabberServo.setPosition(0 /*GRAB SAMPLE PLACEHOLDER*/);
+        if (transferAutoSequence && !horizontalSlideMotor.isBusy()) {
+            grabberServo.setPosition(0.9222);
             double grabSampleTimeOld = runtime.milliseconds();
             if (runtime.milliseconds() - grabSampleTimeOld > 500) { // Sample has been grabbed
-                horizontalSlideMotor.setTargetPosition(100);
+                horizontalSlideMotor.setTargetPosition(267);
                 horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
                 horizontalSlideMotor.setPower(1);
                 intakePivot.setPosition(0.9606); // down
+                transferAutoSequence = false;
             }
         }
 
@@ -511,16 +527,17 @@ public class TeleOP extends LinearOpMode {
     // Calibrate the lift by slowly running it into the bottom of it's travel, and detecting when the resistance on the motor reaches a certain
     // threshold, indicated by a spike in current draw. Then set the initial position of the lift to the current encoder value, since we know the lift
     // is at the bottom of its travel. This is necessary because of the inevitable drift in the encoders.
-    private int GetLiftBottomPosition(double currentThreshold) {
-        while (!IsOverloaded(liftMotor, currentThreshold)) {
+    private void GetLiftBottomPosition(double currentThreshold) {
+        if (!IsOverloaded(liftMotor, currentThreshold)) {
             liftMotor.setPower(-0.5);
             telemetry.addData("zeroing lift", IsOverloaded(liftMotor, currentThreshold));
             updateTelemetry(telemetry);
+        } else {
+            liftMotor.setPower(0.0);
+            telemetry.addData("lift bottom position: ", liftMotor.getCurrentPosition());
+            liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            isLiftHoming = false;
         }
-        liftMotor.setPower(0.0);
-
-        telemetry.addData("lift bottom position: ", liftMotor.getCurrentPosition());
-        return liftMotor.getCurrentPosition();
     }
 
 
