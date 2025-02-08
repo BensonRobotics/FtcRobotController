@@ -32,7 +32,6 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -198,8 +197,8 @@ public class RobotAutoDriveToAprilTagOmni2 extends LinearOpMode
                //if (gamepad1.left_bumper && targetFound) {
                     // Determine heading, range and Yaw (tag image rotation) error so we can use them to control the robot automatically.
                     rangeError      = (desiredTag.ftcPose.range - DESIRED_DISTANCE);
-                    headingError    = (desiredTag.ftcPose.bearing - DESIRED_DISTANCE);
-                    yawError        = (desiredTag.ftcPose.yaw - DESIRED_DISTANCE);
+                    headingError    = (desiredTag.ftcPose.bearing - DESIRED_DISTANCE) + 13;
+                    yawError        = (desiredTag.ftcPose.yaw - DESIRED_DISTANCE) + 12;
 
                     //if (rangeError, headingError, yawError  ), get (DESIRED_DISTANCE) then (drive, turn, strafe = 0)
 
@@ -227,7 +226,6 @@ public class RobotAutoDriveToAprilTagOmni2 extends LinearOpMode
 
     }
 
-
     /**
      * Move robot according to desired axes motions
      * <p>
@@ -237,7 +235,7 @@ public class RobotAutoDriveToAprilTagOmni2 extends LinearOpMode
      * <p>
      * Positive Yaw is counter-clockwise
      */
-    public void moveRobot(double x, double y, double yaw) {
+    public void moveRobot(double x, double y,double yaw) {
         // Calculate wheel powers.
         double leftFrontPower    =  x -y -yaw;
         double rightFrontPower   =  x +y +yaw;
