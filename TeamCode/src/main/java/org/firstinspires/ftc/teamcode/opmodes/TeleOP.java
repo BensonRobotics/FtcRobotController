@@ -330,6 +330,14 @@ public class TeleOP extends LinearOpMode {
         telemetry.addData("Grabber Pivot", grabberPivot.getPosition());
         telemetry.addData("Intake Pivot", intakePivot.getPosition());
 
+        if (gamepad2.right_bumper) {
+            if (grabberPivot.getPosition() == 0.5522) {
+                grabberPivot.setPosition(0.8328);
+            } else {
+                    grabberPivot.setPosition(0.5522);
+            }
+        }
+
         if (gamepad2.b) {
             transferAutoSequence = false;
             if ((horizontalSlideMotor.getCurrentPosition() < 267) && grabberPivot.getPosition() == 0.5522) {
@@ -339,7 +347,7 @@ public class TeleOP extends LinearOpMode {
             }
             currentTransferState = 0;
             // Check if slide is too far in, if so, extend it to a safe distance before raising the intake
-            intakePivot.setPosition(0.6711); // sub barrier clear / transfer
+            intakePivot.setPosition(0.8617); // sub barrier clear
             grabberPivot.setPosition(0.5522); // transfer standby
             grabberServo.setPosition(0.81); // transfer standby
         } else if (gamepad2.a) {
@@ -381,21 +389,23 @@ public class TeleOP extends LinearOpMode {
                 intakePivot.setPosition(0.9606); // down (It may be better to leave this up until the driver presses A again,
                 // but I think maybe the intake should go down in the x sequence as the claw goes up, so that way it's out of the way; I'll just set this as down for now)
                 grabberPivot.setPosition(0.8328); // depo
-                grabberServo.setPosition(0.6); // open
             }
         }
 
         intakeServo.setPower(ScaleStickValue(-gamepad2.right_stick_y));
 
-        if (transferAutoSequence && !horizontalSlideMotor.isBusy()) {
-            grabberServo.setPosition(0.9222);
-            double grabSampleTimeOld = runtime.milliseconds();
-            if (runtime.milliseconds() - grabSampleTimeOld > 500) { // Sample has been grabbed
-                horizontalSlideMotor.setTargetPosition(267);
-                horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-                horizontalSlideMotor.setPower(1);
-                intakePivot.setPosition(0.9606); // down
-                transferAutoSequence = false;
+        if (transferAutoSequence && horizontalSlideMotor.getCurrentPosition() < 0) {
+            double slideCoastTimeOld = runtime.milliseconds();
+            if (runtime.milliseconds() - slideCoastTimeOld > 500) {
+                grabberServo.setPosition(0.9222);
+                double grabSampleTimeOld = runtime.milliseconds();
+                if (runtime.milliseconds() - grabSampleTimeOld > 500) { // Sample has been grabbed
+                    horizontalSlideMotor.setTargetPosition(267);
+                    horizontalSlideMotor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                    horizontalSlideMotor.setPower(1);
+                    intakePivot.setPosition(0.9606); // down
+                    transferAutoSequence = false;
+                }
             }
         }
 
