@@ -34,17 +34,17 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-/**
+/*
  * This OpMode ramps a single motor speed up and down repeatedly until Stop is pressed.
  * The code is structured as a LinearOpMode
  *
- * This code assumes a DC motor configured with the name "left_drive" as is found on a pushbot.
+ * This code assumes a DC motor configured with the name "left_drive" as is found on a Robot.
  *
  * INCREMENT sets how much to increase/decrease the power each cycle
  * CYCLE_MS sets the update period.
  *
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
+ * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 @TeleOp(name = "Concept: Ramp Motor Speed", group = "Concept")
 @Disabled

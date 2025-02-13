@@ -37,15 +37,15 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 
-/**
- *
- * This OpMode executes a basic Tank Drive Teleop for a two wheeled robot using two REV SPARKminis.
- * To use this example, connect two REV SPARKminis into servo ports on the Expansion Hub. On the
+/*
+ * This OpMode demonstrates a POV Drive system, with commented-out code for a Tank Drive system,
+ * for a two wheeled robot using two REV SPARKminis.
+ * To use this example, connect two REV SPARKminis into servo ports on the Control Hub. On the
  * robot configuration, use the drop down list under 'Servos' to select 'REV SPARKmini Controller'
  * and name them 'left_drive' and 'right_drive'.
  *
- * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
+ * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
+ * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
 @TeleOp(name="REV SPARKmini Simple Drive Example", group="Concept")
@@ -63,17 +63,16 @@ public class ConceptRevSPARKMini extends LinearOpMode {
         telemetry.update();
 
         // Initialize the hardware variables. Note that the strings used here as parameters
-        // to 'get' must correspond to the names assigned during the robot configuration
-        // step (using the FTC Robot Controller app on the phone).
+        // to 'get' must correspond to the names assigned during robot configuration.
         leftDrive  = hardwareMap.get(DcMotorSimple.class, "left_drive");
         rightDrive = hardwareMap.get(DcMotorSimple.class, "right_drive");
 
         // Most robots need the motor on one side to be reversed to drive forward
-        // Reverse the motor that runs backwards when connected directly to the battery
+        // Reverse the motor that runs backward when connected directly to the battery
         leftDrive.setDirection(DcMotorSimple.Direction.FORWARD);
         rightDrive.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        // Wait for the game to start (driver presses PLAY)
+        // Wait for the game to start (driver presses START)
         waitForStart();
         runtime.reset();
 
