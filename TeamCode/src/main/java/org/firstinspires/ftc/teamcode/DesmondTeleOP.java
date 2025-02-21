@@ -14,6 +14,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+/*
+Controller mapping goes HERE:
+
+
+ */
+
 // Class
 @TeleOp
 public class
