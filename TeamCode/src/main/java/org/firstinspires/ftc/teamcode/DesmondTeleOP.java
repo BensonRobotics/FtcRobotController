@@ -52,20 +52,31 @@ DesmondTeleOP extends LinearOpMode {
     double driveHeading = 0; // If field centric is disabled, this will always stay at 0
     double rotationPower;
 
+    // Declare our devices!! Yayy!!!
+    private DcMotorEx frontLeftMotor = null;
+    private DcMotorEx frontRightMotor = null;
+    private DcMotorEx backLeftMotor = null;
+    private DcMotorEx backRightMotor = null;
+    private CRServo wheelServo = null;
+    private CRServo ascendServo3 = null;
+    private DcMotorEx armMotor = null;
+    private DcMotorEx armAngleMotor = null;
+    private DcMotorEx ascend = null;
+    private DcMotorEx ascend3 = null;
+
     @Override
     public void runOpMode() {
 
-        // Declare our devices!! Yayy!!!
-        DcMotorEx frontLeftMotor;
-        DcMotorEx frontRightMotor;
-        DcMotorEx backLeftMotor;
-        DcMotorEx backRightMotor;
-        CRServo wheelServo;
-        CRServo ascendServo3;
-        DcMotorEx armMotor;
-        DcMotorEx armAngleMotor;
-        DcMotorEx ascend;
-        DcMotorEx ascend3;
+        // Group drive motors in an array
+        DcMotorEx[] driveMotors = new DcMotorEx[] {
+                frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor
+        };
+
+        // Group all motors in an array
+        DcMotorEx[] allMotors = new DcMotorEx[] {
+                frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor,
+                ascend, ascend3, armMotor, armAngleMotor
+        };
 
         // Assign our devices
         // Make sure your ID's match your configuration
@@ -80,13 +91,13 @@ DesmondTeleOP extends LinearOpMode {
         ascend = hardwareMap.get(DcMotorEx.class, "ascend");
         ascend3 = hardwareMap.get(DcMotorEx.class, "ascend3");
 
-        // Apply drive PIDF coefficients
-        frontLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
-        frontRightMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
-        backLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
-        backRightMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
+        // Set PIDF values for all drive motors
+        for (DcMotorEx motor : driveMotors) {
+            // Apply drive PIDF coefficients
+            motor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
+        }
 
-        // Reverse motors that are backwards otherwise
+        // Reverse motors that are otherwise backwards
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         ascend.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -94,41 +105,19 @@ DesmondTeleOP extends LinearOpMode {
         // Retrieve the IMU from the hardware map
         IMU imu = hardwareMap.get(IMU.class, "imu");
         // Adjust the orientation parameters to match your robot
+        // Without this, the REV Hub's orientation is assumed to be logo up USB forward
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
-        // Without this, the REV Hub's orientation is assumed to be logo up USB forward
         imu.initialize(parameters);
 
-        // Set motors to brake mode
-        frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        ascend.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        ascend3.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        armMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        armAngleMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        // Reset drive system motor encoders
-        frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backRightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        ascend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        ascend3.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        armAngleMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        // Set drive motors to RUN_USING_ENCODER
-        frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        frontLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backLeftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        ascend.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        ascend3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        armAngleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // Set all motors to brake mode, reset encoders, and run using encoders
+        for (DcMotorEx motor : allMotors) {
+            // For example, setting brake mode and encoder run mode:
+            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
 
         // Set motor current thresholds
         ascend.setCurrentAlert(ascendCurrentAlert, CurrentUnit.MILLIAMPS);
