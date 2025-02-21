@@ -53,16 +53,16 @@ DesmondTeleOP extends LinearOpMode {
     double rotationPower;
 
     // Declare our devices!! Yayy!!!
-    private DcMotorEx frontLeftMotor = null;
-    private DcMotorEx frontRightMotor = null;
-    private DcMotorEx backLeftMotor = null;
-    private DcMotorEx backRightMotor = null;
-    private CRServo wheelServo = null;
-    private CRServo ascendServo3 = null;
-    private DcMotorEx armMotor = null;
-    private DcMotorEx armAngleMotor = null;
-    private DcMotorEx ascend = null;
-    private DcMotorEx ascend3 = null;
+    DcMotorEx frontLeftMotor = null;
+    DcMotorEx frontRightMotor = null;
+    DcMotorEx backLeftMotor = null;
+    DcMotorEx backRightMotor = null;
+    CRServo wheelServo = null;
+    CRServo ascendServo3 = null;
+    DcMotorEx armMotor = null;
+    DcMotorEx armAngleMotor = null;
+    DcMotorEx ascend = null;
+    DcMotorEx ascend3 = null;
 
     @Override
     public void runOpMode() {
@@ -74,22 +74,23 @@ DesmondTeleOP extends LinearOpMode {
 
         // Group all motors in an array
         DcMotorEx[] allMotors = new DcMotorEx[] {
-                frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor,
-                ascend, ascend3, armMotor, armAngleMotor
+                frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor, ascend, ascend3, armMotor, armAngleMotor
         };
+
+        // Group all motor hardware names in an array
+        String[] motorHardwareNames = {
+                "front_left_drive", "front_right_drive", "back_left_drive", "back_right_drive", "ascend", "ascend3", "armMotor", "armAngleMotor"
+        };
+
+        // Assign all motors to hardware map
+        for (int i = 0; i < allMotors.length; i++) {
+            allMotors[i] = hardwareMap.get(DcMotorEx.class, motorHardwareNames[i]);
+        }
 
         // Assign our devices
         // Make sure your ID's match your configuration
-        frontLeftMotor = hardwareMap.get(DcMotorEx.class, "front_left_drive");
-        frontRightMotor = hardwareMap.get(DcMotorEx.class, "front_right_drive");
-        backLeftMotor = hardwareMap.get(DcMotorEx.class, "back_left_drive");
-        backRightMotor = hardwareMap.get(DcMotorEx.class, "back_right_drive");
         wheelServo = hardwareMap.get(CRServo.class, "wheelServo");
         ascendServo3 = hardwareMap.get(CRServo.class, "ascendServo3");
-        armMotor = hardwareMap.get(DcMotorEx.class, "armMotor");
-        armAngleMotor = hardwareMap.get(DcMotorEx.class, "armAngleMotor");
-        ascend = hardwareMap.get(DcMotorEx.class, "ascend");
-        ascend3 = hardwareMap.get(DcMotorEx.class, "ascend3");
 
         // Set PIDF values for all drive motors
         for (DcMotorEx motor : driveMotors) {
