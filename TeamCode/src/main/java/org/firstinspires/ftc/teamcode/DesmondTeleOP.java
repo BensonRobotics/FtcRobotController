@@ -27,27 +27,30 @@ DesmondTeleOP extends LinearOpMode {
     final byte hoursYouHaveLeft = 12;
 
     // Drive system PIDF coefficients
-    float NEW_P_DRIVE = 0.75F;
-    float NEW_I_DRIVE = 0.2F;
-    float NEW_D_DRIVE = 0.1F;
-    float NEW_F_DRIVE = 10.0F;
+    final float NEW_P_DRIVE = 0.75F;
+    final float NEW_I_DRIVE = 0.2F;
+    final float NEW_D_DRIVE = 0.1F;
+    final float NEW_F_DRIVE = 10.0F;
 
     // driveTicksPerSecond = driveMotorRPM * driveMotorStepsPerRevolution / 60
     // Output is basically the motor's max speed in encoder steps per second, which is what setVelocity uses
     // 537.7 is a 312 RPM motor's encoder steps per revolution
     // Output is first cast to float, since the equation itself uses double precision
-    float driveTicksPerSecond = (float) (312.0 * 537.7 / 60.0);
+    final float driveTicksPerSecond = (float) (312.0 * 537.7 / 60.0);
     ElapsedTime runtime = new ElapsedTime();
-    boolean useFieldCentricDrive = true;
-    short ascendCurrentAlert = 2500;
-    short armCurrentAlert = 2500;
-    float driveSpeedLimit = 1F;
-    float ascendSpeedLimit = 1F;
-    float armSpeedLimit = 1F;
-    float armAngleSpeedLimit = 1F;
-    float ascend3SpeedLimit = 1F;
-    double driveHeading = 0;
-    double rotationPower = 0;
+    final boolean useFieldCentricDrive = true;
+    final short ascendCurrentAlert = 2500;
+    final short armCurrentAlert = 2500;
+    final short armAngleCurrentAlert = 2500;
+    final float driveSpeedLimit = 1F;
+    final float ascendSpeedLimit = 1F;
+    final float armSpeedLimit = 1F;
+    final float armAngleSpeedLimit = 1F;
+    final float ascend3SpeedLimit = 1F;
+    final float ascendServo3SpeedLimit = 1F;
+    final float wheelServoSpeedLimit = 1F;
+    double driveHeading = 0; // If field centric is disabled, this will always stay at 0
+    double rotationPower;
 
     @Override
     public void runOpMode() {
@@ -129,8 +132,8 @@ DesmondTeleOP extends LinearOpMode {
 
         // Set motor current thresholds
         ascend.setCurrentAlert(ascendCurrentAlert, CurrentUnit.MILLIAMPS);
-        armMotor.setCurrentAlert(ascendCurrentAlert, CurrentUnit.MILLIAMPS);
-        armAngleMotor.setCurrentAlert(ascendCurrentAlert, CurrentUnit.MILLIAMPS);
+        armMotor.setCurrentAlert(armCurrentAlert, CurrentUnit.MILLIAMPS);
+        armAngleMotor.setCurrentAlert(armAngleCurrentAlert, CurrentUnit.MILLIAMPS);
 
         // Reset runtime, fully initialized!
         runtime.reset();
@@ -234,10 +237,11 @@ DesmondTeleOP extends LinearOpMode {
 
                 // If not comboing buttons, use for wheel servo instead
                 if (gamepad1.a) {
-                    wheelServo.setPower(1);
+                    wheelServo.setPower(wheelServoSpeedLimit);
                 } else if (gamepad1.y) {
-                    wheelServo.setPower(-1);
+                    wheelServo.setPower(-wheelServoSpeedLimit);
                 } else {
+                    // When released, shut off
                     wheelServo.setPower(0);
                 }
             }
@@ -245,44 +249,46 @@ DesmondTeleOP extends LinearOpMode {
             // Controls for arm angle
             if (gamepad1.left_bumper) {
                 armAngleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                armAngleMotor.setPower(-1);
+                armAngleMotor.setPower(-armAngleSpeedLimit);
             } else if (gamepad1.right_bumper) {
                 armAngleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                armAngleMotor.setPower(1);
+                armAngleMotor.setPower(armAngleSpeedLimit);
             } else if (armAngleMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
                 // When released, hold at position
                 armAngleMotor.setTargetPosition(armAngleMotor.getCurrentPosition());
                 armAngleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                armAngleMotor.setPower(1);
+                armAngleMotor.setPower(armAngleSpeedLimit);
             }
 
             // Controls for winch motor
             if (gamepad1.dpad_up) {
                 ascend3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                ascend3.setPower(1);
+                ascend3.setPower(ascend3SpeedLimit);
             } else if (gamepad1.dpad_down) {
                 ascend3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                ascend3.setPower(-1);
+                ascend3.setPower(-ascend3SpeedLimit);
             } else if (ascend3.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
                 // When released, hold at position
                 ascend3.setTargetPosition(ascend3.getCurrentPosition());
                 ascend3.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                ascend3.setPower(1);
+                ascend3.setPower(ascend3SpeedLimit);
             }
 
             // Controls for hook servo
             if (gamepad1.dpad_left) {
-                ascendServo3.setPower(1);
+                ascendServo3.setPower(ascendServo3SpeedLimit);
             } else if (gamepad1.dpad_right) {
                 ascendServo3.setPower(0);
             }
+
+            // MOTOR OVERCURRENT TRIPS
 
             // Arm motor current trip
             if (armMotor.isOverCurrent()) {
                 armMotor.setPower(0);
             } else if (armMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
                 // Only reset current trip if in RUN_TO_POSITION mode
-                armMotor.setPower(1);
+                armMotor.setPower(armSpeedLimit);
             }
 
             // Back lift motor current trip
@@ -290,7 +296,7 @@ DesmondTeleOP extends LinearOpMode {
                 ascend.setPower(0);
             } else if (ascend.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
                 // Only reset current trip if in RUN_TO_POSITION mode
-                ascend.setPower(1);
+                ascend.setPower(ascendSpeedLimit);
             }
 
             // Arm angle motor current trip
@@ -298,7 +304,7 @@ DesmondTeleOP extends LinearOpMode {
                 armAngleMotor.setPower(0);
             } else if (armAngleMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
                 // Only reset current trip if in RUN_TO_POSITION mode
-                armAngleMotor.setPower(1);
+                armAngleMotor.setPower(armAngleSpeedLimit);
             }
         }
     }
