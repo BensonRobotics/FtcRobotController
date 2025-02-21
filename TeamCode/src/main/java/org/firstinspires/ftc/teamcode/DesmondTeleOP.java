@@ -1,5 +1,7 @@
+// Package
 package org.firstinspires.ftc.teamcode;
 
+// Imports
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -12,6 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+// Class
 @TeleOp
 public class
 DesmondTeleOP extends LinearOpMode {
@@ -68,7 +71,7 @@ DesmondTeleOP extends LinearOpMode {
         ascend = hardwareMap.get(DcMotorEx.class, "ascend");
         ascend3 = hardwareMap.get(DcMotorEx.class, "ascend3");
 
-        // Apply motor PIDF coefficients
+        // Apply drive PIDF coefficients
         frontLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
         frontRightMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
         backLeftMotor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
@@ -88,6 +91,7 @@ DesmondTeleOP extends LinearOpMode {
         // Without this, the REV Hub's orientation is assumed to be logo up USB forward
         imu.initialize(parameters);
 
+        // Set motors to brake mode
         frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -117,19 +121,26 @@ DesmondTeleOP extends LinearOpMode {
         armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         armAngleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        // Set lift motor current trip
+        // Set motor current thresholds
         ascend.setCurrentAlert(ascendCurrentAlert, CurrentUnit.MILLIAMPS);
         armMotor.setCurrentAlert(ascendCurrentAlert, CurrentUnit.MILLIAMPS);
         armAngleMotor.setCurrentAlert(ascendCurrentAlert, CurrentUnit.MILLIAMPS);
 
-        // Reset runtime
+        // Reset runtime, fully initialized!
         runtime.reset();
+        telemetry.speak("Initialized!");
+        telemetry.update();
 
         // Play button is pressed
         waitForStart();
 
+        // OpMode started!
+        telemetry.speak("Started!");
+        telemetry.update();
+
         if (isStopRequested()) return;
 
+        // Main loop
         while (opModeIsActive()) {
             // Get and assign joystick values. remember, Y stick value is reversed
             // These would normally be y, x, and rx, see next comment
@@ -138,6 +149,7 @@ DesmondTeleOP extends LinearOpMode {
             double rx = gamepad1.right_stick_x;
             double ry = -gamepad1.right_stick_y;
 
+            // Get IMU yaw value
             double botHeading = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
             // Calculate angle and magnitude from joystick values
@@ -150,10 +162,13 @@ DesmondTeleOP extends LinearOpMode {
                 imu.resetYaw();
             }
             // Set botHeading to robot Yaw from IMU, if used
+            // If otherwise, driveAngle will stay at zero, effectively disabling field centric
             if (useFieldCentricDrive) {
                 driveHeading = botHeading;
             }
-                rotationPower = rx * driveSpeedLimit;
+
+            // Calculate rotation power from right stick
+            rotationPower = rx * driveSpeedLimit;
 
             // The evil code for calculating motor powers
             // Desmos used to troubleshoot directions without robot
@@ -183,95 +198,102 @@ DesmondTeleOP extends LinearOpMode {
             frontRightMotor.setVelocity(frontRightPower * driveTicksPerSecond);
             backRightMotor.setVelocity(backRightPower * driveTicksPerSecond);
 
-                    // Engages RUN_TO_POSITION when lift stops moving for active position holding
-                    double armPower = gamepad1.right_trigger - gamepad1.left_trigger;
-                    if (armPower != 0) {
-                        armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                        armMotor.setPower(armSpeedLimit * armPower);
-                    } else if (armMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
-                        armMotor.setTargetPosition(armMotor.getCurrentPosition());
-                        armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                        armMotor.setPower(armSpeedLimit);
-                    }
+            // MISCELLANEOUS MOTOR CONTROLS
+            // The getMode in the ifs is so that it only captures the current position once
+            // Controls for front lift
+            // Better method of handling trigger control
+            double armPower = gamepad1.right_trigger - gamepad1.left_trigger;
+            if (armPower != 0) {
+                armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                armMotor.setPower(armSpeedLimit * armPower);
+            } else if (armMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
+                // When released, hold at position
+                armMotor.setTargetPosition(armMotor.getCurrentPosition());
+                armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                armMotor.setPower(armSpeedLimit);
+            }
 
-                    if (gamepad1.a && gamepad1.x) {
-                        ascend.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                        ascend.setPower(ascendSpeedLimit);
-                    } else if (gamepad1.a && gamepad1.b) {
-                        ascend.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                        ascend.setPower(-ascendSpeedLimit);
-                    } else if (ascend.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
-                        ascend.setTargetPosition(ascend.getCurrentPosition());
-                        ascend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                        ascend.setPower(ascendSpeedLimit);
+            // Controls for back lift
+            if (gamepad1.a && gamepad1.x) {
+                ascend.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                ascend.setPower(ascendSpeedLimit);
+            } else if (gamepad1.a && gamepad1.b) {
+                ascend.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                ascend.setPower(-ascendSpeedLimit);
+            } else if (ascend.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
+                // When released, hold at position
+                ascend.setTargetPosition(ascend.getCurrentPosition());
+                ascend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                ascend.setPower(ascendSpeedLimit);
 
-                        if (gamepad1.a) {
-                            wheelServo.setPower(1);
-                        } else if (gamepad1.y) {
-                            wheelServo.setPower(-1);
-                        } else {
-                            wheelServo.setPower(0);
-                        }
-                    }
+                // If not comboing buttons, use for wheel servo instead
+                if (gamepad1.a) {
+                    wheelServo.setPower(1);
+                } else if (gamepad1.y) {
+                    wheelServo.setPower(-1);
+                } else {
+                    wheelServo.setPower(0);
+                }
+            }
 
-                    if (gamepad1.left_bumper) {
-                        armAngleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                        armAngleMotor.setPower(-1);
-                    } else if (gamepad1.right_bumper) {
-                        armAngleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                        armAngleMotor.setPower(1);
-                    } else if (armAngleMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
-                        armAngleMotor.setTargetPosition(armAngleMotor.getCurrentPosition());
-                        armAngleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                        armAngleMotor.setPower(1);
-                    }
+            // Controls for arm angle
+            if (gamepad1.left_bumper) {
+                armAngleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                armAngleMotor.setPower(-1);
+            } else if (gamepad1.right_bumper) {
+                armAngleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                armAngleMotor.setPower(1);
+            } else if (armAngleMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
+                // When released, hold at position
+                armAngleMotor.setTargetPosition(armAngleMotor.getCurrentPosition());
+                armAngleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                armAngleMotor.setPower(1);
+            }
 
-                    if (gamepad1.dpad_up) {
-                        ascend3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                        ascend3.setPower(1);
-                    } else if (gamepad1.dpad_down) {
-                        ascend3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                        ascend3.setPower(-1);
-                    } else if (ascend3.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
-                        ascend3.setTargetPosition(ascend3.getCurrentPosition());
-                        ascend3.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                        ascend3.setPower(1);
-                    }
+            // Controls for winch motor
+            if (gamepad1.dpad_up) {
+                ascend3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                ascend3.setPower(1);
+            } else if (gamepad1.dpad_down) {
+                ascend3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                ascend3.setPower(-1);
+            } else if (ascend3.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
+                // When released, hold at position
+                ascend3.setTargetPosition(ascend3.getCurrentPosition());
+                ascend3.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                ascend3.setPower(1);
+            }
 
-                    if (gamepad1.dpad_left) {
-                        ascendServo3.setPower(1);
-                    } else if (gamepad1.dpad_right) {
-                        ascendServo3.setPower(0);
-                    }
+            // Controls for hook servo
+            if (gamepad1.dpad_left) {
+                ascendServo3.setPower(1);
+            } else if (gamepad1.dpad_right) {
+                ascendServo3.setPower(0);
+            }
 
-                    // Lift motor current trip, only if going up, to allow for potential hanging
-                    // Remember to tighten the belt on the lift to prevent skipping
-                    if (armMotor.isOverCurrent()) {
-                        armMotor.setPower(0);
-                    } else if (armMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
-                        armMotor.setPower(1);
-                    }
+            // Arm motor current trip
+            if (armMotor.isOverCurrent()) {
+                armMotor.setPower(0);
+            } else if (armMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
+                // Only reset current trip if in RUN_TO_POSITION mode
+                armMotor.setPower(1);
+            }
 
-                    if (ascend.isOverCurrent() && gamepad1.a && gamepad1.x) {
-                        ascend.setPower(0);
-                    } else if (ascend.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
-                        ascend.setPower(1);
-                    }
+            // Back lift motor current trip
+            if (ascend.isOverCurrent() && gamepad1.a && gamepad1.x) {
+                ascend.setPower(0);
+            } else if (ascend.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
+                // Only reset current trip if in RUN_TO_POSITION mode
+                ascend.setPower(1);
+            }
 
-                    if (armAngleMotor.isOverCurrent()) {
-                        armAngleMotor.setPower(0);
-                    } else if (armAngleMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
-                        armAngleMotor.setPower(1);
-                    }
-
-            // Telemetry
-            telemetry.addData("Ascend Height:",ascend.getCurrentPosition());
-            telemetry.addLine();
-            telemetry.addData("Ascend Target:",ascend.getTargetPosition());
-            telemetry.addLine();
-            telemetry.addData("Ascend Current:",ascend.getCurrent(CurrentUnit.MILLIAMPS));
-            telemetry.addLine();
-            telemetry.update();
+            // Arm angle motor current trip
+            if (armAngleMotor.isOverCurrent()) {
+                armAngleMotor.setPower(0);
+            } else if (armAngleMotor.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
+                // Only reset current trip if in RUN_TO_POSITION mode
+                armAngleMotor.setPower(1);
+            }
         }
     }
 }
