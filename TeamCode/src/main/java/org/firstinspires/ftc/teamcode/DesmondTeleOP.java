@@ -46,7 +46,7 @@ DesmondTeleOP extends LinearOpMode {
     final float ascendSpeedLimit = 1F;
     final float armSpeedLimit = 1F;
     final float armAngleSpeedLimit = 1F;
-    final float ascend3SpeedLimit = 1F;
+    final float ascend2SpeedLimit = 1F;
     final float ascendServo3SpeedLimit = 1F;
     final float wheelServoSpeedLimit = 1F;
     double driveHeading = 0; // If field centric is disabled, this will always stay at 0
@@ -62,7 +62,7 @@ DesmondTeleOP extends LinearOpMode {
     DcMotorEx armMotor = null;
     DcMotorEx armAngleMotor = null;
     DcMotorEx ascend = null;
-    DcMotorEx ascend3 = null;
+    DcMotorEx ascend2 = null;
 
     @Override
     public void runOpMode() {
@@ -74,12 +74,12 @@ DesmondTeleOP extends LinearOpMode {
 
         // Group all motors in an array
         DcMotorEx[] allMotors = new DcMotorEx[] {
-                frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor, ascend, ascend3, armMotor, armAngleMotor
+                frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor, ascend, ascend2, armMotor, armAngleMotor
         };
 
         // Group all motor hardware names in an array
         String[] motorHardwareNames = {
-                "front_left_drive", "front_right_drive", "back_left_drive", "back_right_drive", "ascend", "ascend3", "armMotor", "armAngleMotor"
+                "front_left_drive", "front_right_drive", "back_left_drive", "back_right_drive", "ascend", "ascend2", "armMotor", "armAngleMotor"
         };
 
         // Assign all motors to hardware map
@@ -252,16 +252,16 @@ DesmondTeleOP extends LinearOpMode {
 
             // Controls for winch motor
             if (gamepad1.dpad_up) {
-                ascend3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                ascend3.setPower(ascend3SpeedLimit);
+                ascend2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                ascend2.setPower(ascend2SpeedLimit);
             } else if (gamepad1.dpad_down) {
-                ascend3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                ascend3.setPower(-ascend3SpeedLimit);
-            } else if (ascend3.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
+                ascend2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                ascend2.setPower(-ascend2SpeedLimit);
+            } else if (ascend2.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
                 // When released, hold at position
-                ascend3.setTargetPosition(ascend3.getCurrentPosition());
-                ascend3.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                ascend3.setPower(ascend3SpeedLimit);
+                ascend2.setTargetPosition(ascend2.getCurrentPosition());
+                ascend2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                ascend2.setPower(ascend2SpeedLimit);
             }
 
             // Controls for hook servo
