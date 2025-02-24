@@ -46,5 +46,11 @@ public class FConstants {
         FollowerConstants.pathEndVelocityConstraint = 0.1;
         FollowerConstants.pathEndTranslationalConstraint = 0.1;
         FollowerConstants.pathEndHeadingConstraint = 0.007;
+
+        // Custom constants below
+        FollowerConstants.useBrakeModeInTeleOp = true;
+        FollowerConstants.useVoltageCompensationInAuto = true;
+        FollowerConstants.useVoltageCompensationInTeleOp = true;
+        FollowerConstants.nominalVoltage = 10;
     }
 }
