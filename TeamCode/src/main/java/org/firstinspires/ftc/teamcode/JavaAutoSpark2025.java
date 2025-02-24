@@ -26,10 +26,7 @@ JavaAutoSpark2025 extends LinearOpMode {
     DcMotorEx armAngleMotor;
     DcMotorEx ascend;
     DcMotorEx ascend2;
-    final float NEW_P_DRIVE = 0.75F;
-    final float NEW_I_DRIVE = 0.2F;
-    final float NEW_D_DRIVE = 0.1F;
-    final float NEW_F_DRIVE = 10.0F;
+    final float NEW_P_DRIVE = 5.0F;
     final float NEW_P_TURN = 0.5F;
     final short ascendCurrentAlert = 2500;
     final short armCurrentAlert = 2500;
@@ -40,38 +37,37 @@ JavaAutoSpark2025 extends LinearOpMode {
     ElapsedTime runtime = new ElapsedTime();
     int autoStageNum = 0;
     double botHeading;
-    // Group drive motors in an array
-    final DcMotorEx[] driveMotors = new DcMotorEx[] {
-            frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor
-    };
-
-    // Group all motors in an array
-    final DcMotorEx[] allMotors = new DcMotorEx[] {
-            frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor, ascend, ascend2, armMotor, armAngleMotor
-    };
-
-    // Group all motor hardware names in an array
-    final String[] motorHardwareNames = {
-            "front_left_drive", "front_right_drive", "back_left_drive", "back_right_drive", "ascend", "ascend2", "armMotor", "armAngleMotor"
-    };
 
     @Override
     public void runOpMode() throws InterruptedException {
-
-        // Assign all motors to hardware map
-        for (int i = 0; i < allMotors.length; i++) {
-            allMotors[i] = hardwareMap.get(DcMotorEx.class, motorHardwareNames[i]);
-        }
 
         // Assign our devices
         // Make sure your ID's match your configuration
         wheelServo = hardwareMap.get(CRServo.class, "wheelServo");
         ascendServo3 = hardwareMap.get(CRServo.class, "ascendServo3");
+        frontLeftMotor = hardwareMap.get(DcMotorEx.class, "front_left_drive");
+        frontRightMotor = hardwareMap.get(DcMotorEx.class, "front_right_drive");
+        backLeftMotor = hardwareMap.get(DcMotorEx.class, "back_left_drive");
+        backRightMotor = hardwareMap.get(DcMotorEx.class, "back_right_drive");
+        ascend = hardwareMap.get(DcMotorEx.class, "ascend");
+        ascend2 = hardwareMap.get(DcMotorEx.class, "ascend2");
+        armMotor = hardwareMap.get(DcMotorEx.class, "armMotor");
+        armAngleMotor = hardwareMap.get(DcMotorEx.class, "armAngleMotor");
+
+        // Group drive motors in an array
+        DcMotorEx[] driveMotors = new DcMotorEx[] {
+                frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor
+        };
+
+        // Group all motors in an array
+        DcMotorEx[] allMotors = new DcMotorEx[] {
+                frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor, ascend, ascend2, armMotor, armAngleMotor
+        };
 
         // Set PIDF values for all drive motors
         for (DcMotorEx motor : driveMotors) {
             // Apply drive PIDF coefficients
-            motor.setVelocityPIDFCoefficients(NEW_P_DRIVE,NEW_I_DRIVE,NEW_D_DRIVE,NEW_F_DRIVE);
+            motor.setPositionPIDFCoefficients(NEW_P_DRIVE);
         }
 
         // Reverse motors that are otherwise backwards
@@ -109,6 +105,8 @@ JavaAutoSpark2025 extends LinearOpMode {
         // Play button is pressed
         waitForStart();
 
+        imu.resetYaw();
+
         // OpMode started!
         telemetry.speak("Started!");
         telemetry.update();
@@ -119,7 +117,7 @@ JavaAutoSpark2025 extends LinearOpMode {
             botHeading = -imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
             switch (autoStageNum) {
                 case 0:
-                    updateMoveWithPositions(0, 100, 0.5, 0, 0,0,0);
+                    updateMoveWithPositions(0, 400, 1, 0, 0,0,0);
                     if (areMotorsFree()) {
                     autoStageNum = 1;
                     runtime.reset();
@@ -127,9 +125,18 @@ JavaAutoSpark2025 extends LinearOpMode {
                     break;
                 case 1:
                     if (runtime.seconds() > 0.5) {
-                        updateMoveWithPositions(0, 0, 0.5, 0, 0, 0, 0);
+                        updateMoveWithPositions(200, 400, 1, 0, 0, 0, 0);
                         if (areMotorsFree()) {
                             autoStageNum = 2;
+                            runtime.reset();
+                        }
+                    }
+                    break;
+                case 2:
+                    if (runtime.seconds() > 0.5) {
+                        updateMoveWithPositions(0, 0, 1, 0, 0, 0, 0);
+                        if (areMotorsFree()) {
+                            autoStageNum = 3;
                             runtime.reset();
                         }
                     }
@@ -140,6 +147,11 @@ JavaAutoSpark2025 extends LinearOpMode {
     }
     private void updateMoveWithPositions (int mmX, int mmY, double drivePower, int targetYaw,
                                           int armAngle, double ascendHeight, double armHeight) {
+        // Group drive motors in an array
+        DcMotorEx[] driveMotors = new DcMotorEx[] {
+                frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor
+        };
+
         // Calculate angle and magnitude from step values
         double driveAngle = Math.atan2(mmX, mmY);
         double driveDistance = Math.hypot(mmX, mmY);
@@ -147,7 +159,8 @@ JavaAutoSpark2025 extends LinearOpMode {
         driveDistance *= 1.5;
         double error = Math.IEEEremainder(targetYaw - botHeading, 360.0);
         error *= NEW_P_TURN;
-        int rotation = (int) Math.max(Math.abs(error), turnSpeedLimit * 180 * NEW_P_TURN);
+        int rotation = (int) Math.min(Math.abs(error), turnSpeedLimit * 180 * NEW_P_TURN);
+        rotation = (int) Math.copySign(rotation, error);
         // The evil code for calculating motor powers
         // Desmos used to troubleshoot directions without robot
         // https://www.desmos.com/calculator/3gzff5bzbn
@@ -165,6 +178,10 @@ JavaAutoSpark2025 extends LinearOpMode {
         }
     }
     private boolean areMotorsFree() {
+        // Group all motors in an array
+        DcMotorEx[] allMotors = new DcMotorEx[] {
+                frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor, ascend, ascend2, armMotor, armAngleMotor
+        };
         for (DcMotorEx motor : allMotors) {
             if (motor.isBusy()) {
                 return false;
