@@ -52,5 +52,7 @@ public class FConstants {
         FollowerConstants.useVoltageCompensationInAuto = true;
         FollowerConstants.useVoltageCompensationInTeleOp = true;
         FollowerConstants.nominalVoltage = 10;
+        FollowerConstants.maxPower = 0.25; // Speed limit for minimizing wheel slippage
+        // Only use until we get an odometry sensor
     }
 }
