@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 // Imports and package
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.UltrasonicSensor;
@@ -8,6 +9,7 @@ import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 // Class naming and declaration
+@Disabled
 @TeleOp(name="Ultrasonic Test and Calibrate", group="Test")
 public class Ultrasonic_test extends LinearOpMode {
 
