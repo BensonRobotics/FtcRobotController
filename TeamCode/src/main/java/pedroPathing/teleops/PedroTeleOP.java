@@ -3,6 +3,7 @@ package pedroPathing.teleops;
 import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
+import com.pedropathing.pathgen.Vector;
 import com.pedropathing.util.Constants;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -41,12 +42,13 @@ class currentThresholds { // Measured in milliamps
 public class PedroTeleOP extends OpMode {
     private Follower follower;
     private final Pose startPose = new Pose(0,0,0);
-    CRServo wheelServo = null;
-    CRServo ascendServo3 = null;
-    DcMotorEx armMotor = null;
-    DcMotorEx armAngleMotor = null;
-    DcMotorEx ascend = null;
-    DcMotorEx ascend2 = null;
+    private boolean yawHoldEnabled = false;
+    private CRServo wheelServo = null;
+    private CRServo ascendServo3 = null;
+    private DcMotorEx armMotor = null;
+    private DcMotorEx armAngleMotor = null;
+    private DcMotorEx ascend = null;
+    private DcMotorEx ascend2 = null;
 
     /** This method is call once when init is played, it initializes the follower **/
     @Override
@@ -55,17 +57,17 @@ public class PedroTeleOP extends OpMode {
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
 
-        // Group all motors in an array
-        DcMotorEx[] allMiscMotors = new DcMotorEx[] {
-                ascend, ascend2, armMotor, armAngleMotor
-        };
-
         ascend = hardwareMap.get(DcMotorEx.class, "ascend");
         ascend2 = hardwareMap.get(DcMotorEx.class, "ascend2");
         armMotor = hardwareMap.get(DcMotorEx.class, "armMotor");
         armAngleMotor = hardwareMap.get(DcMotorEx.class, "armAngleMotor");
         wheelServo = hardwareMap.get(CRServo.class, "wheelServo");
         ascendServo3 = hardwareMap.get(CRServo.class, "ascendServo3");
+
+        // Group all motors in an array
+        DcMotorEx[] allMiscMotors = new DcMotorEx[] {
+                ascend, ascend2, armMotor, armAngleMotor
+        };
 
         for (DcMotorEx motor : allMiscMotors) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -105,7 +107,22 @@ public class PedroTeleOP extends OpMode {
         - Robot-Centric Mode: false
         */
 
-        follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, false);
+        if (Math.abs(gamepad1.right_stick_x) > 0.1) {
+            yawHoldEnabled = false;
+        } else if (!yawHoldEnabled) {
+                follower.setHeadingOffset(Math.IEEEremainder(follower.getTotalHeading(), 360));
+                yawHoldEnabled = true;
+        }
+
+        double rotationPower;
+        if (yawHoldEnabled) {
+            follower.update();
+            rotationPower = follower.headingVector.getMagnitude();
+        } else {
+            rotationPower = -gamepad1.right_stick_x;
+        }
+
+        follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, rotationPower, false);
         follower.update();
 
         // MISCELLANEOUS MOTOR CONTROLS
@@ -215,7 +232,6 @@ public class PedroTeleOP extends OpMode {
 
         /* Update Telemetry to the Driver Hub */
         telemetry.update();
-
     }
 
     /** We do not use this because everything automatically should disable **/
