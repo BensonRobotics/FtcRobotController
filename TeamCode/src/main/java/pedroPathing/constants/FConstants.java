@@ -20,13 +20,13 @@ public class FConstants {
 
         FollowerConstants.mass = 11.567; // Kilograms
 
-        FollowerConstants.xMovement = 57.8741;
-        FollowerConstants.yMovement = 52.295;
+        FollowerConstants.xMovement = 77.4875;
+        FollowerConstants.yMovement = 146.6195;
 
-        FollowerConstants.forwardZeroPowerAcceleration = -41.278;
-        FollowerConstants.lateralZeroPowerAcceleration = -59.7819;
+        FollowerConstants.forwardZeroPowerAcceleration = -61.3144;
+        FollowerConstants.lateralZeroPowerAcceleration = -786.2445;
 
-        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.1,0,0.01,0);
+        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.001,0,0.01,0);
         FollowerConstants.useSecondaryTranslationalPID = false;
         FollowerConstants.secondaryTranslationalPIDFCoefficients.setCoefficients(0.1,0,0.01,0); // Not being used, @see useSecondaryTranslationalPID
 
@@ -34,11 +34,11 @@ public class FConstants {
         FollowerConstants.useSecondaryHeadingPID = false;
         FollowerConstants.secondaryHeadingPIDFCoefficients.setCoefficients(2,0,0.1,0); // Not being used, @see useSecondaryHeadingPID
 
-        FollowerConstants.drivePIDFCoefficients.setCoefficients(0.1,0,0,0.6,0);
+        FollowerConstants.drivePIDFCoefficients.setCoefficients(0.005,0,0,0.0000001,0);
         FollowerConstants.useSecondaryDrivePID = false;
         FollowerConstants.secondaryDrivePIDFCoefficients.setCoefficients(0.1,0,0,0.6,0); // Not being used, @see useSecondaryDrivePID
 
-        FollowerConstants.zeroPowerAccelerationMultiplier = 4;
+        FollowerConstants.zeroPowerAccelerationMultiplier = 1;
         FollowerConstants.centripetalScaling = 0.0005;
 
         FollowerConstants.pathEndTimeoutConstraint = 500;
@@ -49,10 +49,7 @@ public class FConstants {
 
         // Custom constants below
         FollowerConstants.useBrakeModeInTeleOp = true;
-        FollowerConstants.useVoltageCompensationInAuto = true;
-        FollowerConstants.useVoltageCompensationInTeleOp = true;
-        FollowerConstants.nominalVoltage = 10;
-        FollowerConstants.maxPower = 0.25; // Speed limit for minimizing wheel slippage
+        FollowerConstants.maxPower = 1; // Speed limit for minimizing wheel slippage
         // Only use until we get an odometry sensor
     }
 }

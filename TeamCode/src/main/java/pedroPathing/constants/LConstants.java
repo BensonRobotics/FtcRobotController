@@ -6,7 +6,7 @@ import com.pedropathing.localization.constants.DriveEncoderConstants;
 public class LConstants {
     static {
         DriveEncoderConstants.forwardTicksToInches = 0.0072; // Tune
-        DriveEncoderConstants.strafeTicksToInches = -0.018;
+        DriveEncoderConstants.strafeTicksToInches = 0.018;
         DriveEncoderConstants.turnTicksToInches = 0.0123;
 
         DriveEncoderConstants.robot_Width = 16.287; // Inches, centers of wheels
