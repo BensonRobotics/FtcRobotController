@@ -49,7 +49,7 @@ public class FConstants {
 
         // Custom constants below
         FollowerConstants.useBrakeModeInTeleOp = true;
-        FollowerConstants.nominalVoltage = 12;
+        FollowerConstants.nominalVoltage = 11;
         FollowerConstants.useVoltageCompensationInTeleOp = true;
         FollowerConstants.useVoltageCompensationInAuto = true;
         FollowerConstants.maxPower = 1; // Speed limit for minimizing wheel slippage
