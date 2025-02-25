@@ -37,7 +37,7 @@ class currentThresholds { // Measured in milliamps
     static short armAngle = 2500;
 }
 
-@TeleOp(name = "Pedro Pathing TeleOP!!!", group = "TeleOP")
+@TeleOp(name = "Pedro Pathing TeleOP", group = "TeleOP")
 public class PedroTeleOP extends OpMode {
     private Follower follower;
     private final Pose startPose = new Pose(0,0,0);

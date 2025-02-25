@@ -9,7 +9,7 @@ public class LConstants {
         DriveEncoderConstants.strafeTicksToInches = 1;
         DriveEncoderConstants.turnTicksToInches = 1;
 
-        DriveEncoderConstants.robot_Width = 17.785; // Inches, outside wheels
+        DriveEncoderConstants.robot_Width = 16.287; // Inches, centers of wheels
         DriveEncoderConstants.robot_Length = 13.228; // Inches, centers of wheels
 
         DriveEncoderConstants.leftFrontEncoderDirection = Encoder.REVERSE;
