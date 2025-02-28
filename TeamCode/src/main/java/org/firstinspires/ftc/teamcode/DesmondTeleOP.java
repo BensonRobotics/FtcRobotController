@@ -53,19 +53,32 @@ DesmondTeleOP extends LinearOpMode {
     double rotationPower;
 
     // Declare our devices!! Yayy!!!
-    DcMotorEx frontLeftMotor = null;
-    DcMotorEx frontRightMotor = null;
-    DcMotorEx backLeftMotor = null;
-    DcMotorEx backRightMotor = null;
-    CRServo wheelServo = null;
-    CRServo ascendServo3 = null;
-    DcMotorEx armMotor = null;
-    DcMotorEx armAngleMotor = null;
-    DcMotorEx ascend = null;
-    DcMotorEx ascend2 = null;
+    DcMotorEx frontLeftMotor;
+    DcMotorEx frontRightMotor;
+    DcMotorEx backLeftMotor;
+    DcMotorEx backRightMotor;
+    CRServo wheelServo;
+    CRServo ascendServo3;
+    DcMotorEx armMotor;
+    DcMotorEx armAngleMotor;
+    DcMotorEx ascend;
+    DcMotorEx ascend2;
 
     @Override
     public void runOpMode() {
+
+        // Assign our devices
+        // Make sure your ID's match your configuration
+        wheelServo = hardwareMap.get(CRServo.class, "wheelServo");
+        ascendServo3 = hardwareMap.get(CRServo.class, "ascendServo3");
+        frontLeftMotor = hardwareMap.get(DcMotorEx.class, "front_left_drive");
+        frontRightMotor = hardwareMap.get(DcMotorEx.class, "front_right_drive");
+        backLeftMotor = hardwareMap.get(DcMotorEx.class, "back_left_drive");
+        backRightMotor = hardwareMap.get(DcMotorEx.class, "back_right_drive");
+        ascend = hardwareMap.get(DcMotorEx.class, "ascend");
+        ascend2 = hardwareMap.get(DcMotorEx.class, "ascend2");
+        armMotor = hardwareMap.get(DcMotorEx.class, "armMotor");
+        armAngleMotor = hardwareMap.get(DcMotorEx.class, "armAngleMotor");
 
         // Group drive motors in an array
         DcMotorEx[] driveMotors = new DcMotorEx[] {
@@ -77,21 +90,6 @@ DesmondTeleOP extends LinearOpMode {
                 frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor, ascend, ascend2, armMotor, armAngleMotor
         };
 
-        // Group all motor hardware names in an array
-        String[] motorHardwareNames = {
-                "front_left_drive", "front_right_drive", "back_left_drive", "back_right_drive", "ascend", "ascend2", "armMotor", "armAngleMotor"
-        };
-
-        // Assign all motors to hardware map
-        for (int i = 0; i < allMotors.length; i++) {
-            allMotors[i] = hardwareMap.get(DcMotorEx.class, motorHardwareNames[i]);
-        }
-
-        // Assign our devices
-        // Make sure your ID's match your configuration
-        wheelServo = hardwareMap.get(CRServo.class, "wheelServo");
-        ascendServo3 = hardwareMap.get(CRServo.class, "ascendServo3");
-
         // Set PIDF values for all drive motors
         for (DcMotorEx motor : driveMotors) {
             // Apply drive PIDF coefficients
@@ -101,7 +99,7 @@ DesmondTeleOP extends LinearOpMode {
         // Reverse motors that are otherwise backwards
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        ascend.setDirection(DcMotorSimple.Direction.REVERSE);
+        armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Retrieve the IMU from the hardware map
         IMU imu = hardwareMap.get(IMU.class, "imu");
@@ -214,22 +212,26 @@ DesmondTeleOP extends LinearOpMode {
 
             // Controls for back lift
             if (gamepad1.a && gamepad1.x) {
+                wheelServo.setPower(0);
                 ascend.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 ascend.setPower(ascendSpeedLimit);
             } else if (gamepad1.a && gamepad1.b) {
+                wheelServo.setPower(0);
                 ascend.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 ascend.setPower(-ascendSpeedLimit);
-            } else if (ascend.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
-                // When released, hold at position
-                ascend.setTargetPosition(ascend.getCurrentPosition());
-                ascend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                ascend.setPower(ascendSpeedLimit);
+            } else {
+                if (ascend.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
+                    // When released, hold at position
+                    ascend.setTargetPosition(ascend.getCurrentPosition());
+                    ascend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    ascend.setPower(ascendSpeedLimit);
+                }
 
                 // If not comboing buttons, use for wheel servo instead
                 if (gamepad1.a) {
-                    wheelServo.setPower(wheelServoSpeedLimit);
-                } else if (gamepad1.y) {
                     wheelServo.setPower(-wheelServoSpeedLimit);
+                } else if (gamepad1.y) {
+                    wheelServo.setPower(wheelServoSpeedLimit);
                 } else {
                     // When released, shut off
                     wheelServo.setPower(0);
@@ -296,6 +298,12 @@ DesmondTeleOP extends LinearOpMode {
                 // Only reset current trip if in RUN_TO_POSITION mode
                 armAngleMotor.setPower(armAngleSpeedLimit);
             }
+
+            telemetry.addData("botHeading", botHeading);
+            telemetry.addData("armAngleMotor.getCurrentPosition()", armAngleMotor.getCurrentPosition());
+            telemetry.addData("armMotor.getCurrentPosition()", armMotor.getCurrentPosition());
+            telemetry.addData("ascend.getCurrentPosition()", ascend.getCurrentPosition());
+            telemetry.update();
         }
     }
 }
