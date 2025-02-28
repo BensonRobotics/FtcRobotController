@@ -26,6 +26,9 @@ import pedroPathing.constants.LConstants;
 @Autonomous
 public class ConceptSampleSniff extends OpMode {
 
+    private final float robotLength = 17.75F;
+    private final float robotWidth = 17.625F;
+
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
 
@@ -44,12 +47,10 @@ public class ConceptSampleSniff extends OpMode {
     /** Start Pose of our robot */
     private final Pose startPose = new Pose(0, 0, Math.toRadians(0));
 
-    private final Pose farLeft = new Pose(0, 0, Math.toRadians(0));
+    private final Pose farLeft = new Pose(0, (48 - robotWidth), Math.toRadians(0));
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
     private PathChain fullSweep;
-    private final float robotLength = 17.75F;
-    private final float robotWidth = 17.625F;
     private int sweepCount;
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
