@@ -39,16 +39,18 @@ public class ConceptSampleSniff extends OpMode {
      * (For Into the Deep, this would be Blue Observation Zone (0,0) to Red Observation Zone (144,144).)
      * Even though Pedro uses a different coordinate system than RR, you can convert any roadrunner pose by adding +72 both the x and y.
      * This visualizer is very easy to use to find and create paths/pathchains/poses: <https://pedro-path-generator.vercel.app/>
-     * Lets assume our robot is 18 by 18 inches
-     * Lets assume the Robot is facing the human player and we want to score in the bucket */
+     * Our robot is 17-3/4 by 17-5/8 inches
 
     /** Start Pose of our robot */
-    private final Pose startPose = new Pose(8.8125, 64, Math.toRadians(0));
+    private final Pose startPose = new Pose(0, 0, Math.toRadians(0));
 
-    private final Pose sniffFarLeft = new Pose(8.8125, 84, Math.toRadians(0));
+    private final Pose farLeft = new Pose(0, 0, Math.toRadians(0));
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
     private PathChain fullSweep;
+    private final float robotLength = 17.75F;
+    private final float robotWidth = 17.625F;
+    private int sweepCount;
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
@@ -72,11 +74,11 @@ public class ConceptSampleSniff extends OpMode {
         /* Here is an example for Constant Interpolation
         scorePreload.setConstantInterpolation(startPose.getHeading()); */
 
-        /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
+        /* This is our fullSweep PathChain. We are using two paths with BezierLines, which are straight lines. */
         fullSweep = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(startPose), new Point(sniffFarLeft)))
-                .addPath(new BezierLine(new Point(sniffFarLeft), new Point(startPose)))
-                .setConstantHeadingInterpolation(0)
+                .addPath(new BezierLine(new Point(startPose), new Point(farLeft)))
+                .addPath(new BezierLine(new Point(farLeft), new Point(startPose)))
+                .setConstantHeadingInterpolation(startPose.getHeading())
                 .build();
     }
 
@@ -100,6 +102,8 @@ public class ConceptSampleSniff extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
                     setPathState(0);
+                    telemetry.addData("Sweep Count: ", sweepCount);
+                    telemetry.update();
                 }
                 break;
         }
@@ -134,6 +138,7 @@ public class ConceptSampleSniff extends OpMode {
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
+        sweepCount = 0;
 
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
