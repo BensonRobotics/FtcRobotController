@@ -88,11 +88,11 @@ public class ConceptSampleSniff extends OpMode {
      * The followPath() function sets the follower to run the specific path, but does NOT wait for it to finish before moving on. */
     public void autonomousPathUpdate() {
         switch (pathState) {
-            case 0:
+            case 0: // Start/restart the path ONLY
                 follower.followPath(fullSweep);
                 setPathState(1);
                 break;
-            case 1:
+            case 1: // Following the path
 
                 /* You could check for
                 - Follower State: "if(!follower.isBusy() {}"
@@ -101,7 +101,7 @@ public class ConceptSampleSniff extends OpMode {
                 */
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy()) {
+                if(!follower.isBusy()) { // Path has ended
                     setPathState(0);
                     telemetry.addData("Sweep Count: ", sweepCount);
                     telemetry.update();
