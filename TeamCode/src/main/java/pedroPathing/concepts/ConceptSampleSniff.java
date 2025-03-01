@@ -9,6 +9,9 @@ import com.pedropathing.util.Constants;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
@@ -52,6 +55,9 @@ public class ConceptSampleSniff extends OpMode {
     /* These are our Paths and PathChains that we will define in buildPaths() */
     private PathChain fullSweep;
     private int sweepCount;
+    CRServo wheelServo;
+    DcMotorEx armMotor;
+    DcMotorEx armAngleMotor;
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
@@ -88,11 +94,19 @@ public class ConceptSampleSniff extends OpMode {
      * The followPath() function sets the follower to run the specific path, but does NOT wait for it to finish before moving on. */
     public void autonomousPathUpdate() {
         switch (pathState) {
-            case 0: // Start/restart the path ONLY
+            case 0: // Start/restart the path ONLY, gets run once per sweep
                 follower.followPath(fullSweep);
                 setPathState(1);
                 break;
-            case 1: // Following the path
+            case 1: // Following the path, loops
+
+                // PLACEHOLDER FOR SAMPLE DETECTED
+                // False so it will never happen until you code it otherwise
+                if (false) {
+                    follower.holdPoint(follower.getPose());
+                    setPathState(2);
+                    break;
+                }
 
                 /* You could check for
                 - Follower State: "if(!follower.isBusy() {}"
@@ -101,12 +115,15 @@ public class ConceptSampleSniff extends OpMode {
                 */
 
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
-                if(!follower.isBusy()) { // Path has ended
+                if (!follower.isBusy()) { // Path has ended
                     setPathState(0);
+                    sweepCount++;
                     telemetry.addData("Sweep Count: ", sweepCount);
                     telemetry.update();
                 }
                 break;
+            case 2:
+
         }
     }
 
@@ -136,6 +153,25 @@ public class ConceptSampleSniff extends OpMode {
     /** This method is called once at the init of the OpMode. **/
     @Override
     public void init() {
+        wheelServo = hardwareMap.get(CRServo.class, "wheelServo");
+        armMotor = hardwareMap.get(DcMotorEx.class, "armMotor");
+        armAngleMotor = hardwareMap.get(DcMotorEx.class, "armAngleMotor");
+
+        // Group all motors in an array
+        DcMotorEx[] allMotors = new DcMotorEx[] {
+                armMotor, armAngleMotor
+        };
+
+        // Set all motors to brake mode, reset encoders, and run using encoders
+        for (DcMotorEx motor : allMotors) {
+            // For example, setting brake mode and encoder run mode:
+            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor.setTargetPosition(0);
+            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            motor.setPower(1);
+        }
+
         pathTimer = new Timer();
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
