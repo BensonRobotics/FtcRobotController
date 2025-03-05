@@ -10,9 +10,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class ColorDistTest extends LinearOpMode {
     ColorRangeSensor clawColorDist;
     public void runOpMode() {
+        clawColorDist = hardwareMap.get(ColorRangeSensor.class, "clawColorDist");
         boolean aDebounce = true; // Debounce for A button press
         boolean sensorLEDEnabled = false; // Indicator of LED state, can't just get state from sensor
         clawColorDist.enableLed(sensorLEDEnabled); // Shut off LED at start to comply with FTC rules
+
+        waitForStart();
 
         while (opModeIsActive()) { // Loop
             if (!aDebounce) { // If not debouncing
