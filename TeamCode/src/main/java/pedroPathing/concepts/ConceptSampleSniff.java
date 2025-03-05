@@ -48,9 +48,9 @@ public class ConceptSampleSniff extends OpMode {
      * Our robot is 17-3/4 by 17-5/8 inches
 
     /** Start Pose of our robot */
-    private final Pose startPose = new Pose(0, 0, Math.toRadians(0));
+    private final Pose startPose = new Pose(0, 0, 0);
 
-    private final Pose farLeft = new Pose(0, (48 - robotWidth), Math.toRadians(0));
+    private final Pose farLeft = new Pose(0, (48 - robotWidth), 0);
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
     private PathChain fullSweep;
@@ -84,6 +84,7 @@ public class ConceptSampleSniff extends OpMode {
         /* This is our fullSweep PathChain. We are using two paths with BezierLines, which are straight lines. */
         fullSweep = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(startPose), new Point(farLeft)))
+                .setConstantHeadingInterpolation(farLeft.getHeading())
                 .addPath(new BezierLine(new Point(farLeft), new Point(startPose)))
                 .setConstantHeadingInterpolation(startPose.getHeading())
                 .build();
