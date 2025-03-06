@@ -106,22 +106,14 @@ public class PedroTeleOP extends OpMode {
         - Robot-Centric Mode: false
         */
 
+        follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, false);
         if (Math.abs(gamepad1.right_stick_x) > 0.1) {
             yawHoldEnabled = false;
+            follower.breakFollowing();
         } else if (!yawHoldEnabled) {
-                follower.setHeadingOffset(Math.IEEEremainder(follower.getTotalHeading(), 360));
-                yawHoldEnabled = true;
+            follower.turnTo(Math.IEEEremainder(follower.getTotalHeading(), 2*Math.PI));
+            yawHoldEnabled = true;
         }
-
-        double rotationPower;
-        if (yawHoldEnabled) {
-            follower.update();
-            rotationPower = follower.headingVector.getMagnitude();
-        } else {
-            rotationPower = -gamepad1.right_stick_x;
-        }
-
-        follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, rotationPower, false);
         follower.update();
 
         // MISCELLANEOUS MOTOR CONTROLS
