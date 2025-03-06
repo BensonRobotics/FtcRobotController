@@ -106,6 +106,10 @@ public class PedroTeleOP extends OpMode {
         - Robot-Centric Mode: false
         */
 
+        if (gamepad1.back) { // Heading reset
+            follower.setHeadingOffset(Math.IEEEremainder(follower.getTotalHeading(), 2*Math.PI));
+        }
+
         follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, false);
         if (Math.abs(gamepad1.right_stick_x) > 0.1) {
             yawHoldEnabled = false;
