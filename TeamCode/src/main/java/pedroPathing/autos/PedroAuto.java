@@ -392,107 +392,107 @@ public class PedroAuto extends OpMode {
                 break;
                 case 5: // Following path5
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
-                if(!follower.isBusy()) {
+                if(!follower.isBusy()) { // If path5 has reached its end
                     /* Grab Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(path6, true);
-                    setPathState(6);
+                    follower.followPath(path6, true); // Follow path6
+                    setPathState(6); // Now following path6
                 }
                 break;
-                case 6:
+                case 6: // Following path6
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
-                if(!follower.isBusy()) {
+                if(!follower.isBusy()) { // If path6 has reached its end
                     /* Score Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are parked */
-                    follower.followPath(path7,true);
-                    setPathState(7);
+                    follower.followPath(path7,true); // Follow path7
+                    setPathState(7); // Now following path7
                 }
                 break;
-            case 7:
+            case 7: // Following path7
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
-                if(!follower.isBusy()) {
+                if(!follower.isBusy()) { // If path7 has reached its end
                     /* Level 1 Ascent */
 
-                    follower.followPath(path8,true);
+                    follower.followPath(path8,true); // Follow path8
 
-                    armMotor.setTargetPosition(1400);
-                    armAngleMotor.setTargetPosition(3300);
+                    armMotor.setTargetPosition(1400); // Ready to grab wall spec
+                    armAngleMotor.setTargetPosition(3300); // Clear wall so you can push last spike
 
-                    setPathState(8);
+                    setPathState(8); // Now following path8
                 }
                 break;
-                case 8:
+                case 8: // Following path8
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
-                    if(!follower.isBusy()) {
-                        follower.followPath(path9,true);
-                        armAngleMotor.setTargetPosition(3500);
-                        setPathState(9);
+                    if(!follower.isBusy()) { // If path8 has reached its end
+                        follower.followPath(path9,true); // Follow path9
+                        armAngleMotor.setTargetPosition(3500); // Ready to pick up wall specimen
+                        setPathState(9); // Now following path9
                     }
                     break;
-            case 9:
+            case 9: // Following path9
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
-                if(!follower.isBusy()) {
-                    follower.followPath(path10,true);
-                    setPathState(10);
+                if(!follower.isBusy()) { // If path9 has reached its end
+                    follower.followPath(path10,true); // Follow path10
+                    setPathState(10); // Now following path10
                 }
                 break;
-                case 10:
-                    if(!follower.isBusy()) {
-                        follower.followPath(path11, true);
-                        armMotor.setTargetPosition(3400);
-                        armAngleMotor.setTargetPosition(2380);
-                        setPathState(11);
+                case 10: // Following path10
+                    if(!follower.isBusy()) { // If path10 has reached its end
+                        follower.followPath(path11, true); // Follow path11
+                        armMotor.setTargetPosition(3400); // Lift up specimen, ready to enter chambers
+                        armAngleMotor.setTargetPosition(2380); // Lift up specimen, ready to enter chambers
+                        setPathState(11); // Now following path11
                     }
                     break;
-                case 11:
-                    if(!follower.isBusy()) {
-                        follower.followPath(path12, true);
-                        armAngleMotor.setTargetPosition(2565);
-                        armMotor.setTargetPosition(3570);
-                        setPathState(12);
+                case 11: // Following path11
+                    if(!follower.isBusy()) { // If path11 has reached its end
+                        follower.followPath(path12, true); // Follow path12
+                        armAngleMotor.setTargetPosition(2565); // Lift to score specimen
+                        armMotor.setTargetPosition(3570); // Lift to score specimen
+                        setPathState(12); // Now following path12
                     }
                     break;
-                case 12:
-                    if(!follower.isBusy()) {
-                        follower.followPath(path13, true);
-                        setPathState(13);
+                case 12: // Following path12
+                    if(!follower.isBusy()) { // If path12 has reached its end
+                        follower.followPath(path13, true); // Follow path13
+                        setPathState(13); // Now following path13
                     }
                     break;
-                case 13:
-                    if(!follower.isBusy()) {
-                        follower.followPath(path14, true);
-                        setPathState(14);
+                case 13: // Following path13
+                    if(!follower.isBusy()) { // If path13 has reached its end
+                        follower.followPath(path14, true); // Follow path14
+                        setPathState(14); // Now following path14
                     }
                     break;
-                case 14:
-                    if(!follower.isBusy()) {
-                        follower.followPath(path15, true);
-                        setPathState(15);
+                case 14: // Following path14
+                    if(!follower.isBusy()) { // If path14 has reached its end
+                        follower.followPath(path15, true); // Follow path15
+                        setPathState(15); // Now following path15
                     }
                     break;
-                case 15:
-                    if(!follower.isBusy()) {
-                        follower.followPath(path16, true);
-                        setPathState(16);
+                case 15: // Following path15
+                    if(!follower.isBusy()) { // If path15 has reached its end
+                        follower.followPath(path16, true); // Follow path16
+                        setPathState(16); // Now following path16
                     }
                     break;
-                case 16:
-                    if(!follower.isBusy()) {
-                        follower.followPath(path17, true);
-                        setPathState(17);
+                case 16: // Following path16
+                    if(!follower.isBusy()) { // If path16 has reached its end
+                        follower.followPath(path17, true); // Follow path17
+                        setPathState(17); // Now following path17
                     }
                     break;
-                case 17:
-                    if(!follower.isBusy()) {
-                        follower.followPath(path18, true);
-                        setPathState(18);
+                case 17: // Following path17
+                    if(!follower.isBusy()) { // If path17 has reached its end
+                        follower.followPath(path18, true); // Follow path18
+                        setPathState(18); // Now following path18
                     }
                     break;
-                    case 18:
-                    if(!follower.isBusy()) {
-                        setPathState(-1);
+                    case 18: // Following path18
+                    if(!follower.isBusy()) { // If path18 has reached its end
+                        setPathState(-1); // End of auto
                     }
                     break;
         }
