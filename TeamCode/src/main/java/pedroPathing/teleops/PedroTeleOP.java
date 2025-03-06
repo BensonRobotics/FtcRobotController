@@ -171,12 +171,12 @@ public class PedroTeleOP extends OpMode {
         } else if (gamepad1.right_bumper) {
             armAngleMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             armAngleMotor.setPower(speedLimits.armAngleSpeedLimit);
-        } else if (armAngleMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
+        } /* else if (armAngleMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
             // When released, hold at position
             armAngleMotor.setTargetPosition(armAngleMotor.getCurrentPosition());
             armAngleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             armAngleMotor.setPower(speedLimits.armAngleSpeedLimit);
-        }
+        } */ // armAngleMotor active hold causes too much wobbling, just BRAKE mode will be fine
 
         // Controls for winch motor
         if (gamepad1.dpad_up) {
