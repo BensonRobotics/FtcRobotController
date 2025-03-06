@@ -73,10 +73,10 @@ public class PedroTeleOP extends OpMode {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-            telemetry.speak("Initialized!");
-            telemetry.update();
         }
+
+        telemetry.speak("Initialized!");
+        telemetry.update();
     }
 
     /** This method is called continuously after Init while waiting to be started. **/
