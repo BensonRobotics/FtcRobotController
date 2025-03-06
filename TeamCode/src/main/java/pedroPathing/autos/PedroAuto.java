@@ -95,6 +95,8 @@ public class PedroAuto extends OpMode {
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
+                // Finish raising armMotor after ducking the bar
+                .addParametricCallback(0.9, () -> armMotor.setTargetPosition(3070))
                 .build();
 
         /* This is our path4 PathChain. We are using a single path with a BezierLine, which is a straight line. */
@@ -346,6 +348,7 @@ public class PedroAuto extends OpMode {
 
                     setPathState(1); // Now following path1
                 break;
+
                 case 1: // Following path1
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the behindSpike1Pose's position */
                 if(!follower.isBusy()) { // If path1 has reached its end
@@ -354,12 +357,12 @@ public class PedroAuto extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
                     follower.followPath(path2,true); // Follow path2
 
-                    armMotor.setTargetPosition(3070); // Up to clip specimen
                     armAngleMotor.setTargetPosition(2523); // Up to clip specimen
 
                     setPathState(2); // Now following path2
                 }
                 break;
+
                 case 2: // Following path2
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                 if(!follower.isBusy()) { // If path2 has reached its end
@@ -370,6 +373,7 @@ public class PedroAuto extends OpMode {
                     setPathState(3); // Now following path3
                 }
                 break;
+
                 case 3: // Following path3
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
                 if(!follower.isBusy()) { // If path3 has reached its end
@@ -380,6 +384,7 @@ public class PedroAuto extends OpMode {
                     setPathState(4); // Now following path4
                 }
                 break;
+
                 case 4: // Following path4
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                 if(!follower.isBusy()) { // If path4 has reached its end
@@ -390,6 +395,7 @@ public class PedroAuto extends OpMode {
                     setPathState(5); // Now following path5
                 }
                 break;
+
                 case 5: // Following path5
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
                 if(!follower.isBusy()) { // If path5 has reached its end
@@ -400,6 +406,7 @@ public class PedroAuto extends OpMode {
                     setPathState(6); // Now following path6
                 }
                 break;
+
                 case 6: // Following path6
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                 if(!follower.isBusy()) { // If path6 has reached its end
@@ -410,7 +417,8 @@ public class PedroAuto extends OpMode {
                     setPathState(7); // Now following path7
                 }
                 break;
-            case 7: // Following path7
+
+                case 7: // Following path7
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                 if(!follower.isBusy()) { // If path7 has reached its end
                     /* Level 1 Ascent */
@@ -423,6 +431,7 @@ public class PedroAuto extends OpMode {
                     setPathState(8); // Now following path8
                 }
                 break;
+
                 case 8: // Following path8
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                     if(!follower.isBusy()) { // If path8 has reached its end
@@ -431,13 +440,15 @@ public class PedroAuto extends OpMode {
                         setPathState(9); // Now following path9
                     }
                     break;
-            case 9: // Following path9
+
+                    case 9: // Following path9
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                 if(!follower.isBusy()) { // If path9 has reached its end
                     follower.followPath(path10,true); // Follow path10
                     setPathState(10); // Now following path10
                 }
                 break;
+
                 case 10: // Following path10
                     if(!follower.isBusy()) { // If path10 has reached its end
                         follower.followPath(path11, true); // Follow path11
@@ -446,7 +457,8 @@ public class PedroAuto extends OpMode {
                         setPathState(11); // Now following path11
                     }
                     break;
-                case 11: // Following path11
+
+                    case 11: // Following path11
                     if(!follower.isBusy()) { // If path11 has reached its end
                         follower.followPath(path12, true); // Follow path12
                         armAngleMotor.setTargetPosition(2565); // Lift to score specimen
@@ -454,42 +466,49 @@ public class PedroAuto extends OpMode {
                         setPathState(12); // Now following path12
                     }
                     break;
-                case 12: // Following path12
+
+                    case 12: // Following path12
                     if(!follower.isBusy()) { // If path12 has reached its end
                         follower.followPath(path13, true); // Follow path13
                         setPathState(13); // Now following path13
                     }
                     break;
-                case 13: // Following path13
+
+                    case 13: // Following path13
                     if(!follower.isBusy()) { // If path13 has reached its end
                         follower.followPath(path14, true); // Follow path14
                         setPathState(14); // Now following path14
                     }
                     break;
-                case 14: // Following path14
+
+                    case 14: // Following path14
                     if(!follower.isBusy()) { // If path14 has reached its end
                         follower.followPath(path15, true); // Follow path15
                         setPathState(15); // Now following path15
                     }
                     break;
-                case 15: // Following path15
+
+                    case 15: // Following path15
                     if(!follower.isBusy()) { // If path15 has reached its end
                         follower.followPath(path16, true); // Follow path16
                         setPathState(16); // Now following path16
                     }
                     break;
-                case 16: // Following path16
+
+                    case 16: // Following path16
                     if(!follower.isBusy()) { // If path16 has reached its end
                         follower.followPath(path17, true); // Follow path17
                         setPathState(17); // Now following path17
                     }
                     break;
-                case 17: // Following path17
+
+                    case 17: // Following path17
                     if(!follower.isBusy()) { // If path17 has reached its end
                         follower.followPath(path18, true); // Follow path18
                         setPathState(18); // Now following path18
                     }
                     break;
+
                     case 18: // Following path18
                     if(!follower.isBusy()) { // If path18 has reached its end
                         setPathState(-1); // End of auto
