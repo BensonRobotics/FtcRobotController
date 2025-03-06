@@ -193,7 +193,7 @@ public class PedroAuto extends OpMode {
                         // Line 9
                         new BezierLine(
                                 new Point(22.000, 10.000, Point.CARTESIAN),
-                                new Point(29.000, 10.000, Point.CARTESIAN)
+                                new Point(30.000, 10.000, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
@@ -202,8 +202,8 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 9
                         new BezierLine(
-                                new Point(29.000, 10.000, Point.CARTESIAN),
-                                new Point(26.000, 10.000, Point.CARTESIAN)
+                                new Point(30.000, 10.000, Point.CARTESIAN),
+                                new Point(27.000, 10.000, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
@@ -214,7 +214,7 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 10
                         new BezierCurve(
-                                new Point(26.000, 10.000, Point.CARTESIAN),
+                                new Point(27.000, 10.000, Point.CARTESIAN),
                                 new Point(22.826, 57.794, Point.CARTESIAN),
                                 new Point(35.000, 65.500, Point.CARTESIAN)
                         )
