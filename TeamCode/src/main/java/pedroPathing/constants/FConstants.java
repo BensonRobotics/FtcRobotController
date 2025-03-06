@@ -39,9 +39,9 @@ public class FConstants {
         FollowerConstants.secondaryDrivePIDFCoefficients.setCoefficients(0.1,0,0,0.6,0); // Not being used, @see useSecondaryDrivePID
 
         FollowerConstants.zeroPowerAccelerationMultiplier = 4;
-        FollowerConstants.centripetalScaling = 0.0001;
+        FollowerConstants.centripetalScaling = 0.0005;
 
-        FollowerConstants.pathEndTimeoutConstraint = 250;
+        FollowerConstants.pathEndTimeoutConstraint = 50;
         FollowerConstants.pathEndTValueConstraint = 0.995;
         FollowerConstants.pathEndVelocityConstraint = 0.1;
         FollowerConstants.pathEndTranslationalConstraint = 0.1;
@@ -49,7 +49,7 @@ public class FConstants {
 
         // Custom constants below
         FollowerConstants.useBrakeModeInTeleOp = true;
-        FollowerConstants.nominalVoltage = 10;
+        FollowerConstants.nominalVoltage = 11;
         FollowerConstants.useVoltageCompensationInTeleOp = true;
         FollowerConstants.useVoltageCompensationInAuto = true;
         FollowerConstants.maxPower = 1; // Speed limit for minimizing wheel slippage
