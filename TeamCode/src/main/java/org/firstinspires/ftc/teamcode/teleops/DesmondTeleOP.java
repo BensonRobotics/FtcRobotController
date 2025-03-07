@@ -190,10 +190,12 @@ DesmondTeleOP extends LinearOpMode {
             backLeftPower /= denominator;
 
             // Set motor velocities, converted from (-1 to 1) to (-driveTicksPerSecond to driveTicksPerSecond)
-            frontLeftMotor.setVelocity(frontLeftPower * driveTicksPerSecond);
-            backLeftMotor.setVelocity(backLeftPower * driveTicksPerSecond);
-            frontRightMotor.setVelocity(frontRightPower * driveTicksPerSecond);
-            backRightMotor.setVelocity(backRightPower * driveTicksPerSecond);
+            // Scratch that, this is insane. It can get the motor ticks per revolution from the config.
+            // 1872 is 312RPM converted to degrees per second
+            frontLeftMotor.setVelocity(frontLeftPower * 1872, AngleUnit.DEGREES);
+            backLeftMotor.setVelocity(backLeftPower * 1872, AngleUnit.DEGREES);
+            frontRightMotor.setVelocity(frontRightPower * 1872, AngleUnit.DEGREES);
+            backRightMotor.setVelocity(backRightPower * 1872, AngleUnit.DEGREES);
 
             // MISCELLANEOUS MOTOR CONTROLS
             // The getMode in the ifs is so that it only captures the current position once

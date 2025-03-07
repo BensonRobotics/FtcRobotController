@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 import pedroPathing.constants.FConstants;
@@ -107,15 +108,15 @@ public class PedroTeleOP extends OpMode {
         */
 
         if (gamepad1.back) { // Heading reset
-            follower.setHeadingOffset(Math.IEEEremainder(follower.getTotalHeading(), 2*Math.PI));
+            follower.setPose(new Pose(follower.getPose().getX(),follower.getPose().getY(),0));
         }
 
         follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, false);
-        if (Math.abs(gamepad1.right_stick_x) > 0.1) {
+        if (Math.abs(gamepad1.right_stick_x) > 0.05) {
             yawHoldEnabled = false;
             follower.breakFollowing();
         } else if (!yawHoldEnabled) {
-            follower.turnTo(Math.IEEEremainder(follower.getTotalHeading(), 2*Math.PI));
+            follower.turnTo(AngleUnit.normalizeRadians(follower.getHeadingOffset()));
             yawHoldEnabled = true;
         }
         follower.update();
