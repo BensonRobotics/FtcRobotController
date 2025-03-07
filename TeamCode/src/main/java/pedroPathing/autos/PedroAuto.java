@@ -31,9 +31,13 @@ import pedroPathing.constants.LConstants;
  */
 
 @Config
-class decelMult {
-    static int normal;
-    static int ramming = 100;
+class drivePIDFValues {
+    static double normalT;
+    static double rammingT = 0.95;
+    static double normalP;
+    static double normalI;
+    static double normalD;
+    static double normalF;
 }
 class robotDimesions {
     static double width = 17.75;
@@ -76,6 +80,19 @@ public class PedroAuto extends OpMode {
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
+    public void setRammingMode(boolean enabled) {
+        if (enabled) {
+            FollowerConstants.drivePIDFCoefficients.setCoefficients(
+                    drivePIDFValues.normalP, drivePIDFValues.normalI,
+                    drivePIDFValues.normalD, drivePIDFValues.rammingT,
+                    drivePIDFValues.normalF); // FUCK YEAH
+        } else {
+            FollowerConstants.drivePIDFCoefficients.setCoefficients(
+                    drivePIDFValues.normalP, drivePIDFValues.normalI,
+                    drivePIDFValues.normalD, drivePIDFValues.normalT,
+                    drivePIDFValues.normalF); // FUCK YEAH
+        }
+    }
     public void buildPaths() {
 
         /* There are two major types of paths components: BezierCurves and BezierLines.
@@ -459,7 +476,7 @@ public class PedroAuto extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                     if(!follower.isBusy()) { // If path8 has reached its end
                         follower.followPath(path9,true); // Follow path9
-                        //wheelServo.setPower(0.1); // Hold spec down while ramming
+                        //wheelServo.setPower(0.1); // Hold spec down while rammingT
                         setPathState(9); // Now following path9
                     }
                     break;
@@ -468,7 +485,7 @@ public class PedroAuto extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                 if(!follower.isBusy()) { // If path9 has reached its end
                     follower.followPath(path10,true); // Follow path10
-                    FollowerConstants.zeroPowerAccelerationMultiplier = decelMult.ramming; // FUCK YEAH
+                    setRammingMode(true); // No decel
                     setPathState(10); // Now following path10
                 }
                 break;
@@ -477,7 +494,7 @@ public class PedroAuto extends OpMode {
                     if(!follower.isBusy()) { // If path10 has reached its end
                         //wheelServo.setPower(0); // Stop servo
                         follower.followPath(path11, true); // Follow path11
-                        FollowerConstants.zeroPowerAccelerationMultiplier = decelMult.normal; // FUCK YEAH
+                        setRammingMode(false); // Yes decel
                         armMotor.setTargetPosition(3400); // Lift up specimen, ready to reorient specimen
                         armAngleMotor.setTargetPosition(2400); // Lift up specimen, ready to reorient specimen
                         setPathState(11); // Now following path11
@@ -487,6 +504,7 @@ public class PedroAuto extends OpMode {
                     case 11: // Following path11
                     if(!follower.isBusy()) { // If path11 has reached its end
                         follower.followPath(path12, true); // Follow path12
+                        setRammingMode(true);
                         armAngleMotor.setTargetPosition(2400); // Pull down to score specimen
                         armMotor.setTargetPosition(1000); // Pull down to score specimen
                         setPathState(12); // Now following path12
@@ -496,6 +514,7 @@ public class PedroAuto extends OpMode {
                     case 12: // Following path12
                     if(!follower.isBusy()) { // If path12 has reached its end
                         follower.followPath(path13, true); // Follow path13
+                        setRammingMode(false);
                         setPathState(13); // Now following path13
                     }
                     break;
@@ -503,6 +522,7 @@ public class PedroAuto extends OpMode {
                     case 13: // Following path13
                     if(!follower.isBusy()) { // If path13 has reached its end
                         follower.followPath(path14, true); // Follow path14
+                        setRammingMode(true);
                         armAngleMotor.setTargetPosition(2400); // Pull down to score specimen
                         armMotor.setTargetPosition(1000); // Pull down to score specimen
                         setPathState(14); // Now following path14
@@ -512,6 +532,7 @@ public class PedroAuto extends OpMode {
                     case 14: // Following path14
                     if(!follower.isBusy()) { // If path14 has reached its end
                         follower.followPath(path15, true); // Follow path15
+                        setRammingMode(false);
                         setPathState(15); // Now following path15
                     }
                     break;
@@ -519,6 +540,7 @@ public class PedroAuto extends OpMode {
                     case 15: // Following path15
                     if(!follower.isBusy()) { // If path15 has reached its end
                         follower.followPath(path16, true); // Follow path16
+                        setRammingMode(true);
                         armAngleMotor.setTargetPosition(2400); // Pull down to score specimen
                         armMotor.setTargetPosition(1000); // Pull down to score specimen
                         setPathState(16); // Now following path16
@@ -528,6 +550,7 @@ public class PedroAuto extends OpMode {
                     case 16: // Following path16
                     if(!follower.isBusy()) { // If path16 has reached its end
                         follower.followPath(path17, true); // Follow path17
+                        setRammingMode(false);
                         setPathState(17); // Now following path17
                     }
                     break;
@@ -586,7 +609,7 @@ public class PedroAuto extends OpMode {
         wheelServo = hardwareMap.get(CRServo.class, "wheelServo");
         ascendServo3 = hardwareMap.get(CRServo.class, "ascendServo3");
 
-        decelMult.normal = (int) FollowerConstants.zeroPowerAccelerationMultiplier;
+        drivePIDFValues.normalT = FollowerConstants.drivePIDFCoefficients.T;
 
         // Group all motors in an array
         DcMotorEx[] allMiscMotors = new DcMotorEx[] {
