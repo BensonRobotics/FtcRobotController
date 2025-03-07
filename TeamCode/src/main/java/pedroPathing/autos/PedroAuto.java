@@ -35,6 +35,11 @@ class decelMult {
     static int normal;
     static int ramming = 100;
 }
+class robotDimesions {
+    static double width = 17.75;
+    static double length = 17.625;
+    static double armLength = 16.5;
+}
 
 @Autonomous(name = "Pedro Pathing Autonomous", group = "Autonomous")
 public class PedroAuto extends OpMode {
@@ -175,19 +180,19 @@ public class PedroAuto extends OpMode {
                         new BezierCurve(
                                 new Point(22.000, 17.000, Point.CARTESIAN),
                                 new Point(62.651, 23.555, Point.CARTESIAN),
-                                new Point(63.000, 11.500, Point.CARTESIAN)
+                                new Point(63.000, 11.000, Point.CARTESIAN)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(180))
                 .build();
-
+    // WARNING!!! Y AND HEADING VALUES GET RECALIBRATED AT THE END OF PATH7 WHEN IT RUNS INTO THE WALL
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         path8 = follower.pathBuilder()
                 .addPath(
                         // Line 8
                         new BezierLine(
-                                new Point(63.000, 11.500, Point.CARTESIAN),
-                                new Point(22.000, 11.500, Point.CARTESIAN)
+                                new Point(63.000, 8.875, Point.CARTESIAN),
+                                new Point(22.000, 9.000, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
@@ -198,8 +203,8 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 9
                         new BezierLine(
-                                new Point(22.000, 11.500, Point.CARTESIAN),
-                                new Point(30.000, 15.000, Point.CARTESIAN)
+                                new Point(22.000, 9.000, Point.CARTESIAN),
+                                new Point(30.000, 13.000, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
@@ -210,8 +215,8 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 9
                         new BezierLine(
-                                new Point(30.000, 15.000, Point.CARTESIAN),
-                                new Point(27.000, 15.000, Point.CARTESIAN)
+                                new Point(30.000, 13.000, Point.CARTESIAN),
+                                new Point(27.000, 13.000, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
@@ -222,7 +227,7 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 10
                         new BezierCurve(
-                                new Point(27.000, 15.000, Point.CARTESIAN),
+                                new Point(27.000, 13.000, Point.CARTESIAN),
                                 new Point(22.826, 57.794, Point.CARTESIAN),
                                 new Point(35.000, 65.500, Point.CARTESIAN)
                         )
@@ -429,10 +434,9 @@ public class PedroAuto extends OpMode {
                 case 7: // Following path7
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                 if(!follower.isBusy()) { // If path7 has reached its end
-                    /* Level 1 Ascent */
-
-                    follower.followPath(path8,true); // Follow path8
-
+                    // Use this to reset Y and heading against wall
+                    follower.setPose(new Pose(follower.getPose().getX(), robotDimesions.width/2.0, Math.toRadians(180)));
+                    follower.followPath(path8,false); // Follow path8
                     armMotor.setTargetPosition(1400); // Ready to grab wall spec
                     armAngleMotor.setTargetPosition(2200); // Clear wall so you can push last spike
 
@@ -444,7 +448,7 @@ public class PedroAuto extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                     if(!follower.isBusy()) { // If path8 has reached its end
                         follower.followPath(path9,true); // Follow path9
-                        wheelServo.setPower(1);
+                        wheelServo.setPower(0.1); // Hold spec down while ramming
                         setPathState(9); // Now following path9
                     }
                     break;
@@ -460,7 +464,7 @@ public class PedroAuto extends OpMode {
 
                 case 10: // Following path10
                     if(!follower.isBusy()) { // If path10 has reached its end
-                        wheelServo.setPower(0);
+                        wheelServo.setPower(0); // Stop servo
                         follower.followPath(path11, true); // Follow path11
                         FollowerConstants.zeroPowerAccelerationMultiplier = decelMult.normal; // FUCK YEAH
                         armMotor.setTargetPosition(3400); // Lift up specimen, ready to reorient specimen
