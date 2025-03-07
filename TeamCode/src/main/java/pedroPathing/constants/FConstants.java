@@ -41,18 +41,15 @@ public class FConstants {
         FollowerConstants.zeroPowerAccelerationMultiplier = 4;
         FollowerConstants.centripetalScaling = 0.0005;
 
-        FollowerConstants.pathEndTimeoutConstraint = 50;
+        FollowerConstants.pathEndTimeoutConstraint = 0;
         FollowerConstants.pathEndTValueConstraint = 0.995;
-        FollowerConstants.pathEndVelocityConstraint = 0.1;
+        FollowerConstants.pathEndVelocityConstraint = 0.05;
         FollowerConstants.pathEndTranslationalConstraint = 0.1;
-        FollowerConstants.pathEndHeadingConstraint = 0.007;
+        FollowerConstants.pathEndHeadingConstraint = 0.01;
 
         // Custom constants below
         FollowerConstants.useBrakeModeInTeleOp = true;
         FollowerConstants.nominalVoltage = 10;
-        FollowerConstants.useVoltageCompensationInTeleOp = true;
         FollowerConstants.useVoltageCompensationInAuto = true;
-        FollowerConstants.maxPower = 1; // Speed limit for minimizing wheel slippage
-        // Only use until we get an odometry sensor
     }
 }
