@@ -246,6 +246,9 @@ public class PedroAuto extends OpMode {
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-90))
+                // Ready to pick up specimen
+                .addParametricCallback(0.1, () -> armAngleMotor.setTargetPosition(3800))
+                .addParametricCallback(0.1, () -> armMotor.setTargetPosition(1400))
                 .build();
 
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
@@ -272,6 +275,9 @@ public class PedroAuto extends OpMode {
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-90))
+                // Ready to pick up specimen
+                .addParametricCallback(0.1, () -> armAngleMotor.setTargetPosition(3800))
+                .addParametricCallback(0.1, () -> armMotor.setTargetPosition(1400))
                 .build();
 
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
@@ -298,6 +304,9 @@ public class PedroAuto extends OpMode {
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-90))
+                // Ready to pick up specimen
+                .addParametricCallback(0.1, () -> armAngleMotor.setTargetPosition(3800))
+                .addParametricCallback(0.1, () -> armMotor.setTargetPosition(1400))
                 .build();
 
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
@@ -324,6 +333,8 @@ public class PedroAuto extends OpMode {
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .addParametricCallback(0.1, () -> armAngleMotor.setTargetPosition(3800))
+                .addParametricCallback(0.1, () -> armMotor.setTargetPosition(1400))
                 .build();
     }
 
@@ -347,17 +358,17 @@ public class PedroAuto extends OpMode {
                 // Set motor positions
                     armMotor.setTargetPosition(1500); // Up to enter chambers
                     armAngleMotor.setTargetPosition(3073); // Forward and down to enter chambers
-                    //ascend.setTargetPosition(1000); // Up, stay until endgame for hang
+                    ascend.setTargetPosition(6000); // Up, stay until endgame for hang
 
                 // Set motor modes, only once, after positions are set
                     armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     armAngleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    //ascend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    ascend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
                     // Set motor powers, only once, after modes are set
                     armMotor.setPower(1);
                     armAngleMotor.setPower(1);
-                    //ascend.setPower(1);
+                    ascend.setPower(1);
 
                     setPathState(1); // Now following path1
                 break;
@@ -448,7 +459,7 @@ public class PedroAuto extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                     if(!follower.isBusy()) { // If path8 has reached its end
                         follower.followPath(path9,true); // Follow path9
-                        wheelServo.setPower(0.1); // Hold spec down while ramming
+                        //wheelServo.setPower(0.1); // Hold spec down while ramming
                         setPathState(9); // Now following path9
                     }
                     break;
@@ -464,7 +475,7 @@ public class PedroAuto extends OpMode {
 
                 case 10: // Following path10
                     if(!follower.isBusy()) { // If path10 has reached its end
-                        wheelServo.setPower(0); // Stop servo
+                        //wheelServo.setPower(0); // Stop servo
                         follower.followPath(path11, true); // Follow path11
                         FollowerConstants.zeroPowerAccelerationMultiplier = decelMult.normal; // FUCK YEAH
                         armMotor.setTargetPosition(3400); // Lift up specimen, ready to reorient specimen
@@ -492,6 +503,8 @@ public class PedroAuto extends OpMode {
                     case 13: // Following path13
                     if(!follower.isBusy()) { // If path13 has reached its end
                         follower.followPath(path14, true); // Follow path14
+                        armAngleMotor.setTargetPosition(2400); // Pull down to score specimen
+                        armMotor.setTargetPosition(1000); // Pull down to score specimen
                         setPathState(14); // Now following path14
                     }
                     break;
@@ -506,6 +519,8 @@ public class PedroAuto extends OpMode {
                     case 15: // Following path15
                     if(!follower.isBusy()) { // If path15 has reached its end
                         follower.followPath(path16, true); // Follow path16
+                        armAngleMotor.setTargetPosition(2400); // Pull down to score specimen
+                        armMotor.setTargetPosition(1000); // Pull down to score specimen
                         setPathState(16); // Now following path16
                     }
                     break;
@@ -520,6 +535,8 @@ public class PedroAuto extends OpMode {
                     case 17: // Following path17
                     if(!follower.isBusy()) { // If path17 has reached its end
                         follower.followPath(path18, true); // Follow path18
+                        armAngleMotor.setTargetPosition(2400); // Pull down to score specimen
+                        armMotor.setTargetPosition(1000); // Pull down to score specimen
                         setPathState(18); // Now following path18
                     }
                     break;
