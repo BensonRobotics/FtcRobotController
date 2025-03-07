@@ -113,27 +113,27 @@ public class PedroTeleOP extends OpMode {
         }
 
         follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, false);
-        if (Math.abs(gamepad1.right_stick_x) > 0.05) {
-            yawHoldEnabled = false;
-            follower.breakFollowing();
-        } else {
-            if (!yawHoldEnabled) {
-                holdHeading = follower.getPose().getHeading();
-                yawHoldEnabled = true;
+        if (Math.abs(gamepad1.right_stick_x) > 0.05) { // If we are turning, disable yaw hold
+            yawHoldEnabled = false; // If we are turning, disable yaw hold
+            follower.breakFollowing(); // Even though it auto stops, make sure its not following
+        } else { // If we are not turning, try yaw hold
+            if (!yawHoldEnabled) { // If yaw hold is not enabled, enable it
+                holdHeading = follower.getPose().getHeading(); // Get current heading
+                yawHoldEnabled = true; // Enable yaw hold
             }
-            follower.turnTo(holdHeading);
+            follower.turnTo(holdHeading); // follower.turnTo only runs until it reaches the target
         }
-        follower.update();
+        follower.update(); // Update the follower
 
         // MISCELLANEOUS MOTOR CONTROLS
         // The getMode in the ifs is so that it only captures the current position once
         // Controls for front lift
         // Better method of handling trigger control
         double armPower = gamepad1.right_trigger - gamepad1.left_trigger;
-        if (armPower != 0) {
+        if (Math.abs(armPower) > 0.05) { // If we are moving the arm
             armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             armMotor.setPower(speedLimits.armSpeedLimit * armPower);
-        } else if (armMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
+        } else if (armMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) { // Use mode as flag
             // When released, hold at position
             armMotor.setTargetPosition(armMotor.getCurrentPosition());
             armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
