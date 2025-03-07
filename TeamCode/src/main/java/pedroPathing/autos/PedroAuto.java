@@ -66,7 +66,7 @@ public class PedroAuto extends OpMode {
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
     private PathChain path1, path2, path3, path4, path5, path6, path7, path8, path9, path10, path11, path12, path13, path14, path15, path16, path17, path18;
-    // All the way up to path`17
+    // All the way up to path`18
     // Thank you AI
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
@@ -102,7 +102,7 @@ public class PedroAuto extends OpMode {
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 // Finish raising armMotor after ducking the bar
-                .addParametricCallback(0.9, () -> armMotor.setTargetPosition(3070))
+                .addParametricCallback(0.85, () -> armMotor.setTargetPosition(3070))
                 .build();
 
         /* This is our path4 PathChain. We are using a single path with a BezierLine, which is a straight line. */
