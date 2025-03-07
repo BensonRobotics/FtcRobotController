@@ -49,6 +49,7 @@ public class PedroTeleOP extends OpMode {
     private DcMotorEx armAngleMotor = null;
     private DcMotorEx ascend = null;
     private DcMotorEx ascend2 = null;
+    private double holdHeading;
 
     /** This method is call once when init is played, it initializes the follower **/
     @Override
@@ -115,9 +116,12 @@ public class PedroTeleOP extends OpMode {
         if (Math.abs(gamepad1.right_stick_x) > 0.05) {
             yawHoldEnabled = false;
             follower.breakFollowing();
-        } else if (!yawHoldEnabled) {
-            follower.turnTo(AngleUnit.normalizeRadians(follower.getHeadingOffset()));
-            yawHoldEnabled = true;
+        } else {
+            if (!yawHoldEnabled) {
+                holdHeading = follower.getPose().getHeading();
+                yawHoldEnabled = true;
+            }
+            follower.turnTo(holdHeading);
         }
         follower.update();
 
