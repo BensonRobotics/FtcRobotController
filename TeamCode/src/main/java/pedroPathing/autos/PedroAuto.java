@@ -208,8 +208,8 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 8
                         new BezierLine(
-                                new Point(63.000, 8.875, Point.CARTESIAN),
-                                new Point(22.000, 9.000, Point.CARTESIAN)
+                                new Point(63.000, 11.000, Point.CARTESIAN),
+                                new Point(22.000, 11.000, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
@@ -220,7 +220,7 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 9
                         new BezierLine(
-                                new Point(22.000, 9.000, Point.CARTESIAN),
+                                new Point(22.000, 8.875, Point.CARTESIAN),
                                 new Point(30.000, 13.000, Point.CARTESIAN)
                         )
                 )
@@ -375,7 +375,7 @@ public class PedroAuto extends OpMode {
                 // Set motor positions
                     armMotor.setTargetPosition(1500); // Up to enter chambers
                     armAngleMotor.setTargetPosition(3073); // Forward and down to enter chambers
-                    ascend.setTargetPosition(6000); // Up, stay until endgame for hang
+                    ascend.setTargetPosition(27500); // Up, stay until endgame for hang
 
                 // Set motor modes, only once, after positions are set
                     armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -463,7 +463,6 @@ public class PedroAuto extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                 if(!follower.isBusy()) { // If path7 has reached its end
                     // Use this to reset Y and heading against wall
-                    follower.setPose(new Pose(follower.getPose().getX(), robotDimesions.width/2.0, Math.toRadians(180)));
                     follower.followPath(path8,false); // Follow path8
                     armMotor.setTargetPosition(1400); // Ready to grab wall spec
                     armAngleMotor.setTargetPosition(2200); // Clear wall so you can push last spike
