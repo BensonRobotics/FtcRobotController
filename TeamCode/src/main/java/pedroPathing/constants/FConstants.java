@@ -41,11 +41,11 @@ public class FConstants {
         FollowerConstants.zeroPowerAccelerationMultiplier = 4;
         FollowerConstants.centripetalScaling = 0.0005;
 
-        FollowerConstants.pathEndTimeoutConstraint = 0;
+        FollowerConstants.pathEndTimeoutConstraint = 50;
         FollowerConstants.pathEndTValueConstraint = 0.995;
-        FollowerConstants.pathEndVelocityConstraint = 0.05;
+        FollowerConstants.pathEndVelocityConstraint = 0.1;
         FollowerConstants.pathEndTranslationalConstraint = 0.1;
-        FollowerConstants.pathEndHeadingConstraint = 0.01;
+        FollowerConstants.pathEndHeadingConstraint = 0.007;
 
         // Custom constants below
         FollowerConstants.useBrakeModeInTeleOp = true;
