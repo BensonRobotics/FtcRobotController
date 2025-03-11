@@ -370,7 +370,7 @@ public class PedroAuto extends OpMode {
 
                 case 1: // Following path1
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the behindSpike1Pose's position */
-                if(!follower.isBusy() && armMotor.getCurrentPosition() > 3000) { // If path1 has reached its end
+                if(!follower.isBusy() && armMotor.getCurrentPosition() > 3200) { // If path1 has reached its end
                     /* Grab Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
