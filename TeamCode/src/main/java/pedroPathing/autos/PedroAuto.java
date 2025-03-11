@@ -65,9 +65,9 @@ public class PedroAuto extends OpMode {
     private final Pose startPose = new Pose(10, 63, Math.toRadians(0));
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
-    private PathChain path1, path2, path3, path4, path5, path6, path7, path8, path9, path10, path11, path12, path13, path14, path15, path16, path17, path18;
-    // All the way up to path`18
-    // Thank you AI
+    private PathChain initForward, initScore, travelToSpike1, pushSpike1, travelToSpike2, pushSpike2,
+            travelToSpike3, pushSpike3, clearWall, wallGrab1, chamberSpec1, wallGrab2, chamberSpec2,
+            wallGrab3, chamberSpec3, wallGrab4, chamberSpec4, park;
 
     /** Build the paths for the auto (adds, for example, constant/linear headings while doing paths)
      * It is necessary to do this so that all the paths are built before the auto starts. **/
@@ -93,7 +93,7 @@ public class PedroAuto extends OpMode {
         scorePreload.setConstantInterpolation(startPose.getHeading()); */
 
         /* This is our path1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path1 = follower.pathBuilder()
+        initForward = follower.pathBuilder()
                 .addPath(
                         // Line 1
                         new BezierLine(
@@ -107,7 +107,7 @@ public class PedroAuto extends OpMode {
                 .build();
 
         /* This is our path4 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path2 = follower.pathBuilder()
+        initScore = follower.pathBuilder()
                 .addPath(
                         // Line 2
                         new BezierLine(
@@ -119,7 +119,7 @@ public class PedroAuto extends OpMode {
                 .build();
 
         /* This is our path2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path3 = follower.pathBuilder()
+        travelToSpike1 = follower.pathBuilder()
                 .addPath(
                         // Line 3
                         new BezierCurve(
@@ -133,7 +133,7 @@ public class PedroAuto extends OpMode {
                 .build();
 
         /* This is our path5 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path4 = follower.pathBuilder()
+        pushSpike1 = follower.pathBuilder()
                 .addPath(
                         // Line 4
                         new BezierLine(
@@ -145,7 +145,7 @@ public class PedroAuto extends OpMode {
                 .build();
 
         /* This is our path3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path5 = follower.pathBuilder()
+        travelToSpike2 = follower.pathBuilder()
                 .addPath(
                         // Line 5
                         new BezierCurve(
@@ -158,7 +158,7 @@ public class PedroAuto extends OpMode {
                 .build();
 
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path6 = follower.pathBuilder()
+        pushSpike2 = follower.pathBuilder()
                 .addPath(
                         // Line 6
                         new BezierLine(
@@ -170,7 +170,7 @@ public class PedroAuto extends OpMode {
                 .build();
 
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path7 = follower.pathBuilder()
+        travelToSpike3 = follower.pathBuilder()
                 .addPath(
                         // Line 7
                         new BezierCurve(
@@ -181,9 +181,8 @@ public class PedroAuto extends OpMode {
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(180))
                 .build();
-    // WARNING!!! Y AND HEADING VALUES GET RECALIBRATED AT THE END OF PATH7 WHEN IT RUNS INTO THE WALL
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path8 = follower.pathBuilder()
+        pushSpike3 = follower.pathBuilder()
                 .addPath(
                         // Line 8
                         new BezierLine(
@@ -195,35 +194,35 @@ public class PedroAuto extends OpMode {
                 .build();
 
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path9 = follower.pathBuilder()
+        clearWall = follower.pathBuilder()
                 .addPath(
                         // Line 9
                         new BezierLine(
                                 new Point(22.000, 11.500, Point.CARTESIAN),
-                                new Point(30.000, 15.000, Point.CARTESIAN)
+                                new Point(27.000, 15.000, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 // Ready to pick up wall specimen
-                .addParametricCallback(0.25, () -> armAngleMotor.setTargetPosition(3700))
+                .addParametricCallback(0.2, () -> armAngleMotor.setTargetPosition(3700))
                 .build();
-        path10 = follower.pathBuilder()
+        wallGrab1 = follower.pathBuilder()
                 .addPath(
                         // Line 9
                         new BezierLine(
-                                new Point(30.000, 15.000, Point.CARTESIAN),
-                                new Point(26.000, 15.000, Point.CARTESIAN)
+                                new Point(27.000, 15.000, Point.CARTESIAN),
+                                new Point(25.000, 15.000, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
                 .build();
 
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path11 = follower.pathBuilder()
+        chamberSpec1 = follower.pathBuilder()
                 .addPath(
                         // Line 10
                         new BezierCurve(
-                                new Point(26.000, 15.000, Point.CARTESIAN),
+                                new Point(25.000, 15.000, Point.CARTESIAN),
                                 new Point(22.826, 57.794, Point.CARTESIAN),
                                 new Point(35.000, 65.500, Point.CARTESIAN)
                         )
@@ -232,7 +231,7 @@ public class PedroAuto extends OpMode {
                 .build();
 
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path12 = follower.pathBuilder()
+        wallGrab2 = follower.pathBuilder()
                 .addPath(
                         // Line 11
                         new BezierCurve(
@@ -248,7 +247,7 @@ public class PedroAuto extends OpMode {
                 .build();
 
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path13 = follower.pathBuilder()
+        chamberSpec2 = follower.pathBuilder()
                 .addPath(
                         // Line 12
                         new BezierCurve(
@@ -261,7 +260,7 @@ public class PedroAuto extends OpMode {
                 .build();
 
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path14 = follower.pathBuilder()
+        wallGrab3 = follower.pathBuilder()
                 .addPath(
                         // Line 13
                         new BezierCurve(
@@ -277,7 +276,7 @@ public class PedroAuto extends OpMode {
                 .build();
 
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path15 = follower.pathBuilder()
+        chamberSpec3 = follower.pathBuilder()
                 .addPath(
                         // Line 14
                         new BezierCurve(
@@ -290,7 +289,7 @@ public class PedroAuto extends OpMode {
                 .build();
 
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path16 = follower.pathBuilder()
+        wallGrab4 = follower.pathBuilder()
                 .addPath(
                         // Line 15
                         new BezierCurve(
@@ -306,7 +305,7 @@ public class PedroAuto extends OpMode {
                 .build();
 
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path17 = follower.pathBuilder()
+        chamberSpec4 = follower.pathBuilder()
                 .addPath(
                         // Line 16
                         new BezierCurve(
@@ -319,7 +318,7 @@ public class PedroAuto extends OpMode {
                 .build();
 
         /* This is our path6 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        path18 = follower.pathBuilder()
+        park = follower.pathBuilder()
                 .addPath(
                         // Line 17
                         new BezierCurve(
@@ -349,7 +348,7 @@ public class PedroAuto extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */                 /* Score Preload */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(path1,true); // Follow path1
+                    follower.followPath(initForward,true); // Follow path1
 
                 // Set motor positions
                     armMotor.setTargetPosition(1100); // Up to enter chambers
@@ -375,7 +374,7 @@ public class PedroAuto extends OpMode {
                     /* Grab Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(path2,true); // Follow path2
+                    follower.followPath(initScore,true); // Follow path2
 
                     armAngleMotor.setTargetPosition(2530); // Up to clip specimen
 
@@ -389,7 +388,7 @@ public class PedroAuto extends OpMode {
                     /* Score Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(path3,true); // Follow path3
+                    follower.followPath(travelToSpike1,true); // Follow path3
                     setPathState(3); // Now following path3
                 }
                 break;
@@ -400,7 +399,7 @@ public class PedroAuto extends OpMode {
                     /* Grab Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(path4,true); // Follow path4
+                    follower.followPath(pushSpike1,true); // Follow path4
                     setPathState(4); // Now following path4
                 }
                 break;
@@ -411,7 +410,7 @@ public class PedroAuto extends OpMode {
                     /* Score Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(path5,true); // Follow path5
+                    follower.followPath(travelToSpike2,true); // Follow path5
                     setPathState(5); // Now following path5
                 }
                 break;
@@ -422,7 +421,7 @@ public class PedroAuto extends OpMode {
                     /* Grab Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(path6, true); // Follow path6
+                    follower.followPath(pushSpike2, true); // Follow path6
                     setPathState(6); // Now following path6
                 }
                 break;
@@ -433,7 +432,7 @@ public class PedroAuto extends OpMode {
                     /* Score Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are parked */
-                    follower.followPath(path7,true); // Follow path7
+                    follower.followPath(travelToSpike3,true); // Follow path7
                     setPathState(7); // Now following path7
                 }
                 break;
@@ -442,7 +441,7 @@ public class PedroAuto extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                 if(!follower.isBusy()) { // If path7 has reached its end
                     // Use this to reset Y and heading against wall
-                    follower.followPath(path8,true); // Follow path8
+                    follower.followPath(pushSpike3,true); // Follow path8
                     armMotor.setTargetPosition(1400); // Ready to grab wall spec
                     armAngleMotor.setTargetPosition(2200); // Clear wall so you can push last spike
 
@@ -453,7 +452,7 @@ public class PedroAuto extends OpMode {
                 case 8: // Following path8
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                     if(!follower.isBusy()) { // If path8 has reached its end
-                        follower.followPath(path9,true); // Follow path9
+                        follower.followPath(clearWall,true); // Follow path9
                         setPathState(9); // Now following path9
                     }
                     break;
@@ -468,7 +467,7 @@ public class PedroAuto extends OpMode {
                     if (wallSpecWaitTimer.getElapsedTimeSeconds() > 0.5 && !armAngleMotor.isBusy()) {
                         wallSpecWaiting = false;
                         wheelServo.setPower(0.25); // Hold spec down while ramming
-                        follower.followPath(path10, true); // Follow path10
+                        follower.followPath(wallGrab1, true); // Follow path10
                         setPathState(10); // Now following path10
                     }
                 }
@@ -477,7 +476,7 @@ public class PedroAuto extends OpMode {
                 case 10: // Following path10
                     if(!follower.isBusy()) { // If path10 has reached its end
                         wheelServo.setPower(0); // Stop servo
-                        follower.followPath(path11, true); // Follow path11
+                        follower.followPath(chamberSpec1, true); // Follow path11
                         armMotor.setTargetPosition(3400); // Lift up specimen, ready to reorient specimen
                         armAngleMotor.setTargetPosition(2400); // Lift up specimen, ready to reorient specimen
                         setPathState(11); // Now following path11
@@ -486,7 +485,7 @@ public class PedroAuto extends OpMode {
 
                     case 11: // Following path11
                     if(!follower.isBusy()) { // If path11 has reached its end
-                        follower.followPath(path12, true); // Follow path12
+                        follower.followPath(wallGrab2, true); // Follow path12
                         wheelServo.setPower(0.25); // Hold spec down while rammingT
                         armAngleMotor.setTargetPosition(2400); // Pull down to score specimen
                         armMotor.setTargetPosition(1000); // Pull down to score specimen
@@ -497,7 +496,7 @@ public class PedroAuto extends OpMode {
                     case 12: // Following path12
                     if(!follower.isBusy()) { // If path12 has reached its end
                         wheelServo.setPower(0); // Stop servo
-                        follower.followPath(path13, true); // Follow path13
+                        follower.followPath(chamberSpec2, true); // Follow path13
                         setPathState(13); // Now following path13
                     }
                     break;
@@ -505,7 +504,7 @@ public class PedroAuto extends OpMode {
                     case 13: // Following path13
                     if(!follower.isBusy()) { // If path13 has reached its end
                         wheelServo.setPower(0.25); // Hold spec down while rammingT
-                        follower.followPath(path14, true); // Follow path14
+                        follower.followPath(wallGrab3, true); // Follow path14
                         armAngleMotor.setTargetPosition(2400); // Pull down to score specimen
                         armMotor.setTargetPosition(1000); // Pull down to score specimen
                         setPathState(14); // Now following path14
@@ -515,7 +514,7 @@ public class PedroAuto extends OpMode {
                     case 14: // Following path14
                     if(!follower.isBusy()) { // If path14 has reached its end
                         wheelServo.setPower(0); // Stop servo
-                        follower.followPath(path15, true); // Follow path15
+                        follower.followPath(chamberSpec3, true); // Follow path15
                         setPathState(15); // Now following path15
                     }
                     break;
@@ -523,7 +522,7 @@ public class PedroAuto extends OpMode {
                     case 15: // Following path15
                     if(!follower.isBusy()) { // If path15 has reached its end
                         wheelServo.setPower(0.25); // Hold spec down while rammingT
-                        follower.followPath(path16, true); // Follow path16
+                        follower.followPath(wallGrab4, true); // Follow path16
                         armAngleMotor.setTargetPosition(2400); // Pull down to score specimen
                         armMotor.setTargetPosition(1000); // Pull down to score specimen
                         setPathState(16); // Now following path16
@@ -533,14 +532,14 @@ public class PedroAuto extends OpMode {
                     case 16: // Following path16
                     if(!follower.isBusy()) { // If path16 has reached its end
                         wheelServo.setPower(0); // Stop servo
-                        follower.followPath(path17, true); // Follow path17
+                        follower.followPath(chamberSpec4, true); // Follow path17
                         setPathState(17); // Now following path17
                     }
                     break;
 
                     case 17: // Following path17
                     if(!follower.isBusy()) { // If path17 has reached its end
-                        follower.followPath(path18, true); // Follow path18
+                        follower.followPath(park, true); // Follow path18
                         armAngleMotor.setTargetPosition(2400); // Pull down to score specimen
                         armMotor.setTargetPosition(1000); // Pull down to score specimen
                         setPathState(18); // Now following path18
