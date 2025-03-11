@@ -45,6 +45,8 @@ public class PedroAuto extends OpMode {
     private CRServo ascendServo3 = null;
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
+    private Timer wallSpecWaitTimer;
+    private boolean wallSpecWaiting = false;
 
     /** This is the variable where we store the state of our auto.
      * It is used by the pathUpdate method. */
@@ -210,7 +212,7 @@ public class PedroAuto extends OpMode {
                         // Line 9
                         new BezierLine(
                                 new Point(30.000, 15.000, Point.CARTESIAN),
-                                new Point(27.000, 15.000, Point.CARTESIAN)
+                                new Point(26.000, 15.000, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
@@ -221,7 +223,7 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 10
                         new BezierCurve(
-                                new Point(27.000, 15.000, Point.CARTESIAN),
+                                new Point(26.000, 15.000, Point.CARTESIAN),
                                 new Point(22.826, 57.794, Point.CARTESIAN),
                                 new Point(35.000, 65.500, Point.CARTESIAN)
                         )
@@ -452,7 +454,6 @@ public class PedroAuto extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                     if(!follower.isBusy()) { // If path8 has reached its end
                         follower.followPath(path9,true); // Follow path9
-                        //wheelServo.setPower(0.1); // Hold spec down while rammingT
                         setPathState(9); // Now following path9
                     }
                     break;
@@ -460,14 +461,22 @@ public class PedroAuto extends OpMode {
                     case 9: // Following path9
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
                 if(!follower.isBusy()) { // If path9 has reached its end
-                    follower.followPath(path10,true); // Follow path10
-                    setPathState(10); // Now following path10
+                    if (!wallSpecWaiting) {
+                        wallSpecWaitTimer.resetTimer(); // Wait for wall spec positioning
+                        wallSpecWaiting = true;
+                    }
+                    if (wallSpecWaitTimer.getElapsedTimeSeconds() > 0.5 && !armAngleMotor.isBusy()) {
+                        wallSpecWaiting = false;
+                        wheelServo.setPower(0.25); // Hold spec down while ramming
+                        follower.followPath(path10, true); // Follow path10
+                        setPathState(10); // Now following path10
+                    }
                 }
                 break;
 
                 case 10: // Following path10
                     if(!follower.isBusy()) { // If path10 has reached its end
-                        //wheelServo.setPower(0); // Stop servo
+                        wheelServo.setPower(0); // Stop servo
                         follower.followPath(path11, true); // Follow path11
                         armMotor.setTargetPosition(3400); // Lift up specimen, ready to reorient specimen
                         armAngleMotor.setTargetPosition(2400); // Lift up specimen, ready to reorient specimen
@@ -478,6 +487,7 @@ public class PedroAuto extends OpMode {
                     case 11: // Following path11
                     if(!follower.isBusy()) { // If path11 has reached its end
                         follower.followPath(path12, true); // Follow path12
+                        wheelServo.setPower(0.25); // Hold spec down while rammingT
                         armAngleMotor.setTargetPosition(2400); // Pull down to score specimen
                         armMotor.setTargetPosition(1000); // Pull down to score specimen
                         setPathState(12); // Now following path12
@@ -486,6 +496,7 @@ public class PedroAuto extends OpMode {
 
                     case 12: // Following path12
                     if(!follower.isBusy()) { // If path12 has reached its end
+                        wheelServo.setPower(0); // Stop servo
                         follower.followPath(path13, true); // Follow path13
                         setPathState(13); // Now following path13
                     }
@@ -493,6 +504,7 @@ public class PedroAuto extends OpMode {
 
                     case 13: // Following path13
                     if(!follower.isBusy()) { // If path13 has reached its end
+                        wheelServo.setPower(0.25); // Hold spec down while rammingT
                         follower.followPath(path14, true); // Follow path14
                         armAngleMotor.setTargetPosition(2400); // Pull down to score specimen
                         armMotor.setTargetPosition(1000); // Pull down to score specimen
@@ -502,6 +514,7 @@ public class PedroAuto extends OpMode {
 
                     case 14: // Following path14
                     if(!follower.isBusy()) { // If path14 has reached its end
+                        wheelServo.setPower(0); // Stop servo
                         follower.followPath(path15, true); // Follow path15
                         setPathState(15); // Now following path15
                     }
@@ -509,6 +522,7 @@ public class PedroAuto extends OpMode {
 
                     case 15: // Following path15
                     if(!follower.isBusy()) { // If path15 has reached its end
+                        wheelServo.setPower(0.25); // Hold spec down while rammingT
                         follower.followPath(path16, true); // Follow path16
                         armAngleMotor.setTargetPosition(2400); // Pull down to score specimen
                         armMotor.setTargetPosition(1000); // Pull down to score specimen
@@ -518,6 +532,7 @@ public class PedroAuto extends OpMode {
 
                     case 16: // Following path16
                     if(!follower.isBusy()) { // If path16 has reached its end
+                        wheelServo.setPower(0); // Stop servo
                         follower.followPath(path17, true); // Follow path17
                         setPathState(17); // Now following path17
                     }
@@ -568,7 +583,9 @@ public class PedroAuto extends OpMode {
     public void init() {
         pathTimer = new Timer();
         opmodeTimer = new Timer();
+        wallSpecWaitTimer = new Timer();
         opmodeTimer.resetTimer();
+        wallSpecWaitTimer.resetTimer();
 
         ascend = hardwareMap.get(DcMotorEx.class, "ascend");
         ascend2 = hardwareMap.get(DcMotorEx.class, "ascend2");
@@ -604,6 +621,7 @@ public class PedroAuto extends OpMode {
     @Override
     public void start() {
         opmodeTimer.resetTimer();
+        wallSpecWaitTimer.resetTimer();
         setPathState(0);
     }
 
