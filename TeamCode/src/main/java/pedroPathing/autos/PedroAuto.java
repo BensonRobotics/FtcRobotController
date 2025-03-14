@@ -43,7 +43,7 @@ class armPoses {
     static short armWallGrab = 1400;
     static short armAngleWallClear = 2200;
     static short armAngleWallGrab = 3700;
-    static short armChamberSpec = 3350;
+    static short armChamberSpec = 3200;
     static short armAngleChamberSpec = 1800;
 }
 
