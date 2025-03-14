@@ -28,12 +28,6 @@ import pedroPathing.constants.LConstants;
  * @version 2.0, 11/28/2024
  */
 
-class robotDimesions {
-    static double width = 17.75;
-    static double length = 17.625;
-    static double armLength = 16.5;
-}
-
 class armPoses {
     static short armHalfStart = 1100;
     static short armFullStart = 3600;
@@ -50,12 +44,10 @@ class armPoses {
 @Autonomous(name = "Pedro Pathing Autonomous", group = "Autonomous")
 public class PedroAuto extends OpMode {
 
+    private DcMotorEx ascend = null;
     private DcMotorEx armMotor = null;
     private DcMotorEx armAngleMotor = null;
-    private DcMotorEx ascend = null;
-    private DcMotorEx ascend2 = null;
     private CRServo wheelServo = null;
-    private CRServo ascendServo3 = null;
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
 
@@ -357,7 +349,7 @@ public class PedroAuto extends OpMode {
                 // Set motor positions
                     armMotor.setTargetPosition(armPoses.armHalfStart); // Up to enter chambers
                     armAngleMotor.setTargetPosition(armPoses.armAngleStart); // Forward and down to enter chambers
-                    //ascend.setTargetPosition(armPoses.ascendStart); // Up, stay until endgame for hang
+                    ascend.setTargetPosition(armPoses.ascendStart); // Up, stay until endgame for hang
 
                 // Set motor modes, only once, after positions are set
                     armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -595,15 +587,13 @@ public class PedroAuto extends OpMode {
         opmodeTimer.resetTimer();
 
         ascend = hardwareMap.get(DcMotorEx.class, "ascend");
-        ascend2 = hardwareMap.get(DcMotorEx.class, "ascend2");
         armMotor = hardwareMap.get(DcMotorEx.class, "armMotor");
         armAngleMotor = hardwareMap.get(DcMotorEx.class, "armAngleMotor");
         wheelServo = hardwareMap.get(CRServo.class, "wheelServo");
-        ascendServo3 = hardwareMap.get(CRServo.class, "ascendServo3");
 
         // Group all motors in an array
         DcMotorEx[] allMiscMotors = new DcMotorEx[] {
-                ascend, ascend2, armMotor, armAngleMotor
+                ascend, armMotor, armAngleMotor
         };
 
         armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
