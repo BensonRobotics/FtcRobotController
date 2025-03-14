@@ -247,7 +247,7 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 11
                         new BezierCurve(
-                                new Point(35.000, 65.500, Point.CARTESIAN),
+                                new Point(36.250, 68.000, Point.CARTESIAN),
                                 new Point(13.541, 73.093, Point.CARTESIAN),
                                 new Point(9.500, 28.000, Point.CARTESIAN)
                         )
@@ -262,7 +262,7 @@ public class PedroAuto extends OpMode {
                         // Line 12
                         new BezierCurve(
                                 new Point(9.500, 28.000, Point.CARTESIAN),
-                                new Point(12.327, 73.907, Point.CARTESIAN),
+                                new Point(12.327, 74.907, Point.CARTESIAN),
                                 new Point(36.250, 69.000, Point.CARTESIAN)
                         )
                 )
@@ -274,8 +274,8 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 13
                         new BezierCurve(
-                                new Point(36.250, 70.000, Point.CARTESIAN),
-                                new Point(12.813, 73.393, Point.CARTESIAN),
+                                new Point(36.250, 69.000, Point.CARTESIAN),
+                                new Point(12.813, 74.393, Point.CARTESIAN),
                                 new Point(9.500, 28.000, Point.CARTESIAN)
                         )
                 )
@@ -289,7 +289,7 @@ public class PedroAuto extends OpMode {
                         // Line 14
                         new BezierCurve(
                                 new Point(9.500, 28.000, Point.CARTESIAN),
-                                new Point(12.541, 73.821, Point.CARTESIAN),
+                                new Point(12.541, 75.821, Point.CARTESIAN),
                                 new Point(36.250, 70.000, Point.CARTESIAN)
                         )
                 )
@@ -302,7 +302,7 @@ public class PedroAuto extends OpMode {
                         // Line 15
                         new BezierCurve(
                                 new Point(36.250, 70.000, Point.CARTESIAN),
-                                new Point(12.813, 73.364, Point.CARTESIAN),
+                                new Point(12.813, 75.364, Point.CARTESIAN),
                                 new Point(9.500, 28.000, Point.CARTESIAN)
                         )
                 )
