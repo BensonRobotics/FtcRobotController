@@ -8,12 +8,14 @@ import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Constants;
 import com.pedropathing.util.Timer;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
@@ -36,9 +38,9 @@ class armPoses {
     static short armAngleInitScore = 2530;
     static short armWallGrab = 1400;
     static short armAngleWallClear = 2200;
-    static short armAngleWallGrab = 3700;
-    static short armChamberSpec = 3200;
-    static short armAngleChamberSpec = 1800;
+    static short armAngleWallGrab = 3750;
+    static short armChamberSpec = 3300;
+    static short armAngleChamberSpec = 1850;
 }
 
 @Autonomous(name = "Pedro Pathing Autonomous", group = "Autonomous")
@@ -65,7 +67,7 @@ public class PedroAuto extends OpMode {
      * Lets assume the Robot is facing the human player and we want to score in the bucket */
 
     /** Start Pose of our robot */
-    private final Pose startPose = new Pose(8, 64.5, Math.toRadians(0));
+    private final Pose startPose = new Pose(8.000, 62.625, Math.toRadians(0));
 
     /* These are our Paths and PathChains that we will define in buildPaths() */
     private PathChain initForward, initScore, travelToSpike1, pushSpike1, travelToSpike2, pushSpike2,
@@ -101,7 +103,7 @@ public class PedroAuto extends OpMode {
                         // Line 1
                         new BezierLine(
                                 new Point(startPose),
-                                new Point(28.000, 63.000, Point.CARTESIAN)
+                                new Point(28.500, 62.625, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
@@ -109,27 +111,16 @@ public class PedroAuto extends OpMode {
                 .addParametricCallback(0.95, () -> armMotor.setTargetPosition(armPoses.armFullStart))
                 .build();
 
-        /* This is our path4 PathChain. We are using a single path with a BezierLine, which is a straight line. */
-        initScore = follower.pathBuilder()
-                .addPath(
-                        // Line 2
-                        new BezierLine(
-                                new Point(28.000, 63.000, Point.CARTESIAN),
-                                new Point(20.000, 63.000, Point.CARTESIAN)
-                        )
-                )
-                .setConstantHeadingInterpolation(Math.toRadians(0))
-                .build();
-
         /* This is our path2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
         travelToSpike1 = follower.pathBuilder()
                 .addPath(
                         // Line 3
                         new BezierCurve(
-                                new Point(20.000, 63.000, Point.CARTESIAN),
-                                new Point(28.654, 13.755, Point.CARTESIAN),
-                                new Point(58.810, 51.066, Point.CARTESIAN),
-                                new Point(61.000, 26.000, Point.CARTESIAN)
+                                new Point(28.500, 62.625, Point.CARTESIAN),
+                                new Point(6.000, 70.000, Point.CARTESIAN),
+                                new Point(28.654, 10.755, Point.CARTESIAN),
+                                new Point(55.810, 51.066, Point.CARTESIAN),
+                                new Point(59.000, 27.000, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
@@ -140,8 +131,8 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 4
                         new BezierLine(
-                                new Point(61.000, 26.000, Point.CARTESIAN),
-                                new Point(22.000, 26.000, Point.CARTESIAN)
+                                new Point(59.000, 27.000, Point.CARTESIAN),
+                                new Point(20.000, 27.000, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
@@ -152,9 +143,9 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 5
                         new BezierCurve(
-                                new Point(22.000, 26.000, Point.CARTESIAN),
+                                new Point(20.000, 27.000, Point.CARTESIAN),
                                 new Point(61.601, 29.372, Point.CARTESIAN),
-                                new Point(61.000, 18.000, Point.CARTESIAN)
+                                new Point(59.000, 18.000, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(0))
@@ -165,7 +156,7 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 6
                         new BezierLine(
-                                new Point(61.000, 18.000, Point.CARTESIAN),
+                                new Point(59.000, 18.000, Point.CARTESIAN),
                                 new Point(22.000, 18.000, Point.CARTESIAN)
                         )
                 )
@@ -179,7 +170,7 @@ public class PedroAuto extends OpMode {
                         new BezierCurve(
                                 new Point(22.000, 18.000, Point.CARTESIAN),
                                 new Point(62.651, 23.555, Point.CARTESIAN),
-                                new Point(61.000, 11.000, Point.CARTESIAN)
+                                new Point(59.000, 12.000, Point.CARTESIAN)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(180))
@@ -189,8 +180,8 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 8
                         new BezierLine(
-                                new Point(61.000, 11.000, Point.CARTESIAN),
-                                new Point(22.000, 11.000, Point.CARTESIAN)
+                                new Point(59.000, 12.000, Point.CARTESIAN),
+                                new Point(22.000, 11.500, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
@@ -201,8 +192,8 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 9
                         new BezierLine(
-                                new Point(22.000, 11.000, Point.CARTESIAN),
-                                new Point(28.500, 14.500, Point.CARTESIAN)
+                                new Point(22.000, 11.500, Point.CARTESIAN),
+                                new Point(29.000, 14.500, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
@@ -213,8 +204,8 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 9
                         new BezierLine(
-                                new Point(28.500, 14.500, Point.CARTESIAN),
-                                new Point(25.250, 14.500, Point.CARTESIAN)
+                                new Point(29.000, 14.500, Point.CARTESIAN),
+                                new Point(25.500, 14.500, Point.CARTESIAN)
                         )
                 )
                 .setConstantHeadingInterpolation(Math.toRadians(180))
@@ -226,9 +217,9 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 10
                         new BezierCurve(
-                                new Point(25.250, 14.500, Point.CARTESIAN),
-                                new Point(12.000, 74.000, Point.CARTESIAN),
-                                new Point(36.250, 68.000, Point.CARTESIAN)
+                                new Point(25.500, 14.500, Point.CARTESIAN),
+                                new Point(24.000, 74.000, Point.CARTESIAN),
+                                new Point(37.000, 68.000, Point.CARTESIAN)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(0))
@@ -239,12 +230,12 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 11
                         new BezierCurve(
-                                new Point(36.250, 68.000, Point.CARTESIAN),
-                                new Point(13.541, 73.093, Point.CARTESIAN),
-                                new Point(9.500, 28.000, Point.CARTESIAN)
+                                new Point(37.000, 68.000, Point.CARTESIAN),
+                                new Point(21.000, 78.000, Point.CARTESIAN),
+                                new Point(9.500, 28.500, Point.CARTESIAN)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-90),0.9)
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-90),0.8)
                 .setZeroPowerAccelerationMultiplier(16)
                 .build();
 
@@ -253,9 +244,9 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 12
                         new BezierCurve(
-                                new Point(9.500, 28.000, Point.CARTESIAN),
-                                new Point(12.327, 74.907, Point.CARTESIAN),
-                                new Point(36.250, 69.000, Point.CARTESIAN)
+                                new Point(9.500, 28.500, Point.CARTESIAN),
+                                new Point(24.000, 78.000, Point.CARTESIAN),
+                                new Point(37.000, 68.000, Point.CARTESIAN)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(0))
@@ -266,12 +257,12 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 13
                         new BezierCurve(
-                                new Point(36.250, 69.000, Point.CARTESIAN),
-                                new Point(12.813, 74.393, Point.CARTESIAN),
-                                new Point(9.500, 28.000, Point.CARTESIAN)
+                                new Point(37.000, 68.000, Point.CARTESIAN),
+                                new Point(21.000, 78.000, Point.CARTESIAN),
+                                new Point(9.500, 28.500, Point.CARTESIAN)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-90),0.9)
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-90),0.8)
                 .setZeroPowerAccelerationMultiplier(16)
                 .build();
 
@@ -280,9 +271,9 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 14
                         new BezierCurve(
-                                new Point(9.500, 28.000, Point.CARTESIAN),
-                                new Point(12.541, 75.821, Point.CARTESIAN),
-                                new Point(36.250, 70.000, Point.CARTESIAN)
+                                new Point(9.500, 28.500, Point.CARTESIAN),
+                                new Point(24.000, 78.000, Point.CARTESIAN),
+                                new Point(37.000, 68.000, Point.CARTESIAN)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(0))
@@ -293,12 +284,12 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 15
                         new BezierCurve(
-                                new Point(36.250, 70.000, Point.CARTESIAN),
-                                new Point(12.813, 75.364, Point.CARTESIAN),
-                                new Point(9.500, 28.000, Point.CARTESIAN)
+                                new Point(37.000, 68.000, Point.CARTESIAN),
+                                new Point(21.000, 78.000, Point.CARTESIAN),
+                                new Point(9.500, 28.500, Point.CARTESIAN)
                         )
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-90),0.9)
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(-90),0.8)
                 .setZeroPowerAccelerationMultiplier(16)
                 .build();
 
@@ -307,9 +298,9 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 16
                         new BezierCurve(
-                                new Point(9.500, 28.000, Point.CARTESIAN),
-                                new Point(12.484, 73.464, Point.CARTESIAN),
-                                new Point(36.250, 71.000, Point.CARTESIAN)
+                                new Point(9.500, 28.500, Point.CARTESIAN),
+                                new Point(24.000, 78.000, Point.CARTESIAN),
+                                new Point(37.000, 68.000, Point.CARTESIAN)
                         )
                 )
                 .setLinearHeadingInterpolation(Math.toRadians(-90), Math.toRadians(0))
@@ -320,8 +311,8 @@ public class PedroAuto extends OpMode {
                 .addPath(
                         // Line 17
                         new BezierCurve(
-                                new Point(36.250, 71.000, Point.CARTESIAN),
-                                new Point(12.298, 73.735, Point.CARTESIAN),
+                                new Point(37.000, 68.000, Point.CARTESIAN),
+                                new Point(21.000, 78.000, Point.CARTESIAN),
                                 new Point(18.000, 34.000, Point.CARTESIAN)
                         )
                 )
@@ -354,12 +345,12 @@ public class PedroAuto extends OpMode {
                 // Set motor modes, only once, after positions are set
                     armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     armAngleMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    //ascend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    ascend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
                     // Set motor powers, only once, after modes are set
                     armMotor.setPower(1);
                     armAngleMotor.setPower(1);
-                    //ascend.setPower(1);
+                    ascend.setPower(1);
 
                     setPathState(1); // Now following path1
                 break;
@@ -370,22 +361,11 @@ public class PedroAuto extends OpMode {
                     /* Grab Sample */
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(initScore,true); // Follow path2
+                    follower.followPath(travelToSpike1,true); // Follow path2
 
                     armAngleMotor.setTargetPosition(armPoses.armAngleInitScore); // Up to clip specimen
 
-                    setPathState(2); // Now following path2
-                }
-                break;
-
-                case 2: // Following path2
-                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the score1Pose's position */
-                if(!follower.isBusy()) { // If path2 has reached its end
-                    /* Score Sample */
-
-                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(travelToSpike1,true); // Follow path3
-                    setPathState(3); // Now following path3
+                    setPathState(3); // Now following path2
                 }
                 break;
 
@@ -462,14 +442,14 @@ public class PedroAuto extends OpMode {
                 break;
 
             case 100:
-                if (actionTimer.getElapsedTimeSeconds() > 0.75) {
+                if (actionTimer.getElapsedTimeSeconds() > 0.5) {
                     follower.followPath(wallGrab1, true); // Follow path10
                     setPathState(10); // Now following path10
                 }
                 break;
 
                 case 10: // Following path10
-                    if(!follower.isBusy()) { // If path10 has reached its end
+                    if(!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 0.5) { // If path10 has reached its end
                         wheelServo.setPower(0); // Stop servo
                         armMotor.setTargetPosition(armPoses.armChamberSpec); // Lift up specimen, ready to reorient specimen
                         armAngleMotor.setTargetPosition(armPoses.armAngleChamberSpec); // Lift up specimen, ready to reorient specimen
@@ -480,69 +460,96 @@ public class PedroAuto extends OpMode {
 
                     case 11: // Following path11
                     if(!follower.isBusy()) { // If path11 has reached its end
-                        follower.followPath(wallGrab2, true); // Follow path12
                         armMotor.setTargetPosition(armPoses.armWallGrab); // Ready to grab wall spec
                         armAngleMotor.setTargetPosition(armPoses.armAngleWallGrab);
-                        wheelServo.setPower(0.1); // Hold spec down while ramming
+                        follower.followPath(wallGrab2, true); // Follow path12
+                        wheelServo.setPower(1); // Hold spec down while ramming
                         setPathState(12); // Now lowering specimen
                     }
                     break;
 
                     case 12: // Following path12
                     if(!follower.isBusy()) { // If path12 has reached its end
-                        wheelServo.setPower(0); // Stop servo
+                        follower.holdPoint(follower.getClosestPose()); // Hold position
+                        wheelServo.setPower(-1); // Stop servo
                         armMotor.setTargetPosition(armPoses.armChamberSpec); // Lift up specimen, ready to reorient specimen
                         armAngleMotor.setTargetPosition(armPoses.armAngleChamberSpec); // Lift up specimen, ready to reorient specimen
-                        follower.followPath(chamberSpec2, true); // Follow path13
-                        setPathState(13); // Now following path13
+                        actionTimer.resetTimer();
+                        setPathState(120); // Now following path13
+                        wheelServo.setPower(0);
                     }
                     break;
 
+            case 120:
+                if(actionTimer.getElapsedTimeSeconds() > 0.25) {
+                    follower.followPath(chamberSpec2, true); // Follow path13
+                    setPathState(13);
+                }
+                break;
+
                     case 13: // Following path13
                     if(!follower.isBusy()) { // If path13 has reached its end
+                        armMotor.setTargetPosition(armPoses.armWallGrab); // Ready to grab wall spec
+                        armAngleMotor.setTargetPosition(armPoses.armAngleWallGrab);
                         follower.followPath(wallGrab3, true); // Follow path14
-                        armAngleMotor.setTargetPosition(armPoses.armAngleWallGrab); // Pull down to score specimen
-                        armMotor.setTargetPosition(armPoses.armWallGrab); // Pull down to score specimen
-                        wheelServo.setPower(0.1); // Hold spec down while rammingT
+                        wheelServo.setPower(1); // Hold spec down while rammingT
                         setPathState(14); // Now following path14
                     }
                     break;
 
                     case 14: // Following path14
                     if(!follower.isBusy()) { // If path14 has reached its end
-                        wheelServo.setPower(0); // Stop servo
+                        follower.holdPoint(follower.getClosestPose()); // Hold position
+                        wheelServo.setPower(-1); // Stop servo
                         armMotor.setTargetPosition(armPoses.armChamberSpec); // Lift up specimen, ready to reorient specimen
                         armAngleMotor.setTargetPosition(armPoses.armAngleChamberSpec); // Lift up specimen, ready to reorient specimen
-                        follower.followPath(chamberSpec3, true); // Follow path15
-                        setPathState(15); // Now following path15
+                        actionTimer.resetTimer();
+                        setPathState(140); // Now following path15
+                        wheelServo.setPower(0);
                     }
                     break;
 
+            case 140:
+                if(actionTimer.getElapsedTimeSeconds() > 0.25) {
+                    follower.followPath(chamberSpec3, true); // Follow path13
+                    setPathState(15);
+                }
+                break;
+
                     case 15: // Following path15
                     if(!follower.isBusy()) { // If path15 has reached its end
+                        armMotor.setTargetPosition(armPoses.armWallGrab); // Ready to grab wall spec
+                        armAngleMotor.setTargetPosition(armPoses.armAngleWallGrab);
                         follower.followPath(wallGrab4, true); // Follow path16
-                        armAngleMotor.setTargetPosition(armPoses.armAngleWallGrab); // Pull down to score specimen
-                        armMotor.setTargetPosition(armPoses.armWallGrab); // Pull down to score specimen
-                        wheelServo.setPower(0.1); // Hold spec down while rammingT
+                        wheelServo.setPower(1); // Hold spec down while rammingT
                         setPathState(16); // Now following path16
                     }
                     break;
 
                     case 16: // Following path16
                     if(!follower.isBusy()) { // If path16 has reached its end
-                        wheelServo.setPower(0); // Stop servo
+                        follower.holdPoint(follower.getClosestPose()); // Hold position
+                        wheelServo.setPower(-1); // Stop servo
                         armMotor.setTargetPosition(armPoses.armChamberSpec); // Lift up specimen, ready to reorient specimen
                         armAngleMotor.setTargetPosition(armPoses.armAngleChamberSpec); // Lift up specimen, ready to reorient specimen
-                        follower.followPath(chamberSpec4, true); // Follow path17
-                        setPathState(17); // Now following path17
+                        actionTimer.resetTimer();
+                        setPathState(160); // Now following
+                        wheelServo.setPower(0);
                     }
                     break;
 
+            case 160:
+                if(actionTimer.getElapsedTimeSeconds() > 0.25) {
+                    follower.followPath(chamberSpec4, true); // Follow path13
+                    setPathState(17);
+                }
+                break;
+
                     case 17: // Following path17
                     if(!follower.isBusy()) { // If path17 has reached its end
+                        armMotor.setTargetPosition(armPoses.armWallGrab); // Ready to grab wall spec
+                        armAngleMotor.setTargetPosition(armPoses.armAngleWallGrab);
                         follower.followPath(park, true); // Follow path18
-                        armAngleMotor.setTargetPosition(armPoses.armAngleWallGrab); // Pull down to score specimen
-                        armMotor.setTargetPosition(armPoses.armWallGrab); // Pull down to score specimen
                         setPathState(18); // Now following path18
                     }
                     break;
@@ -590,6 +597,15 @@ public class PedroAuto extends OpMode {
         armMotor = hardwareMap.get(DcMotorEx.class, "armMotor");
         armAngleMotor = hardwareMap.get(DcMotorEx.class, "armAngleMotor");
         wheelServo = hardwareMap.get(CRServo.class, "wheelServo");
+        /*IMU imu = hardwareMap.get(IMU.class,"imu");
+
+        // Adjust the orientation parameters to match your robot
+        // Without this, the REV Hub's orientation is assumed to be logo up USB forward
+        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
+        imu.initialize(parameters);
+        imu.resetYaw();*/
 
         // Group all motors in an array
         DcMotorEx[] allMiscMotors = new DcMotorEx[] {
