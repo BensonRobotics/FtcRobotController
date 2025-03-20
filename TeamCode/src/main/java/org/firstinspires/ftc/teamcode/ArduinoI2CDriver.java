@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class ArduinoI2CDriver {
 
-    private I2cDeviceSynch deviceSynch;
+    private final I2cDeviceSynch deviceSynch;
     private static final int INPUT_REGISTER = 0x00;
     private static final int OUTPUT_REGISTER = 0x01;
     // Constructor: initialize the device using hardwareMap and device name
