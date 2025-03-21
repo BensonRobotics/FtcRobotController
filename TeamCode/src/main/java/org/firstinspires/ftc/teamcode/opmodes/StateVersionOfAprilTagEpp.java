@@ -117,9 +117,9 @@ public class StateVersionOfAprilTagEpp extends LinearOpMode
     double drive = 0;        // Desired forward power/speed (-1 to +1)
     double strafe = 0;        // Desired strafe power/speed (-1 to +1)
     double turn = 0;        // Desired turning power/speed (-1 to +1)
-    double rangeError = 0;
-    double headingError = 0;
-    double yawError = 0;
+    //double rangeError = 0;
+    //double headingError = 0;
+    //double yawError = 0;
 
     enum movebaby
     {
@@ -229,9 +229,6 @@ public class StateVersionOfAprilTagEpp extends LinearOpMode
             telemetry.addData("Range", "%5.1f inches", desiredTag.ftcPose.range);
             telemetry.addData("Bearing", "%3.0f degrees", desiredTag.ftcPose.bearing);
             telemetry.addData("Yaw", "%3.0f degrees", desiredTag.ftcPose.yaw);
-        }            // Tell the driver what we see, and what to do.
-        if (true && targetFound) {
-
             // Determine heading, range and Yaw (tag image rotation) error so we can use them to control the robot automatically.
             double  rangeError      = (desiredTag.ftcPose.range - DESIRED_DISTANCE);
             double  headingError    = desiredTag.ftcPose.bearing +13;
@@ -245,11 +242,12 @@ public class StateVersionOfAprilTagEpp extends LinearOpMode
             telemetry.addData("Auto","Drive %5.2f, Strafe %5.2f, Turn %5.2f ", drive, strafe, turn);
                 //telemetry.update();
 
-             // Apply desired axes motions to the drivetrain.
-            if(Math.abs(rangeError) < 12)
+            // Apply desired axes motions to the drivetrain.
+            if (Math.abs(rangeError) < 3)
                 myRobotState = movebaby.STOP_ROBOT;
 
-           else moveRobot(drive, strafe, turn);
+            else
+                moveRobot(drive, strafe, turn);
             //sleep(10);
         }
     }
