@@ -1,74 +1,82 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp(name = "Sundae OpMode", group = "Off-Season")
-public class TheSundaeMachine extends OpMode {
+@TeleOp(name = "Sundae Machine", group = "Off-Season")
+public class TheSundaeMachine extends LinearOpMode {
 
-    private ArduinoI2CDriver arduinoDriver;
-    private final ElapsedTime runtime = new ElapsedTime();
+    CustomI2cDriver arduino;
+    I2cDeviceSynch i2cDeviceSynch;
+    byte[] readCache;
+    ElapsedTime timer;
 
-    /**
-     * This method will be called once, when the INIT button is pressed.
-     */
+    //Number of digital pins
+    int numDigitalInputs = 5;
+    //Total size of the buffer
+    int bufferSize = numDigitalInputs;
+    int outputBufferSize = 1;
+
+    //Pin states
+    boolean pin2State;
+    boolean pin3State;
+    boolean pin4State;
+    boolean pin5State;
+    boolean pin6State;
+    //Output state
+    boolean outputState;
+
     @Override
-    public void init() {
-        arduinoDriver = new ArduinoI2CDriver(hardwareMap, "arduino");
-        arduinoDriver.engage();
-        telemetry.addData("Status", "I2C device engaged");
-        telemetry.addData("Status", "Initialized");
-    }
-
-    /**
-     * This method will be called repeatedly during the period between when
-     * the INIT button is pressed and when the START button is pressed (or the
-     * OpMode is stopped).
-     */
-    @Override
-    public void init_loop() {
-    }
-
-    /**
-     * This method will be called once, when the START button is pressed.
-     */
-    @Override
-    public void start() {
-        runtime.reset();
-    }
-
-    /**
-     * This method will be called repeatedly during the period between when
-     * the START button is pressed and when the OpMode is stopped.
-     */
-    @Override
-    public void loop() {
-        // Read the 12 input pins as a boolean array.
-        boolean[] buttonPins = arduinoDriver.readButtonPinsAsBooleans();
-
-        // Display each input pin state via telemetry.
-        StringBuilder pinStates = new StringBuilder();
-        for (int i = 0; i < buttonPins.length; i++) {
-            pinStates.append("Pin ").append(i).append(": ").append(buttonPins[i] ? "HIGH" : "LOW").append("  ");
+    public void runOpMode() throws InterruptedException {
+        // Get the I2C device
+        arduino = hardwareMap.get(CustomI2cDriver.class, "arduino");
+        if(arduino == null){
+            telemetry.addData("Error", "Arduino not found");
+            telemetry.update();
+            sleep(5000);
+            return;
         }
-        telemetry.addData("Input Pins", pinStates.toString());
 
-        // Example: Toggle the output pin based on gamepad1.x.
-        boolean outputState = gamepad1.x;
-        arduinoDriver.enableResetRelay(outputState);
-        telemetry.addData("Output Pin", outputState ? "HIGH" : "LOW");
+        i2cDeviceSynch = arduino.getDeviceClient();
 
+        telemetry.addData("Status", "Initialized");
         telemetry.update();
-    }
 
-    /**
-     * This method will be called once, when this OpMode is stopped.
-     * <p>
-     * Your ability to control hardware from this method will be limited.
-     */
-    @Override
-    public void stop() {
-        arduinoDriver.close();
+        waitForStart();
+
+        timer = new ElapsedTime();
+        timer.reset();
+        while (opModeIsActive()) {
+
+            //Read from the input register.
+            readCache = i2cDeviceSynch.read(CustomI2cDriver.PIN_STATE_INPUT_REGISTER, bufferSize);
+
+            // Get individual pin states
+            pin2State = readCache[0] == 1;
+            pin3State = readCache[1] == 1;
+            pin4State = readCache[2] == 1;
+            pin5State = readCache[3] == 1;
+            pin6State = readCache[4] == 1;
+
+            //Set the output state
+            if (timer.seconds() > 1){
+                outputState = !outputState;
+                timer.reset();
+            }
+
+            //Send the output pin state
+            i2cDeviceSynch.write(CustomI2cDriver.PIN_STATE_OUTPUT_REGISTER, new byte[]{outputState ? (byte) 1 : (byte) 0});
+
+            // Display the states
+            telemetry.addData("Pin D2", pin2State);
+            telemetry.addData("Pin D3", pin3State);
+            telemetry.addData("Pin D4", pin4State);
+            telemetry.addData("Pin D5", pin5State);
+            telemetry.addData("Pin D6", pin6State);
+            telemetry.addData("Output State", outputState);
+            telemetry.update();
+        }
     }
 }
