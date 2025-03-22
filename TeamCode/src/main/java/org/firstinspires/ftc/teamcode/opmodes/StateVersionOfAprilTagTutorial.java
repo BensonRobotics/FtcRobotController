@@ -85,9 +85,9 @@ import java.util.concurrent.TimeUnit;
  *
  */
 
-@Autonomous(name="State Machine Epp 1", group = "Concept")
+@Autonomous(name="April Tage State Version", group = "Concept")
 //@Disabled
-public class StateVersionOfAprilTagEpp extends LinearOpMode
+public class StateVersionOfAprilTagTutorial extends LinearOpMode
 {
     // Adjust these numbers to suit your robot.
     final double DESIRED_DISTANCE = 12.0; //  this is how close the camera should get to the target (inches)
@@ -123,10 +123,11 @@ public class StateVersionOfAprilTagEpp extends LinearOpMode
 
     enum movebaby
     {
-        RECOGNIZE_APRIL,
+       MOTOR_TEST,
+        MOVE_TO_APRIL,
         STOP_ROBOT
     }
-    movebaby myRobotState  = movebaby.RECOGNIZE_APRIL;
+    movebaby myRobotState  = movebaby.MOVE_TO_APRIL;
 
     @Override public void runOpMode()
     {
@@ -166,25 +167,14 @@ public class StateVersionOfAprilTagEpp extends LinearOpMode
             desiredTag = null;
 
             switch (myRobotState) {
-                case RECOGNIZE_APRIL:
-                    /*
-                    moveRobot(0.5, 0.0, 0.0);
-                    sleep (2000);
-                    moveRobot(-0.5, 0.0, 0.0);
-                    sleep (2000);
-                    moveRobot(0.0, 0.5, 0.0);
-                    sleep (2000);
-                    moveRobot(0.0, -0.5, 0.0);
-                    sleep (2000);
-                    moveRobot(0.0, 0.0, 0.0);
-                    sleep (2000);
-                    myRobotState  = movebaby.STOP_ROBOT;
-                    */
-                    recognizeAprilTag();  // uses camera to find April Tag
-                    
+                case MOVE_TO_APRIL:
+                     moveToAprilTag();  // uses camera to find April Tag
                     break;
                 case STOP_ROBOT:
                     shutDown();
+                    break;
+                case MOTOR_TEST:
+                    testMotors();
                     break;
                 default:
                     shutDown();
@@ -199,8 +189,36 @@ public class StateVersionOfAprilTagEpp extends LinearOpMode
     }
 
 
+ //******************************************************************************
+
+    public void testMotors() {
+        moveRobot(0.5, 0.0, 0.0);
+        sleep(2000);
+        moveRobot(-0.5, 0.0, 0.0);
+        sleep(2000);
+        moveRobot(0.0, 0.0, 0.0);
+        sleep (2000);
+
+        moveRobot(0.0, 0.5, 0.0);
+        sleep(2000);
+        moveRobot(0.0, -0.5, 0.0);
+        sleep(2000);
+        moveRobot(0.0, 0.0, 0.0);
+        sleep(2000);
+
+        moveRobot(0.0, 0.0, 0.5);
+        sleep(2000);
+        moveRobot(0.0, 0.0, -0.5);
+        sleep(2000);
+        moveRobot(0.0, 0.0, 0.0);
+        sleep(2000);
+
+        myRobotState = movebaby.STOP_ROBOT;
+    }
+
     // *******************************************************************************
-    public  void recognizeAprilTag() {
+    public  void moveToAprilTag() {
+        //sleep(10);
         // Step through the list of detected tags and look for a matching tag
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
         //telemetry.addData(">", "Loaded currentDetections");
@@ -239,17 +257,18 @@ public class StateVersionOfAprilTagEpp extends LinearOpMode
             turn   = Range.clip(headingError * TURN_GAIN, -MAX_AUTO_TURN, MAX_AUTO_TURN) ;
             strafe = Range.clip(-yawError * STRAFE_GAIN, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE);
 
-            telemetry.addData("Auto","Drive %5.2f, Strafe %5.2f, Turn %5.2f ", drive, strafe, turn);
-                //telemetry.update();
+            telemetry.addData("Auto", "Drive %5.2f, Strafe %5.2f, Turn %5.2f ", drive, strafe, turn);
+            //telemetry.update();
 
             // Apply desired axes motions to the drivetrain.
-            if (Math.abs(rangeError) < 3)
-                myRobotState = movebaby.STOP_ROBOT;
+            if (Math.abs(rangeError) < 3) myRobotState = movebaby.STOP_ROBOT;
 
-            else
-                moveRobot(drive, strafe, turn);
-            //sleep(10);
+            else moveRobot(drive, strafe, turn);
+        } else {
+            myRobotState = movebaby.STOP_ROBOT;
         }
+        //sleep(10);
+
     }
 
 
@@ -295,8 +314,8 @@ public class StateVersionOfAprilTagEpp extends LinearOpMode
     //*****************************************************************************//
     public void printState() {
         switch (myRobotState) {
-            case RECOGNIZE_APRIL:
-                telemetry.addData("State is ", "RECOGNIZE_APRIL");
+            case MOVE_TO_APRIL:
+                telemetry.addData("State is ", "MOVE_TO_APRIL");
                 break;
             case STOP_ROBOT:
                 telemetry.addData("State is ", "STOP_ROBOT");
