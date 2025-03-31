@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 @TeleOp(name = "Sundae Machine over USB, Hurray!", group = "Off-Season")
-public class TheBestSundaeMachine extends LinearOpMode {
+public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
 
     // Timers
     private ElapsedTime toppingFallTimer = new ElapsedTime();
@@ -61,7 +61,7 @@ public class TheBestSundaeMachine extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         UsbManager usbManager = (UsbManager) hardwareMap.appContext.getSystemService(Context.USB_SERVICE);
-        reader.setReceiver(new Receiver());
+        reader.setReceiver(this);
         reader.initialize(usbManager);
         // Initialize motors
         for (int i = 0; i < allMotors.length; i++) {
@@ -240,23 +240,21 @@ public class TheBestSundaeMachine extends LinearOpMode {
         reader.sendLedCommand(UsbSerialReader.LedMode.ON, UsbSerialReader.LedName.ABORT);
     }
 
-    public class Receiver {
-        public void confirmSelection(int selection) {
-            processSelection(selection);
-        }
-        public void otherSignal(byte header) {
-            switch (header) {
-                case 0x10: // Start header
-                    startCycle();
-                    break;
-                case 0x11: // Abort header
-                    emergencyStop();
-                    break;
-                case 0x12: // Reset header
-                    resetSystem();
-                    break;
+    public void confirmSelection(int selection) {
+        processSelection(selection);
+    }
+    public void otherSignal(byte header) {
+        switch (header) {
+            case 0x10: // Start header
+                startCycle();
+                break;
+            case 0x11: // Abort header
+                emergencyStop();
+                break;
+            case 0x12: // Reset header
+                resetSystem();
+                break;
             }
         }
-    }
 }
 

@@ -28,7 +28,7 @@ public class UsbSerialReader {
     private UsbSerialPort port;
     private SerialInputOutputManager usbIoManager;
     private ExecutorService executor;
-    private TheBestSundaeMachine.Receiver signalReceiver;
+    private SignalReader signalReceiver;
 
     // Call this method from your op mode's init() routine,
     // providing the UsbManager (from the Android context).
@@ -79,24 +79,17 @@ public class UsbSerialReader {
         usbIoManager.start();
     }
 
-    // Process the incoming data (for example, print to log)
+    // When processing data:
     private void handleIncomingData(byte[] data) {
-        // Check if data exists and if it's long enough.
         if (data == null || data.length < 1) return;
 
-        // Check header byte.
         if (data[0] == CONFIRM_HEADER) {
-            // We expect at least two more bytes for selection data.
             if (data.length >= CONFIRM_PACKET_LENGTH) {
-                // Extract two bytes (treating bytes as unsigned).
                 byte lowByte = data[1];
                 byte highByte = data[2];
-
-                // Combine bytes into an integer bitmask.
                 int selectionData = ((highByte & 0xFF) << 8) | (lowByte & 0xFF);
                 Log.d(TAG, "Confirm packet received. Bitmask: " + Integer.toBinaryString(selectionData));
 
-                // Send selection data to Receiver in TeleOp.
                 if (signalReceiver != null) {
                     signalReceiver.confirmSelection(selectionData);
                 }
@@ -104,7 +97,6 @@ public class UsbSerialReader {
                 Log.w(TAG, "Incomplete confirm packet received.");
             }
         } else {
-            // Handle other types of packets by checking the header value.
             Log.d(TAG, "Other signal received. Header: " + data[0]);
             if (signalReceiver != null) {
                 signalReceiver.otherSignal(data[0]);
@@ -129,7 +121,7 @@ public class UsbSerialReader {
         }
     }
 
-    public void setReceiver(TheBestSundaeMachine.Receiver receiver) {
+    public void setReceiver(SignalReader receiver) {
         this.signalReceiver = receiver;
     }
 
