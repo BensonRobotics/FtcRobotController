@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.util.Log;
 
@@ -45,12 +46,14 @@ public class UsbSerialReader {
 
         // Open a connection to the USB device.
         try {
-            // Make sure you have permission to access the device!
-            if (usbManager.openDevice(driver.getDevice()) == null) {
+            // Store the UsbDevice instance in a variable.
+            UsbDeviceConnection device = usbManager.openDevice(driver.getDevice());
+            if (device == null) {
                 Log.e(TAG, "Device could not be opened. Check permissions.");
                 return;
             }
-            port.open(usbManager.openDevice(driver.getDevice()));
+            // Open the port with the same device instance.
+            port.open(device);
             // Set the port parameters to match the Arduino (9600 baud, 8 data bits, 1 stop bit, no parity)
             port.setParameters(9600, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
         } catch (IOException e) {
