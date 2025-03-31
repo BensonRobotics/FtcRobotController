@@ -14,7 +14,6 @@ import java.util.ArrayList;
 public class TheBestSundaeMachine extends LinearOpMode {
 
     // Timers
-    private ElapsedTime timer = new ElapsedTime();
     private ElapsedTime toppingFallTimer = new ElapsedTime();
 
     // Constants
@@ -82,7 +81,6 @@ public class TheBestSundaeMachine extends LinearOpMode {
         waitForStart();
 
         // Reset timers
-        timer.reset();
         toppingFallTimer.reset();
 
         while (opModeIsActive()) {
