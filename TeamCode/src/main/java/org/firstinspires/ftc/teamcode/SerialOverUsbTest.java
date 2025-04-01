@@ -40,6 +40,7 @@ public class SerialOverUsbTest extends OpMode implements SignalReader {
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.addData("Last Button Command: ", String.format("0x%02X", lastButtonCommand));
         telemetry.addData("Last Selection: ", formatSelection(lastSelection));
+        telemetry.update();
     }
 
     @Override
@@ -57,8 +58,8 @@ public class SerialOverUsbTest extends OpMode implements SignalReader {
     private String formatSelection(int selection) {
         int numBits = 10;  // Adjust as needed for your use case
         StringBuilder formatted = new StringBuilder();
-        // Loop from most-significant to least-significant bit
-        for (int i = numBits - 1; i >= 0; i--) {
+        // Loop from least-significant to most-significant bit
+        for (int i = 0; i < numBits; i++) {
             int bit = (selection >> i) & 1;
             formatted.append(bit).append(" ");
         }
