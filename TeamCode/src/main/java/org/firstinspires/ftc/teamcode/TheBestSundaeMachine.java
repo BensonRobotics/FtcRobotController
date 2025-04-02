@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import android.content.Context;
 import android.hardware.usb.UsbManager;
@@ -15,10 +16,10 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
 
     // Timers
     private ElapsedTime toppingFallTimer = new ElapsedTime();
+    private ElapsedTime creamDispenseTimer = new ElapsedTime();
 
     // Constants
     private static final Locale LOCALE = Locale.US;
-    private static final float BASE_PRICE = 2.00F;
     private static final int NUM_OF_TOPPINGS = 7;
     private static final int MAX_QUEUE_TELEMETRY = 3;
     private static final int TOPPING_FALL_WAIT = 1000; // 1 second delay
@@ -28,14 +29,19 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private static final int END_POSITION = 8000;
     // Make sure these are all the same length as NUM_OF_TOPPINGS
     private final int[] BOWL_POSITIONS = {1000, 2000, 3000, 4000, 5000, 6000, 7000};
-    private final int[] DISPENSER_SECTORS = {8, 8, 8, 8, 8, 8, 8};
-    private final int[] SECTORS_PER_DISPENSE = {1, 1, 1, 1, 1, 1, 1};
-    private int[] dispenserTally = {0, 0, 0, 0, 0, 0, 0};
+    private final int[] DISPENSER_SECTORS = {8, 8, 8, 8, 8, 8, -1}; // -1 is servo, invalid
+    private final int[] SECTORS_PER_DISPENSE = {1, 1, 1, 1, 1, 1, -1}; // Same
+    private final int CREAM_DISPENSE_DURATION = 1500;
+    private final float CREAM_DISPENSE_ANGLE = 0.25f;
+    private int[] dispenserTally = {0, 0, 0, 0, 0, 0, -1}; // Same
 
     // Motors
     private DcMotorEx conveyorMotor;
+    private Servo creamServo;
     private final String[] allMotorNames = {"topping0Motor", "topping1Motor", "topping2Motor",
-            "topping3Motor", "topping4Motor", "topping5Motor", "topping6Motor", "conveyorMotor"};
+            "topping3Motor", "topping4Motor", "topping5Motor", "T6PLACEHOLDER", "conveyorMotor"};
+    // topping6 is a servo
+    private final int SERVO_INDEX = 6;
     private DcMotorEx[] allMotors = new DcMotorEx[allMotorNames.length];
 
     // Topping schedule and current topping
@@ -63,15 +69,20 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         UsbManager usbManager = (UsbManager) hardwareMap.appContext.getSystemService(Context.USB_SERVICE);
         reader.setReceiver(this);
         reader.initialize(usbManager);
-        // Initialize motors
+        // Initialize motors, except servo
         for (int i = 0; i < allMotors.length; i++) {
-            allMotors[i] = hardwareMap.get(DcMotorEx.class, allMotorNames[i]);
-            allMotors[i].setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-            allMotors[i].setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-            allMotors[i].setTargetPosition(0);
-            allMotors[i].setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-            allMotors[i].setPower(DISPENSER_POWER);
+            if (i != SERVO_INDEX) {
+                allMotors[i] = hardwareMap.get(DcMotorEx.class, allMotorNames[i]);
+                allMotors[i].setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+                allMotors[i].setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                allMotors[i].setTargetPosition(0);
+                allMotors[i].setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                allMotors[i].setPower(DISPENSER_POWER);
+            } else { // Servo is not a motor
+                allMotors[i] = null;
+            }
         }
+        creamServo = hardwareMap.get(Servo.class, "creamServo");
         // Increase conveyor motor power
         conveyorMotor = allMotors[allMotors.length-1];
         conveyorMotor.setPower(1);
@@ -82,6 +93,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
 
         // Reset timers
         toppingFallTimer.reset();
+        creamDispenseTimer.reset();
 
         while (opModeIsActive()) {
             // State machine
@@ -103,9 +115,17 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                     }
                     break;
                 case DISPENSING:
-                    if (!allMotors[currentSchedule.get(0)].isBusy()) {
-                        toppingFallTimer.reset();
-                        machineState = MachineState.WAIT_FOR_TOPPING_FALL;
+                    if (currentSchedule.get(0) != SERVO_INDEX) {
+                        if (!allMotors[currentSchedule.get(0)].isBusy()) {
+                            toppingFallTimer.reset();
+                            machineState = MachineState.WAIT_FOR_TOPPING_FALL;
+                        }
+                    } else {
+                        if (creamDispenseTimer.milliseconds() > CREAM_DISPENSE_DURATION) {
+                            creamServo.setPosition(0);
+                            toppingFallTimer.reset();
+                            machineState = MachineState.WAIT_FOR_TOPPING_FALL;
+                        }
                     }
                     break;
                 case WAIT_FOR_TOPPING_FALL:
@@ -143,14 +163,10 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
 
     /**
      * Builds a schedule of toppings based on the read input.
-     * The start button is on index 0; toppings are from index 1 onward.
      */
     public void processSelection(int selection) {
-        // This is designed to allow customers to go back and add toppings when their order is done.
-        // There are two options: one where the customer can go back and add toppings,
-        // and one where multiple customers can order in a queue system. I should make a poll on that.
         List<Integer> newSchedule = new ArrayList<>();
-        float newCost = BASE_PRICE;
+        float newCost = 0.00f;
         String newFlavor = "None";
             for (int i = 0; i < NUM_OF_TOPPINGS; i++) {
                 if (((selection >> i) & 0x01) == 1) {
@@ -159,12 +175,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             }
             scheduleQueue.add(newSchedule);
 
-        // First topping is free
-            float toppingCost = 0.50f * (Math.max((float) newSchedule.size(), 1.00f) - 1.00f);
-            // If cost is zero, assume bowl has not been paid for yet, so add it
-            newCost += toppingCost;
-            costQueue.add(newCost);
-
+            // Select flavors
             for (int i = NUM_OF_TOPPINGS; i < NUM_OF_TOPPINGS + 3; i++) {
                 if (((selection >> i) & 0x01) == 1) { // If flavor selected
                     switch (i - NUM_OF_TOPPINGS) { // Which one
@@ -178,6 +189,11 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             }
             flavorQueue.add(newFlavor);
 
+        // First topping is free, only if with ice cream
+        newCost += 0.50f * newSchedule.size(); // Each is 50 cents
+        if (!newFlavor.equals("None")) {newCost += 2.00f - 0.50f;} // Bowl cost and discount
+        costQueue.add(newCost); // Save cost to queue
+
             if (machineState == MachineState.IDLE) {
                 reader.sendLedCommand(UsbSerialReader.LedMode.ON, UsbSerialReader.LedName.START);
             }
@@ -189,10 +205,15 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
      * @param topping the topping index (1-indexed)
      */
     private void dispenseTopping(int topping) {
-        dispenserTally[topping] += SECTORS_PER_DISPENSE[topping];
-        double ticksPerLoad = 2786.2 / DISPENSER_SECTORS[topping];
-        int dispenserTarget = (int) (dispenserTally[topping] * ticksPerLoad);
-        allMotors[topping].setTargetPosition(dispenserTarget);
+        if (topping != SERVO_INDEX) { // If not whipped cream
+            dispenserTally[topping] += SECTORS_PER_DISPENSE[topping];
+            double ticksPerLoad = 2786.2 / DISPENSER_SECTORS[topping];
+            int dispenserTarget = (int) (dispenserTally[topping] * ticksPerLoad);
+            allMotors[topping].setTargetPosition(dispenserTarget);
+        } else { // Whipped cream
+            creamServo.setPosition(CREAM_DISPENSE_ANGLE);
+            creamDispenseTimer.reset();
+        }
     }
 
     public void startCycle() {
@@ -203,8 +224,10 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             currentSchedule = scheduleQueue.remove(0);
         }
         if (isEmergencyStopped) { // Only reset powers if emergency stopped
-            for (DcMotorEx motor : allMotors) {
-                motor.setPower(DISPENSER_POWER);
+            for (int i = 0; i < allMotors.length; i++) {
+                if (i != SERVO_INDEX) {
+                    allMotors[i].setPower(DISPENSER_POWER);
+                }
             }
             conveyorMotor.setPower(1);
             isEmergencyStopped = false;
@@ -216,6 +239,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         for (DcMotorEx motor : allMotors) {
             motor.setPower(0); // Kill power to all motors
         }
+        creamServo.setPosition(0);
         isEmergencyStopped = true; // Flag for emergency stop
         reader.sendLedCommand(UsbSerialReader.LedMode.BLINK, UsbSerialReader.LedName.ABORT);
     }
@@ -231,8 +255,10 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         machineState = MachineState.IDLE;
         conveyorMotor.setTargetPosition(0);
         if (isEmergencyStopped) { // Only reset powers if emergency stopped
-            for (DcMotorEx motor : allMotors) {
-                motor.setPower(DISPENSER_POWER);
+            for (int i = 0; i < allMotors.length; i++) {
+                if (i != SERVO_INDEX) {
+                    allMotors[i].setPower(DISPENSER_POWER);
+                }
             }
             conveyorMotor.setPower(1);
             isEmergencyStopped = false;
