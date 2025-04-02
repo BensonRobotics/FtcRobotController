@@ -182,7 +182,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                         case 0: newFlavor = "Vanilla"; break;
                         case 1: newFlavor = "Chocolate"; break;
                         case 2: newFlavor = "Strawberry"; break;
-                        default: break; // No change
+                        default: break; // Still "None"
                     }
                     break; // Breaks the for loop, only one flavor at a time
                 }
@@ -191,7 +191,11 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
 
         // First topping is free, only if with ice cream
         newCost += 0.50f * newSchedule.size(); // Each is 50 cents
-        if (!newFlavor.equals("None")) {newCost += 2.00f - 0.50f;} // Bowl cost and discount
+        if (!newFlavor.equals("None")) {
+            newCost += 2.00f; // Bowl cost
+            if (!newSchedule.isEmpty()) { newCost -= 0.50f; }
+            // Only apply discount if you have ordered ice cream and at least 1 topping
+        }
         costQueue.add(newCost); // Save cost to queue
 
             if (machineState == MachineState.IDLE) {
