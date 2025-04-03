@@ -3,10 +3,13 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import android.content.Context;
 import android.hardware.usb.UsbManager;
+
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.List;
 import java.util.ArrayList;
@@ -45,12 +48,25 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private final int SERVO_INDEX = 6;
     private DcMotorEx[] allMotors = new DcMotorEx[allMotorNames.length];
 
+    private final String[] operatorButtonNames = {"startButton", "abortButton", "resetButton"};
+    private final String[] operatorLedNames = {"startLed", "abortLed", "resetLed"};
+    private DigitalChannel[] operatorButtons = new DigitalChannel[3]; // 3 op buttons
+    private DigitalChannel[] operatorLeds = new DigitalChannel[3]; // 3 op LEDs
+
     // Topping schedule and current topping
     private List<List<Integer>> scheduleQueue = new ArrayList<>();
     private List<String> flavorQueue = new ArrayList<>();
     private List<Float> costQueue = new ArrayList<>();
     private List<Integer> currentSchedule = new ArrayList<>();
     private boolean isEmergencyStopped = false;
+    private boolean[] lastButtonStates = new boolean[operatorButtons.length];
+    // All will be set to true in setup
+    private LedState[] operatorLedStates = new LedState[] {
+            LedState.OFF,
+            LedState.ON,
+            LedState.ON
+    };
+    private ElapsedTime[] ledBlinkTimers = new ElapsedTime[operatorLeds.length];
 
     // State management using enum
     private enum MachineState {
@@ -62,6 +78,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         FINISHED
     }
     private MachineState machineState = MachineState.IDLE;
+    private enum LedState { ON, OFF, BLINK }
 
     UsbSerialReader reader = new UsbSerialReader();
 
@@ -88,6 +105,18 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         conveyorMotor = allMotors[allMotors.length-1];
         conveyorMotor.setPower(1);
 
+        for (int i = 0; i < operatorButtons.length; i++) {
+            operatorButtons[i] = hardwareMap.get(DigitalChannel.class, operatorButtonNames[i]);
+            operatorButtons[i].setMode(DigitalChannel.Mode.INPUT);
+        }
+        for (int i = 0; i < operatorLeds.length; i++) {
+            operatorLeds[i] = hardwareMap.get(DigitalChannel.class, operatorLedNames[i]);
+            operatorLeds[i].setMode(DigitalChannel.Mode.OUTPUT);
+        }
+
+        Arrays.fill(lastButtonStates, true); // Set all button states to true
+        // This is to ignore any buttons that are pressed during initialization
+
         telemetry.addLine("Initialized!");
         telemetry.update();
         waitForStart();
@@ -95,8 +124,38 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         // Reset timers
         toppingFallTimer.reset();
         creamDispenseTimer.reset();
+        for (ElapsedTime timer : ledBlinkTimers) {
+            timer.reset();
+        }
 
         while (opModeIsActive()) {
+
+            // Check operator buttons and act ONCE if they are pressed
+            for (int i = 0; i < operatorButtons.length; i++) {
+                if (operatorButtons[i].getState()) { // If pressed
+                    if (!lastButtonStates[i]) { // If first time pressed since last
+                        lastButtonStates[i] = true;
+                        operatorAction(i);
+                    }
+                } else {
+                    lastButtonStates[i] = false;
+                }
+            }
+
+            for (int i = 0; i < operatorLeds.length; i++) {
+                switch (operatorLedStates[i]) {
+                    case ON: operatorLeds[i].setState(true);
+                    break;
+                    case OFF: operatorLeds[i].setState(false);
+                    break;
+                    case BLINK: if (ledBlinkTimers[i].milliseconds() > 500) {
+                        operatorLeds[i].setState(!operatorLeds[i].getState());
+                        ledBlinkTimers[i].reset();
+                    }
+                    break;
+                }
+            }
+
             // State machine
             switch (machineState) {
                 case IDLE:
@@ -201,7 +260,8 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         costQueue.add(newCost); // Save cost to queue
 
             if (machineState == MachineState.IDLE) {
-                reader.sendLedCommand(UsbSerialReader.LedMode.ON, UsbSerialReader.LedName.START);
+                // Set start LED to ON
+                operatorLedStates[0] = LedState.ON;
             }
     }
 
@@ -238,7 +298,8 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             conveyorMotor.setPower(1);
             isEmergencyStopped = false;
         }
-        reader.sendLedCommand(UsbSerialReader.LedMode.ON, UsbSerialReader.LedName.ABORT);
+        // Set abort LED to ON
+        operatorLedStates[1] = LedState.ON;
     }
 
     public void emergencyStop() {
@@ -247,16 +308,19 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         }
         creamServo.setPosition(0);
         isEmergencyStopped = true; // Flag for emergency stop
-        reader.sendLedCommand(UsbSerialReader.LedMode.BLINK, UsbSerialReader.LedName.ABORT);
+        // Set abort LED to BLINK
+        operatorLedStates[1] = LedState.BLINK;
     }
 
     public void resetSystem() {
         if (!scheduleQueue.isEmpty()) {
             // Clear the top of the queue
             scheduleQueue.remove(0);
-            reader.sendLedCommand(UsbSerialReader.LedMode.ON, UsbSerialReader.LedName.START);
+            // Set start LED to ON
+            operatorLedStates[0] = LedState.ON;
         } else {
-            reader.sendLedCommand(UsbSerialReader.LedMode.OFF, UsbSerialReader.LedName.START);
+            // Set start LED to OFF
+            operatorLedStates[0] = LedState.OFF;
         }
         machineState = MachineState.IDLE;
         conveyorMotor.setTargetPosition(0);
@@ -269,21 +333,22 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             conveyorMotor.setPower(1);
             isEmergencyStopped = false;
         }
-        reader.sendLedCommand(UsbSerialReader.LedMode.ON, UsbSerialReader.LedName.ABORT);
+        // Set abort LED to ON
+        operatorLedStates[1] = LedState.ON;
     }
 
     public void confirmSelection(int selection) {
         processSelection(selection);
     }
-    public void otherSignal(byte header) {
-        switch (header) {
-            case 0x10: // Start header
+    public void operatorAction(int button) {
+        switch (button) {
+            case 0: // Start header
                 startCycle();
                 break;
-            case 0x11: // Abort header
+            case 1: // Abort header
                 emergencyStop();
                 break;
-            case 0x12: // Reset header
+            case 2: // Reset header
                 resetSystem();
                 break;
             }

@@ -96,11 +96,6 @@ public class UsbSerialReader {
             } else {
                 Log.w(TAG, "Incomplete confirm packet received.");
             }
-        } else {
-            Log.d(TAG, "Other signal received. Header: " + data[0]);
-            if (signalReceiver != null) {
-                signalReceiver.otherSignal(data[0]);
-            }
         }
     }
 
@@ -123,44 +118,5 @@ public class UsbSerialReader {
 
     public void setReceiver(SignalReader receiver) {
         this.signalReceiver = receiver;
-    }
-
-    public void sendLedCommand(LedMode ledState, LedName buttonName) {
-        byte command = -1; // If not set, nothing will happen.
-        switch (ledState) {
-            case ON:
-                command = 0x30;
-                break;
-            case OFF:
-                command = 0x31;
-                break;
-            case BLINK:
-                command = 0x32;
-                break;
-        }
-        byte buttonIndex = -1; // If not set, nothing will happen.
-        switch (buttonName) {
-            case CONFIRM:
-                buttonIndex = 0x00;
-                break;
-            case START:
-                buttonIndex = 0x01;
-                break;
-            case ABORT:
-                buttonIndex = 0x02;
-                break;
-        }
-
-        // Only attempt to write if the port is available.
-        if (port == null) {
-            Log.e(TAG, "USB port is not initialized.");
-            return;
-        }
-        try {
-            byte[] packet = {command, buttonIndex};
-            port.write(packet, 100);
-        } catch (IOException e) {
-            Log.e(TAG, "Failed to send LED command: " + e.getMessage());
-        }
     }
 }

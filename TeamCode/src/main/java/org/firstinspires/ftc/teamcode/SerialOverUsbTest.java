@@ -51,9 +51,6 @@ public class SerialOverUsbTest extends OpMode implements SignalReader {
         lastSelection = selection;
         lastButtonCommand = 0x20;
     }
-    public void otherSignal(byte header) {
-        lastButtonCommand = header;
-    }
 
     private String formatSelection(int selection) {
         int numBits = 10;  // Adjust as needed for your use case
