@@ -21,6 +21,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     // Constants
     private static final Locale LOCALE = Locale.US;
     private static final int NUM_OF_TOPPINGS = 7;
+    private static final int NUM_OF_FLAVORS = 3;
     private static final int MAX_QUEUE_TELEMETRY = 3;
     private static final int TOPPING_FALL_WAIT = 1000; // 1 second delay
     private static final double DISPENSER_POWER = 0.5;
@@ -168,26 +169,27 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         List<Integer> newSchedule = new ArrayList<>();
         float newCost = 0.00f;
         String newFlavor = "None";
-            for (int i = 0; i < NUM_OF_TOPPINGS; i++) {
+
+        // Select flavors
+        for (int i = 0; i < NUM_OF_FLAVORS; i++) {
+            if (((selection >> i) & 0x01) == 1) { // If flavor selected
+                switch (i) { // Which one
+                    case 0: newFlavor = "Vanilla"; break;
+                    case 1: newFlavor = "Chocolate"; break;
+                    case 2: newFlavor = "Strawberry"; break;
+                    default: break; // Still "None"
+                }
+                break; // Breaks the for loop, only one flavor allowed
+            }
+        }
+        flavorQueue.add(newFlavor);
+
+            for (int i = NUM_OF_FLAVORS; i < NUM_OF_FLAVORS + NUM_OF_TOPPINGS; i++) {
                 if (((selection >> i) & 0x01) == 1) {
-                    newSchedule.add(i);
+                    newSchedule.add(i - NUM_OF_FLAVORS);
                 }
             }
             scheduleQueue.add(newSchedule);
-
-            // Select flavors
-            for (int i = NUM_OF_TOPPINGS; i < NUM_OF_TOPPINGS + 3; i++) {
-                if (((selection >> i) & 0x01) == 1) { // If flavor selected
-                    switch (i - NUM_OF_TOPPINGS) { // Which one
-                        case 0: newFlavor = "Vanilla"; break;
-                        case 1: newFlavor = "Chocolate"; break;
-                        case 2: newFlavor = "Strawberry"; break;
-                        default: break; // Still "None"
-                    }
-                    break; // Breaks the for loop, only one flavor at a time
-                }
-            }
-            flavorQueue.add(newFlavor);
 
         // First topping is free, only if with ice cream
         newCost += 0.50f * newSchedule.size(); // Each is 50 cents
