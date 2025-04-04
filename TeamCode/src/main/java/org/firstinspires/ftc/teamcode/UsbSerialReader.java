@@ -1,3 +1,19 @@
+/**
+ * Bit position to selection map:
+ * 0 = Vanilla
+ * 1 = Chocolate
+ * 2 = Strawberry
+ * 3 = Middle slightly right
+ * 4 = Middle far right
+ * 5 = Middle slightly left (buggy for some reason)
+ * 6 = Middle
+ * 7 =
+ * 8 =
+ * 9 =
+ *
+ */
+
+
 package org.firstinspires.ftc.teamcode;
 
 import android.hardware.usb.UsbDeviceConnection;
@@ -8,6 +24,7 @@ import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
 import com.hoho.android.usbserial.util.SerialInputOutputManager;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import java.io.IOException;
 import java.util.List;
@@ -16,10 +33,6 @@ import java.util.concurrent.Executors;
 
 // This class encapsulates the USB serial functionality.
 public class UsbSerialReader {
-
-    public enum LedMode { ON, OFF, BLINK }
-    public enum LedName { CONFIRM, START, ABORT }
-
     // Define your confirm header and the expected packet length.
     private static final byte CONFIRM_HEADER = 0x20;
     private static final int CONFIRM_PACKET_LENGTH = 3; // 1 header + 2 bytes
@@ -29,10 +42,12 @@ public class UsbSerialReader {
     private SerialInputOutputManager usbIoManager;
     private ExecutorService executor;
     private SignalReader signalReceiver;
+    private ElapsedTime goodPacketWaitTimer = new ElapsedTime();
 
     // Call this method from your op mode's init() routine,
     // providing the UsbManager (from the Android context).
     public void initialize(UsbManager usbManager) {
+        goodPacketWaitTimer.reset();
         // Probe for USB serial drivers connected to the device.
         List<UsbSerialDriver> availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager);
         if (availableDrivers.isEmpty()) {
@@ -54,7 +69,7 @@ public class UsbSerialReader {
             }
             // Open the port with the same device instance.
             port.open(device);
-            // Set the port parameters to match the Arduino (9600 baud, 8 data bits, 1 stop bit, no parity)
+            // Set the port parameters to match the Arduino (110 baud, 8 data bits, 2 stop bits, no parity)
             port.setParameters(9600, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
         } catch (IOException e) {
             Log.e(TAG, "Error opening USB port: " + e.getMessage());
@@ -83,12 +98,13 @@ public class UsbSerialReader {
     private void handleIncomingData(byte[] data) {
         if (data == null || data.length < 1) return;
 
-        if (data[0] == CONFIRM_HEADER) {
+        if (data[0] == CONFIRM_HEADER && goodPacketWaitTimer.milliseconds() > 1000) {
             if (data.length >= CONFIRM_PACKET_LENGTH) {
                 byte lowByte = data[1];
                 byte highByte = data[2];
                 int selectionData = ((highByte & 0xFF) << 8) | (lowByte & 0xFF);
                 Log.d(TAG, "Confirm packet received. Bitmask: " + Integer.toBinaryString(selectionData));
+                goodPacketWaitTimer.reset();
 
                 if (signalReceiver != null) {
                     signalReceiver.confirmSelection(selectionData);
