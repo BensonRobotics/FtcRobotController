@@ -42,12 +42,12 @@ public class UsbSerialReader {
     private SerialInputOutputManager usbIoManager;
     private ExecutorService executor;
     private SignalReader signalReceiver;
-    private ElapsedTime goodPacketWaitTimer = new ElapsedTime();
+    private ElapsedTime ignoreAfterFullPacketTimer = new ElapsedTime();
 
     // Call this method from your op mode's init() routine,
     // providing the UsbManager (from the Android context).
     public void initialize(UsbManager usbManager) {
-        goodPacketWaitTimer.reset();
+        ignoreAfterFullPacketTimer.reset();
         // Probe for USB serial drivers connected to the device.
         List<UsbSerialDriver> availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager);
         if (availableDrivers.isEmpty()) {
@@ -98,13 +98,13 @@ public class UsbSerialReader {
     private void handleIncomingData(byte[] data) {
         if (data == null || data.length < 1) return;
 
-        if (data[0] == CONFIRM_HEADER && goodPacketWaitTimer.milliseconds() > 1000) {
-            if (data.length >= CONFIRM_PACKET_LENGTH) {
+        if (data[0] == CONFIRM_HEADER && ignoreAfterFullPacketTimer.milliseconds() > 1000) {
+            if (data.length >= CONFIRM_PACKET_LENGTH && (data[1] != 0 || (data[2] & 0xC0) != 0)) {
                 byte lowByte = data[1];
                 byte highByte = data[2];
                 int selectionData = ((highByte & 0xFF) << 8) | (lowByte & 0xFF);
                 Log.d(TAG, "Confirm packet received. Bitmask: " + Integer.toBinaryString(selectionData));
-                goodPacketWaitTimer.reset();
+                ignoreAfterFullPacketTimer.reset();
 
                 if (signalReceiver != null) {
                     signalReceiver.confirmSelection(selectionData);
