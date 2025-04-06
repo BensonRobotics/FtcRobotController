@@ -12,10 +12,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import android.content.Context;
 import android.hardware.usb.UsbManager;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.List;
 import java.util.ArrayList;
@@ -31,13 +31,12 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private static final Locale LOCALE = Locale.US;
     private static final int NUM_OF_TOPPINGS = 7;
     private static final int NUM_OF_FLAVORS = 3;
-    private static final int MAX_QUEUE_TELEMETRY = 3;
     private static final int TOPPING_FALL_WAIT = 1000; // 1 second delay
     private static final double DISPENSER_POWER = 0.5;
 
     // Positions and loads (placeholders, update as needed)
-    private static final int END_POSITION = 8000;
     // Make sure these are all the same length as NUM_OF_TOPPINGS
+    private final int[] BUTTON_TO_TOPPING_NUM = {0, 1, 2, 3, 4, 5, 6};
     private final int[] BOWL_POSITIONS = {1000, 2000, 3000, 4000, 5000, 6000, 7000};
     private final int[] DISPENSER_SECTORS = {8, 8, 8, 8, 8, 8, -1}; // -1 is servo, invalid
     private final int[] SECTORS_PER_DISPENSE = {1, 1, 1, 1, 1, 1, -1}; // Same
@@ -69,8 +68,6 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private List<Float> costQueue = new ArrayList<>();
     private List<Integer> currentSchedule = new ArrayList<>();
     private boolean isEmergencyStopped = false;
-    private enum HomingState { NORMAL, MINNING, MAXXING }
-    private HomingState homingMode = HomingState.NORMAL;
     private boolean[] lastButtonStates = new boolean[operatorButtons.length];
     // All will be set to true in setup
     private int lastQueueLength = 0;
@@ -97,8 +94,11 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
 
     @Override
     public void runOpMode() throws InterruptedException {
+        for (int i = 0; i < ledBlinkTimers.length; i++) {
+            ledBlinkTimers[i] = new ElapsedTime();
+        }
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        clearGodDamnit();
+        clearGoshDarnit();
         UsbManager usbManager = (UsbManager) hardwareMap.appContext.getSystemService(Context.USB_SERVICE);
         reader.setReceiver(this);
         reader.initialize(usbManager);
@@ -186,6 +186,8 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                         machineState = MachineState.TRAVELLING;
                     } else {
                         machineState = MachineState.FINISHED;
+                        conveyorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                        conveyorMotor.setPower(1);
                     }
                     break;
                 case TRAVELLING:
@@ -216,13 +218,18 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                     }
                     break;
                 case FINISHED:
-                    // scheduleQueue now has an empty schedule on top
-                    // It will get removed when reset button is pressed
-                    conveyorMotor.setTargetPosition(END_POSITION);
                     break;
             }
+
+            if (minEndstop.getState() && conveyorMotor.getPower() < 0) {
+                conveyorMotor.setPower(0);
+                conveyorMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            } else if (maxEndstop.getState() && conveyorMotor.getPower() > 0) {
+                conveyorMotor.setPower(0);
+            }
+
             if (lastQueueLength != scheduleQueue.size()) {
-                clearGodDamnit();
+                clearGoshDarnit();
                 lastQueueLength = scheduleQueue.size();
             }
             if (!costQueue.isEmpty()) { // If queue is empty, only need to check one of them
@@ -236,12 +243,12 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                     telemetry.addData((i+1)+suffix+" Order Info", orderInfo);
                 }
             } else { // If queue is empty
-                telemetry.addData("Queue Status", "Empty.");
+                telemetry.addData("Queue Status", "Empty");
             }
             telemetry.update();
         }
         reader.shutdown();
-        clearGodDamnit();
+        clearGoshDarnit();
     }
 
     /**
@@ -250,7 +257,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     public void processSelection(int selection) {
         List<Integer> newSchedule = new ArrayList<>();
         float newCost = 0.00f;
-        String newFlavor = "None";
+        String newFlavor = "No Ice Cream";
 
         // Select flavors
         for (int i = 0; i < NUM_OF_FLAVORS; i++) {
@@ -268,14 +275,15 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
 
             for (int i = NUM_OF_FLAVORS; i < NUM_OF_FLAVORS + NUM_OF_TOPPINGS; i++) {
                 if (((selection >> i) & 0x01) == 1) {
-                    newSchedule.add(i - NUM_OF_FLAVORS);
+                    newSchedule.add(BUTTON_TO_TOPPING_NUM[i - NUM_OF_FLAVORS]);
                 }
             }
+            Collections.sort(newSchedule);
             scheduleQueue.add(newSchedule);
 
         // First topping is free, only if with ice cream
         newCost += 0.50f * newSchedule.size(); // Each is 50 cents
-        if (!newFlavor.equals("None")) {
+        if (!newFlavor.equals("No Ice Cream")) {
             newCost += 2.00f; // Bowl cost
             if (!newSchedule.isEmpty()) { newCost -= 0.50f; }
             // Only apply discount if you have ordered ice cream and at least 1 topping
@@ -323,6 +331,8 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         }
         // Set abort LED to ON
         operatorLedStates[1] = LedState.ON;
+        conveyorMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        conveyorMotor.setPower(1);
     }
 
     public void emergencyStop() {
@@ -337,8 +347,6 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
 
     public void resetSystem() {
         if (!scheduleQueue.isEmpty()) {
-            // Clear the top of the queue
-            scheduleQueue.remove(0);
             // Set start LED to ON
             operatorLedStates[0] = LedState.ON;
         } else {
@@ -346,7 +354,6 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             operatorLedStates[0] = LedState.OFF;
         }
         machineState = MachineState.IDLE;
-        conveyorMotor.setTargetPosition(0);
         if (isEmergencyStopped) { // Only reset powers if emergency stopped
             for (int i = 0; i < allMotors.length; i++) {
                 if (i != SERVO_INDEX) {
@@ -358,6 +365,8 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         }
         // Set abort LED to ON
         operatorLedStates[1] = LedState.ON;
+        conveyorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        conveyorMotor.setPower(-1);
     }
 
     public void confirmSelection(int selection) {
@@ -377,7 +386,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             }
         }
 
-    public void clearGodDamnit() {
+    public void clearGoshDarnit() {
         for (int i = 0; i < 2; i++) {
             telemetry.clearAll();
         }
