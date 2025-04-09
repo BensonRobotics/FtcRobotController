@@ -77,6 +77,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             LedState.ON
     };
     private ElapsedTime[] ledBlinkTimers = new ElapsedTime[operatorLeds.length];
+    private ElapsedTime debounceTimer = new ElapsedTime();
 
     // State management using enum
     private enum MachineState {
@@ -144,24 +145,28 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         // Reset timers
         toppingFallTimer.reset();
         creamDispenseTimer.reset();
+        debounceTimer.reset();
         for (ElapsedTime timer : ledBlinkTimers) {
             timer.reset();
         }
 
         while (opModeIsActive()) {
 
-            // Check operator buttons and act ONCE if they are pressed
+            // Check operator buttons and act ONCE if they are pressed and debounced
+            // Remember that button presses are falling edge
             for (int i = 0; i < operatorButtons.length; i++) {
-                if (operatorButtons[i].getState()) { // If pressed
+                if (!operatorButtons[i].getState() && debounceTimer.milliseconds() > 20) {
                     if (!lastButtonStates[i]) { // If first time pressed since last
                         lastButtonStates[i] = true;
                         operatorAction(i);
+                        debounceTimer.reset();
                     }
                 } else {
                     lastButtonStates[i] = false;
                 }
             }
 
+            // LEDs must be driven using transistors, as digital I/O has insufficient power
             for (int i = 0; i < operatorLeds.length; i++) {
                 switch (operatorLedStates[i]) {
                     case ON: operatorLeds[i].setState(true);
