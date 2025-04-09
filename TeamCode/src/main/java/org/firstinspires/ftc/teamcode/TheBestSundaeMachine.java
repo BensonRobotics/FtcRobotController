@@ -226,10 +226,10 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                     break;
             }
 
-            if (minEndstop.getState() && conveyorMotor.getPower() < 0) {
+            if (minEndstop.getState() && conveyorMotor.getVelocity() < -100) {
                 conveyorMotor.setPower(0);
                 conveyorMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            } else if (maxEndstop.getState() && conveyorMotor.getPower() > 0) {
+            } else if (maxEndstop.getState() && conveyorMotor.getVelocity() > 100) {
                 conveyorMotor.setPower(0);
             }
 
