@@ -15,8 +15,6 @@ import android.hardware.usb.UsbManager;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
@@ -87,11 +85,12 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     // State management using enum
     private enum MachineState {
         IDLE,
-        TARGET_DISPENSER,
+        TARGETING_DISPENSER,
         TRAVELLING,
         DISPENSING,
-        WAIT_FOR_TOPPING_FALL,
-        FINISHED
+        WAITING_FOR_TOPPING_FALL,
+        FINISHING,
+        DEPOSITING
     }
     private MachineState machineState = MachineState.IDLE;
     private enum LedState { ON, OFF, BLINK }
@@ -192,12 +191,12 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             switch (machineState) {
                 case IDLE:
                     break; // Nothing
-                case TARGET_DISPENSER:
+                case TARGETING_DISPENSER:
                     if (!currentSchedule.isEmpty()) {
                         conveyorMotor.setTargetPosition(BOWL_POSITIONS[currentSchedule.get(0)]);
                         machineState = MachineState.TRAVELLING;
                     } else {
-                        machineState = MachineState.FINISHED;
+                        machineState = MachineState.FINISHING;
                         conveyorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                         conveyorMotor.setPower(1);
                     }
@@ -212,34 +211,42 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                     if (currentSchedule.get(0) != SERVO_INDEX) {
                         if (!allMotors[currentSchedule.get(0)].isBusy()) {
                             toppingFallTimer.reset();
-                            machineState = MachineState.WAIT_FOR_TOPPING_FALL;
+                            machineState = MachineState.WAITING_FOR_TOPPING_FALL;
                         }
                     } else {
                         if (creamDispenseTimer.milliseconds() > CREAM_DISPENSE_DURATION) {
                             creamServo.setPosition(0);
                             toppingFallTimer.reset();
-                            machineState = MachineState.WAIT_FOR_TOPPING_FALL;
+                            machineState = MachineState.WAITING_FOR_TOPPING_FALL;
                         }
                     }
                     break;
-                case WAIT_FOR_TOPPING_FALL:
+                case WAITING_FOR_TOPPING_FALL:
                     if (toppingFallTimer.milliseconds() > TOPPING_FALL_WAIT) {
                         // Done dispensing
                         currentSchedule.remove(0);
-                        machineState = MachineState.TARGET_DISPENSER;
+                        machineState = MachineState.TARGETING_DISPENSER;
                     }
                     break;
-                case FINISHED:
+                case FINISHING:
+                    break;
+                case DEPOSITING:
+                    if (bowlDepositTimer.milliseconds() > 1000) {
+                        resetSystem();
+                    }
                     break;
             }
 
             // Using getVelocity covers both power and position control
-            if (minEndstop.getState() && conveyorMotor.getVelocity() < -100) {
+            // Digital inputs are falling edge! Remember to invert all digital inputs
+            if (!minEndstop.getState() && conveyorMotor.getPower() < 0) {
                 conveyorMotor.setPower(0);
                 conveyorMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 operatorLedStates[2] = LedState.OFF;
-            } else if (maxEndstop.getState() && conveyorMotor.getVelocity() > 100) {
+            } else if (!maxEndstop.getState() && conveyorMotor.getPower() > 0) {
                 conveyorMotor.setPower(0);
+                machineState = MachineState.DEPOSITING;
+                bowlDepositTimer.reset();
             }
 
             if (lastQueueLength != scheduleQueue.size()) {
@@ -330,7 +337,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     public void startCycle() {
         operatorLedStates[2] = LedState.ON;
         if (!scheduleQueue.isEmpty()) {
-            machineState = MachineState.TARGET_DISPENSER;
+            machineState = MachineState.TARGETING_DISPENSER;
             costQueue.remove(0);
             flavorQueue.remove(0);
             currentSchedule = scheduleQueue.remove(0);
@@ -344,7 +351,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             conveyorMotor.setPower(1);
             isEmergencyStopped = false;
         }
-        // Set abort LED to ON
+        operatorLedStates[0] = LedState.BLINK;
         operatorLedStates[1] = LedState.ON;
         conveyorMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         conveyorMotor.setPower(1);
