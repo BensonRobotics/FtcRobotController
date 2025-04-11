@@ -27,7 +27,7 @@ public class OperatorPanelTest extends OpMode {
         for (int i = 0; i < operatorLeds.length; i++) {
             operatorLeds[i] = hardwareMap.get(DigitalChannel.class, operatorLedNames[i]);
             operatorLeds[i].setMode(DigitalChannel.Mode.OUTPUT);
-            operatorLeds[i].setState(false);
+            operatorLeds[i].setState(true);
         }
         Arrays.fill(lastButtonStates, true);
     }
@@ -40,8 +40,8 @@ public class OperatorPanelTest extends OpMode {
     @Override
     public void loop() {
         for (int i = 0; i < operatorButtons.length; i++) {
-            if (!operatorButtons[i].getState() && debounceTimer.milliseconds() > 20) {
-                if (!lastButtonStates[i]) { // If first time pressed since last
+            if (!operatorButtons[i].getState()) {
+                if (!lastButtonStates[i] && debounceTimer.milliseconds() > 20) { // If first time pressed since last
                     lastButtonStates[i] = true;
                     operatorLeds[i].setState(!operatorLeds[i].getState());
                     debounceTimer.reset();
@@ -55,7 +55,7 @@ public class OperatorPanelTest extends OpMode {
     @Override
     public void stop() {
         for (DigitalChannel operatorLed : operatorLeds) {
-            operatorLed.setState(false);
+            operatorLed.setState(true);
         }
     }
 }
