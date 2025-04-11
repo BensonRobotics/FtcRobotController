@@ -14,6 +14,9 @@ import android.hardware.usb.UsbManager;
 
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 
+
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
@@ -41,7 +44,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private final int[] DISPENSER_SECTORS = {8, 8, 8, 8, 8, 8, -1}; // -1 is servo, invalid
     private final int[] SECTORS_PER_DISPENSE = {1, 1, 1, 1, 1, 1, -1}; // Same
     private final int CREAM_DISPENSE_DURATION = 1500;
-    private final float CREAM_DISPENSE_ANGLE = 0.25f;
+    private final float CREAM_DISPENSE_ANGLE = 0.175f;
     private int[] dispenserTally = {0, 0, 0, 0, 0, 0, -1}; // Same
 
     // Motors
@@ -60,6 +63,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private final String[] operatorLedNames = {"startLed", "abortLed", "resetLed"};
     private DigitalChannel[] operatorButtons = new DigitalChannel[3]; // 3 op buttons
     private DigitalChannel[] operatorLeds = new DigitalChannel[3]; // 3 op LEDs
+    // LED states are reversed, so false is on and true is off; digital i/o used as sink
     private LED testLed;
 
     // Topping schedule and current topping
@@ -128,6 +132,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         for (int i = 0; i < operatorLeds.length; i++) {
             operatorLeds[i] = hardwareMap.get(DigitalChannel.class, operatorLedNames[i]);
             operatorLeds[i].setMode(DigitalChannel.Mode.OUTPUT);
+            operatorLeds[i].setState(true); // Off
         }
 
         Arrays.fill(lastButtonStates, true); // Set all button states to true
@@ -155,8 +160,8 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             // Check operator buttons and act ONCE if they are pressed and debounced
             // Remember that button presses are falling edge
             for (int i = 0; i < operatorButtons.length; i++) {
-                if (!operatorButtons[i].getState() && debounceTimer.milliseconds() > 20) {
-                    if (!lastButtonStates[i]) { // If first time pressed since last
+                if (!operatorButtons[i].getState()) {
+                    if (!lastButtonStates[i] && debounceTimer.milliseconds() > 20) { // If first time pressed since last
                         lastButtonStates[i] = true;
                         operatorAction(i);
                         debounceTimer.reset();
@@ -169,9 +174,9 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             // LEDs must be driven using transistors, as digital I/O has insufficient power
             for (int i = 0; i < operatorLeds.length; i++) {
                 switch (operatorLedStates[i]) {
-                    case ON: operatorLeds[i].setState(true);
+                    case ON: operatorLeds[i].setState(false);
                     break;
-                    case OFF: operatorLeds[i].setState(false);
+                    case OFF: operatorLeds[i].setState(true);
                     break;
                     case BLINK: if (ledBlinkTimers[i].milliseconds() > 250) {
                         operatorLeds[i].setState(!operatorLeds[i].getState());
@@ -227,6 +232,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             }
 
             if (minEndstop.getState() && conveyorMotor.getVelocity() < -100) {
+                operatorLedStates[2] = LedState.ON;
                 conveyorMotor.setPower(0);
                 conveyorMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             } else if (maxEndstop.getState() && conveyorMotor.getVelocity() > 100) {
@@ -237,8 +243,8 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                 clearGoshDarnit();
                 lastQueueLength = scheduleQueue.size();
             }
-            if (!costQueue.isEmpty()) { // If queue is empty, only need to check one of them
-                for (int i = 0; i < costQueue.size(); i++) {
+            if (!scheduleQueue.isEmpty()) { // If there is something in one of the cues
+                for (int i = 0; i < scheduleQueue.size(); i++) {
                     String orderInfo = String.format(LOCALE, "$%.2f", costQueue.get(i))+", "+
                             flavorQueue.get(i);
                     String suffix =
@@ -370,6 +376,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         }
         // Set abort LED to ON
         operatorLedStates[1] = LedState.ON;
+        operatorLedStates[2] = LedState.BLINK;
         conveyorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         conveyorMotor.setPower(-1);
     }
