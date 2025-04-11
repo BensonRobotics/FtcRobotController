@@ -82,6 +82,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     };
     private ElapsedTime[] ledBlinkTimers = new ElapsedTime[operatorLeds.length];
     private ElapsedTime debounceTimer = new ElapsedTime();
+    private ElapsedTime bowlDepositTimer = new ElapsedTime();
 
     // State management using enum
     private enum MachineState {
@@ -151,6 +152,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         toppingFallTimer.reset();
         creamDispenseTimer.reset();
         debounceTimer.reset();
+        bowlDepositTimer.reset();
         for (ElapsedTime timer : ledBlinkTimers) {
             timer.reset();
         }
@@ -231,10 +233,11 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                     break;
             }
 
+            // Using getVelocity covers both power and position control
             if (minEndstop.getState() && conveyorMotor.getVelocity() < -100) {
-                operatorLedStates[2] = LedState.ON;
                 conveyorMotor.setPower(0);
                 conveyorMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                operatorLedStates[2] = LedState.OFF;
             } else if (maxEndstop.getState() && conveyorMotor.getVelocity() > 100) {
                 conveyorMotor.setPower(0);
             }
@@ -325,6 +328,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     }
 
     public void startCycle() {
+        operatorLedStates[2] = LedState.ON;
         if (!scheduleQueue.isEmpty()) {
             machineState = MachineState.TARGET_DISPENSER;
             costQueue.remove(0);
@@ -357,6 +361,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     }
 
     public void resetSystem() {
+        operatorLedStates[2] = LedState.BLINK;
         if (!scheduleQueue.isEmpty()) {
             // Set start LED to ON
             operatorLedStates[0] = LedState.ON;
@@ -376,7 +381,6 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         }
         // Set abort LED to ON
         operatorLedStates[1] = LedState.ON;
-        operatorLedStates[2] = LedState.BLINK;
         conveyorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         conveyorMotor.setPower(-1);
     }
