@@ -85,7 +85,6 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private ElapsedTime[] ledBlinkTimers = new ElapsedTime[operatorLeds.length];
     private ElapsedTime debounceTimer = new ElapsedTime();
     private ElapsedTime bowlDepositTimer = new ElapsedTime();
-    private ElapsedTime oscillationTimer = new ElapsedTime();
 
     // State management using enum
     private enum MachineState {
@@ -212,7 +211,6 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                     if (!conveyorMotor.isBusy()) {
                         dispenseTopping(currentTopping);
                         machineState = MachineState.DISPENSING;
-                        oscillationTimer.reset();
                     }
                     break;
                 case DISPENSING:
@@ -358,8 +356,21 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         }
     }
 
+    private double dispenseCompletion(int index) {
+        if (index != SERVO_INDEX) {
+            double ticksPerLoad = 5281.1 / DISPENSER_SECTORS[index];
+            double dispenserTarget = dispenserTally[index] * ticksPerLoad;
+            double oldTarget = (dispenserTally[index] - SECTORS_PER_DISPENSE[index]) * ticksPerLoad;
+            double range = dispenserTarget - oldTarget;
+            double thoseWhoKnow = allMotors[index].getCurrentPosition() - oldTarget;
+            return thoseWhoKnow / range;
+        } else {
+            return creamDispenseTimer.seconds();
+        }
+    }
+
     private int oscillatedOffset(int index) {
-        double position = Math.sin(2*Math.PI * oscillationTimer.seconds()) * OSCILLATION_AMP[index];
+        double position = Math.sin(2*Math.PI * dispenseCompletion(index)) * OSCILLATION_AMP[index];
         return (int) position;
     }
 
