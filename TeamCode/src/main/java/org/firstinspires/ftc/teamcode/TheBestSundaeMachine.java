@@ -70,6 +70,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private List<String> flavorQueue = new ArrayList<>();
     private List<Float> costQueue = new ArrayList<>();
     private List<Integer> currentSchedule = new ArrayList<>();
+    private int currentTopping = 0;
     private boolean isEmergencyStopped = false;
     private boolean[] lastButtonStates = new boolean[operatorButtons.length];
     // All will be set to true in setup
@@ -198,7 +199,8 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                     break; // Nothing
                 case TARGETING_DISPENSER:
                     if (!currentSchedule.isEmpty()) {
-                        conveyorMotor.setTargetPosition(BOWL_POSITIONS[currentSchedule.get(0)]);
+                        currentTopping = currentSchedule.remove(0);
+                        conveyorMotor.setTargetPosition(BOWL_POSITIONS[currentTopping]);
                         machineState = MachineState.TRAVELLING;
                     } else {
                         machineState = MachineState.FINISHING;
@@ -208,35 +210,36 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                     break;
                 case TRAVELLING:
                     if (!conveyorMotor.isBusy()) {
-                        dispenseTopping(currentSchedule.get(0));
+                        dispenseTopping(currentTopping);
                         machineState = MachineState.DISPENSING;
                         oscillationTimer.reset();
                     }
                     break;
                 case DISPENSING:
-                    conveyorMotor.setTargetPosition(oscillatedPosition(
-                            BOWL_POSITIONS[currentSchedule.get(0)]));
+                    if (OSCILLATION_AMP[currentTopping] != 0) {
+                        conveyorMotor.setTargetPosition(BOWL_POSITIONS[currentTopping] +
+                                oscillatedOffset(currentTopping));
+                    }
 
-                    if (currentSchedule.get(0) != SERVO_INDEX) {
-                        if (!allMotors[currentSchedule.get(0)].isBusy()) {
+                    if (currentTopping != SERVO_INDEX) {
+                        if (!allMotors[currentTopping].isBusy()) {
                             toppingFallTimer.reset();
                             machineState = MachineState.WAITING_FOR_TOPPING_FALL;
                             conveyorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                            conveyorMotor.setTargetPosition(BOWL_POSITIONS[currentSchedule.get(0)]);
+                            conveyorMotor.setTargetPosition(BOWL_POSITIONS[currentTopping]);
                         }
                     } else {
                         if (creamDispenseTimer.milliseconds() > CREAM_DISPENSE_DURATION) {
                             creamServo.setPosition(0);
                             toppingFallTimer.reset();
                             machineState = MachineState.WAITING_FOR_TOPPING_FALL;
-                            conveyorMotor.setTargetPosition(BOWL_POSITIONS[currentSchedule.get(0)]);
+                            conveyorMotor.setTargetPosition(BOWL_POSITIONS[currentTopping]);
                         }
                     }
                     break;
                 case WAITING_FOR_TOPPING_FALL:
                     if (toppingFallTimer.milliseconds() > TOPPING_FALL_WAIT) {
                         // Done dispensing
-                        currentSchedule.remove(0);
                         machineState = MachineState.TARGETING_DISPENSER;
                     }
                     break;
@@ -355,11 +358,8 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         }
     }
 
-    private int oscillatedPosition(int index) {
-        double position = conveyorMotor.getCurrentPosition();
-        if (OSCILLATION_AMP[index] != 0) {
-            position += Math.sin(2*Math.PI * oscillationTimer.seconds()) * OSCILLATION_AMP[index];
-        }
+    private int oscillatedOffset(int index) {
+        double position = Math.sin(2*Math.PI * oscillationTimer.seconds()) * OSCILLATION_AMP[index];
         return (int) position;
     }
 
