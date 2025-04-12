@@ -57,6 +57,9 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private final int SERVO_INDEX = 6;
     private DcMotorEx[] allMotors = new DcMotorEx[allMotorNames.length];
 
+    private int[] wobbleAmplitudes = {100, 100, 0, 0, 0, 0, 0, 0, 90}; // in ticks
+    private double[] wobblePeriods = {1, 1, 1, 1, 1, 1, 1, 1, 1}; // in seconds
+
     private DigitalChannel minEndstop;
     private DigitalChannel maxEndstop;
 
@@ -85,6 +88,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private ElapsedTime[] ledBlinkTimers = new ElapsedTime[operatorLeds.length];
     private ElapsedTime debounceTimer = new ElapsedTime();
     private ElapsedTime bowlDepositTimer = new ElapsedTime();
+    private ElapsedTime dispenseWobbleTimer = new ElapsedTime();
 
     // State management using enum
     private enum MachineState {
@@ -213,6 +217,9 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                     }
                     break;
                 case DISPENSING:
+                    // Wobble while dispensing based on the settings in the two arrays defined in the definition section above.
+                    dispenseWobble(dispenseWobbleTimer, wobbleAmplitudes, wobblePeriods, currentSchedule.get(0));
+
                     if (currentSchedule.get(0) != SERVO_INDEX) {
                         if (!allMotors[currentSchedule.get(0)].isBusy()) {
                             toppingFallTimer.reset();
@@ -227,6 +234,9 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                     }
                     break;
                 case WAITING_FOR_TOPPING_FALL:
+                    // Stop wobbling while waiting for toppings to fall, set target position back to center for the current topping.
+                    conveyorMotor.setTargetPosition(BOWL_POSITIONS[currentSchedule.get(0)]);
+
                     if (toppingFallTimer.milliseconds() > TOPPING_FALL_WAIT) {
                         // Done dispensing
                         currentSchedule.remove(0);
@@ -346,6 +356,16 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             creamServo.setPosition(CREAM_DISPENSE_ANGLE);
             creamDispenseTimer.reset();
         }
+    }
+
+    // Function for wobbling while dispensing a topping.
+    private void dispenseWobble(ElapsedTime dispenseWobbleTimer, int[] wobbleAmplitudes, double[] wobblePeriods, int currentTopping) {
+        conveyorMotor.setTargetPosition(BOWL_POSITIONS[currentSchedule.get(0)] + wobbleFunction(dispenseWobbleTimer.seconds(), wobbleAmplitudes, wobblePeriods, currentTopping));
+    }
+
+    // Sine function used for wobbling
+    private int wobbleFunction(double currentWobbleSeconds, int[] wobbleAmplitudes, double[] wobblePeriods, int currentTopping) {
+        return (int) ((Math.sin(((2 * Math.PI) / wobblePeriods[currentTopping]) * currentWobbleSeconds) * (double) wobbleAmplitudes[currentTopping]));
     }
 
     public void startCycle() {
