@@ -365,7 +365,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             double thoseWhoKnow = allMotors[index].getCurrentPosition() - oldTarget;
             return thoseWhoKnow / range;
         } else {
-            return creamDispenseTimer.seconds();
+            return creamDispenseTimer.milliseconds() / CREAM_DISPENSE_DURATION;
         }
     }
 
