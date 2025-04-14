@@ -41,6 +41,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     // Make sure these are all the same length as NUM_OF_TOPPINGS
     private final int[] BUTTON_TO_TOPPING_NUM = {0, 1, 2, 3, 4, 5, 6};
     private final int[] OSCILLATION_AMP = {100, 100, 0, 0, 0, 0, 90}; // in ticks
+    private final int[] OSCILLATION_FREQ = {1, 1, 1, 1, 1, 1, 1};
     private final int[] BOWL_POSITIONS = {1000, 2000, 3000, 4000, 5000, 6000, 7000};
     private final int[] DISPENSER_SECTORS = {8, 8, 8, 8, 8, 8, -1}; // -1 is servo, invalid
     private final int[] SECTORS_PER_DISPENSE = {2, 2, 2, 2, 2, 2, -1}; // Same
@@ -370,7 +371,8 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     }
 
     private int oscillatedOffset(int index) {
-        double position = Math.sin(2*Math.PI * dispenseCompletion(index)) * OSCILLATION_AMP[index];
+        double position = Math.sin(2*Math.PI * dispenseCompletion(index) * OSCILLATION_FREQ[index]) *
+                OSCILLATION_AMP[index];
         return (int) position;
     }
 
