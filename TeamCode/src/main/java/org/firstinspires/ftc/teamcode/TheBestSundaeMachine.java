@@ -28,6 +28,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     // Timers
     private ElapsedTime toppingFallTimer = new ElapsedTime();
     private ElapsedTime creamDispenseTimer = new ElapsedTime();
+    private double lastCreamTime = 0;
 
     // Constants
     private static final Locale LOCALE = Locale.US;
@@ -168,7 +169,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             // Remember that button presses are falling edge
             for (int i = 0; i < operatorButtons.length; i++) {
                 if (!operatorButtons[i].getState()) {
-                    if (!lastButtonStates[i] && debounceTimer.milliseconds() > 20) { // If first time pressed since last
+                    if (!lastButtonStates[i] && debounceTimer.milliseconds() > 100) { // If first time pressed since last
                         lastButtonStates[i] = true;
                         operatorAction(i);
                         debounceTimer.reset();
@@ -228,7 +229,8 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                             conveyorMotor.setTargetPosition(BOWL_POSITIONS[currentTopping]);
                         }
                     } else {
-                        if (creamDispenseTimer.milliseconds() > CREAM_DISPENSE_DURATION) {
+                        if (creamDispenseTimer.milliseconds() + lastCreamTime >
+                                CREAM_DISPENSE_DURATION) {
                             creamServo.setPosition(0);
                             toppingFallTimer.reset();
                             machineState = MachineState.WAITING_FOR_TOPPING_FALL;
@@ -354,6 +356,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         } else { // Whipped cream
             creamServo.setPosition(CREAM_DISPENSE_ANGLE);
             creamDispenseTimer.reset();
+            lastCreamTime = 0;
         }
     }
 
@@ -366,14 +369,14 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             double thoseWhoKnow = allMotors[index].getCurrentPosition() - oldTarget;
             return thoseWhoKnow / range;
         } else {
-            return creamDispenseTimer.milliseconds() / CREAM_DISPENSE_DURATION;
+            return (creamDispenseTimer.milliseconds() + lastCreamTime) / CREAM_DISPENSE_DURATION;
         }
     }
 
     private int oscillatedOffset(int index) {
-        double position = Math.sin(2*Math.PI * dispenseCompletion(index) * OSCILLATION_FREQ[index]) *
-                OSCILLATION_AMP[index];
-        return (int) position;
+        double offset = Math.sin(2*Math.PI * dispenseCompletion(index) *
+                OSCILLATION_FREQ[index]) * OSCILLATION_AMP[index];
+        return (int) offset;
     }
 
     public void startCycle() {
@@ -384,17 +387,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             flavorQueue.remove(0);
             currentSchedule = scheduleQueue.remove(0);
         }
-        if (isEmergencyStopped) { // Only reset powers if emergency stopped
-            for (int i = 0; i < allMotors.length; i++) {
-                if (i != SERVO_INDEX) {
-                    allMotors[i].setPower(DISPENSER_POWER);
-                }
-            }
-            conveyorMotor.setPower(1);
-            isEmergencyStopped = false;
-        }
         operatorLedStates[0] = LedState.BLINK;
-        operatorLedStates[1] = LedState.ON;
         conveyorMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         conveyorMotor.setPower(1);
     }
@@ -403,35 +396,41 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         for (DcMotorEx motor : allMotors) {
             motor.setPower(0); // Kill power to all motors
         }
-        creamServo.setPosition(0);
+        creamServo.setPosition(0.01);
+        lastCreamTime = creamDispenseTimer.milliseconds();
         isEmergencyStopped = true; // Flag for emergency stop
         // Set abort LED to BLINK
         operatorLedStates[1] = LedState.BLINK;
     }
 
     public void resetSystem() {
-        operatorLedStates[2] = LedState.BLINK;
-        if (!scheduleQueue.isEmpty()) {
-            // Set start LED to ON
-            operatorLedStates[0] = LedState.ON;
-        } else {
-            // Set start LED to OFF
-            operatorLedStates[0] = LedState.OFF;
-        }
-        machineState = MachineState.IDLE;
         if (isEmergencyStopped) { // Only reset powers if emergency stopped
             for (int i = 0; i < allMotors.length; i++) {
                 if (i != SERVO_INDEX) {
                     allMotors[i].setPower(DISPENSER_POWER);
                 }
             }
+            operatorLedStates[1] = LedState.ON;
             conveyorMotor.setPower(1);
+            creamDispenseTimer.reset();
             isEmergencyStopped = false;
+            if (creamServo.getPosition() == 0.01) {
+                creamServo.setPosition(CREAM_DISPENSE_ANGLE);
+            }
+        } else {
+            operatorLedStates[2] = LedState.BLINK;
+            if (!scheduleQueue.isEmpty()) {
+                // Set start LED to ON
+                operatorLedStates[0] = LedState.ON;
+            } else {
+                // Set start LED to OFF
+                operatorLedStates[0] = LedState.OFF;
+            }
+            machineState = MachineState.IDLE;
+            // Set abort LED to ON
+            conveyorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            conveyorMotor.setPower(-1);
         }
-        // Set abort LED to ON
-        operatorLedStates[1] = LedState.ON;
-        conveyorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        conveyorMotor.setPower(-1);
     }
 
     public void confirmSelection(int selection) {
