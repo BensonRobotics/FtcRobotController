@@ -34,21 +34,21 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private static final Locale LOCALE = Locale.US;
     private static final int NUM_OF_TOPPINGS = 7;
     private static final int NUM_OF_FLAVORS = 3;
-    private static final int TOPPING_FALL_WAIT = 1000; // 1 second delay
+    private static final int TOPPING_FALL_WAIT = 500; // Half second delay
     private static final double DISPENSER_POWER = 0.5;
-    private static final int CONVEYOR_CURRENT_LIMIT = 2000;
+    private static final int CONVEYOR_CURRENT_LIMIT = 5000;
 
     // Positions and loads (placeholders, update as needed)
     // Make sure these are all the same length as NUM_OF_TOPPINGS
     private final int[] BUTTON_TO_TOPPING_NUM = {0, 1, 2, 3, 4, 5, 6};
-    private final int[] OSCILLATION_AMP = {100, 100, 0, 0, 0, 0, 90}; // in ticks
+    private final int[] OSCILLATION_AMP = {0, 0, 0, 0, 0, 0, 0}; // in ticks
     private final int[] OSCILLATION_FREQ = {1, 1, 1, 1, 1, 1, 1};
-    private final int[] BOWL_POSITIONS = {1000, 2000, 3000, 4000, 5000, 6000, 7000};
-    private final int[] DISPENSER_SECTORS = {8, 8, 8, 8, 8, 8, -1}; // -1 is servo, invalid
-    private final int[] SECTORS_PER_DISPENSE = {2, 2, 2, 2, 2, 2, -1}; // Same
+    private final int[] BOWL_POSITIONS = {1977, 3615, 5049, 6667, 8313, 9930, 11857};
+    private final int[] DISPENSER_SECTORS = {8, 8, 8, 8, 8, 8, 0}; // -1 is servo, invalid
+    private final int[] SECTORS_PER_DISPENSE = {2, 2, 2, 2, 2, 2, 0}; // Same
     private final int CREAM_DISPENSE_DURATION = 1000;
     private final float CREAM_DISPENSE_ANGLE = 0.175f;
-    private int[] dispenserTally = {0, 0, 0, 0, 0, 0, -1}; // Same
+    private int[] dispenserTally = new int[NUM_OF_TOPPINGS];
 
     // Motors
     private DcMotorEx conveyorMotor;
@@ -74,6 +74,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private List<Integer> currentSchedule = new ArrayList<>();
     private int currentTopping = 0;
     private boolean isEmergencyStopped = false;
+    private MachineState lastMachineState = MachineState.IDLE;
     private boolean[] lastButtonStates = new boolean[operatorButtons.length];
     // All will be set to true in setup
     private int lastQueueLength = 0;
@@ -96,7 +97,9 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         DISPENSING,
         WAITING_FOR_TOPPING_FALL,
         FINISHING,
-        DEPOSITING
+        DEPOSITING,
+        RESETTING,
+        EMERGENCY
     }
     private MachineState machineState = MachineState.IDLE;
     private enum LedState { ON, OFF, BLINK }
@@ -105,6 +108,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
 
     @Override
     public void runOpMode() throws InterruptedException {
+        Arrays.fill(dispenserTally, 0);
         for (int i = 0; i < ledBlinkTimers.length; i++) {
             ledBlinkTimers[i] = new ElapsedTime();
         }
@@ -162,6 +166,8 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         for (ElapsedTime timer : ledBlinkTimers) {
             timer.reset();
         }
+
+        processSelection(993);
 
         while (opModeIsActive()) {
 
@@ -225,7 +231,6 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                         if (!allMotors[currentTopping].isBusy()) {
                             toppingFallTimer.reset();
                             machineState = MachineState.WAITING_FOR_TOPPING_FALL;
-                            conveyorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                             conveyorMotor.setTargetPosition(BOWL_POSITIONS[currentTopping]);
                         }
                     } else {
@@ -245,28 +250,29 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                     }
                     break;
                 case FINISHING:
+                    if (!maxEndstop.getState()) {
+                        lastConveyorPower = conveyorMotor.getPower();
+                        conveyorMotor.setPower(0);
+                        machineState = MachineState.DEPOSITING;
+                        bowlDepositTimer.reset();
+                    }
                     break;
                 case DEPOSITING:
                     if (bowlDepositTimer.milliseconds() > 1000) {
                         resetSystem();
                     }
                     break;
+                case RESETTING:
+                    if (!minEndstop.getState()) {
+                        lastConveyorPower = conveyorMotor.getPower();
+                        conveyorMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        operatorLedStates[2] = LedState.ON;
+                        machineState = MachineState.IDLE;
+                    }
+                    break;
             }
 
-            if (conveyorMotor.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
-                // Digital inputs are falling edge! Remember to invert all digital inputs
-                if (!minEndstop.getState() && conveyorMotor.getPower() < 0) {
-                    conveyorMotor.setPower(0);
-                    conveyorMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    operatorLedStates[2] = LedState.OFF;
-                } else if (!maxEndstop.getState() && conveyorMotor.getPower() > 0) {
-                    conveyorMotor.setPower(0);
-                    machineState = MachineState.DEPOSITING;
-                    bowlDepositTimer.reset();
-                }
-            }
-
-            if (conveyorMotor.isOverCurrent()) {
+            /*if (conveyorMotor.isOverCurrent()) {
                 lastConveyorPower = conveyorMotor.getPower();
                 conveyorMotor.setPower(0);
                 isConveyorCurrentTripped = true;
@@ -275,7 +281,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                 conveyorMotor.setPower(lastConveyorPower);
                 isConveyorCurrentTripped = false;
                 conveyorMotor.setCurrentAlert(CONVEYOR_CURRENT_LIMIT, CurrentUnit.MILLIAMPS);
-            }
+            } */
 
             if (lastQueueLength != scheduleQueue.size()) {
                 clearGoshDarnit();
@@ -380,40 +386,44 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     }
 
     public void startCycle() {
-        operatorLedStates[2] = LedState.ON;
+        // startCycle no longer resets emergency mode
         if (!scheduleQueue.isEmpty()) {
             machineState = MachineState.TARGETING_DISPENSER;
             costQueue.remove(0);
             flavorQueue.remove(0);
             currentSchedule = scheduleQueue.remove(0);
+            operatorLedStates[0] = LedState.BLINK;
+            conveyorMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            conveyorMotor.setPower(1);
         }
-        operatorLedStates[0] = LedState.BLINK;
-        conveyorMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        conveyorMotor.setPower(1);
     }
 
     public void emergencyStop() {
         for (DcMotorEx motor : allMotors) {
-            motor.setPower(0); // Kill power to all motors
+            if (motor != null) {
+                motor.setPower(0); // Kill power to all motors
+            }
         }
         creamServo.setPosition(0.01);
+        lastConveyorPower = conveyorMotor.getPower();
         lastCreamTime = creamDispenseTimer.milliseconds();
-        isEmergencyStopped = true; // Flag for emergency stop
+        lastMachineState = machineState;
+        machineState = MachineState.EMERGENCY;
         // Set abort LED to BLINK
         operatorLedStates[1] = LedState.BLINK;
     }
 
     public void resetSystem() {
-        if (isEmergencyStopped) { // Only reset powers if emergency stopped
-            for (int i = 0; i < allMotors.length; i++) {
-                if (i != SERVO_INDEX) {
-                    allMotors[i].setPower(DISPENSER_POWER);
+        if (machineState == MachineState.EMERGENCY) { // Only reset powers if emergency stopped
+            for (DcMotorEx allMotor : allMotors) {
+                if (allMotor != null) {
+                    allMotor.setPower(DISPENSER_POWER);
                 }
             }
             operatorLedStates[1] = LedState.ON;
-            conveyorMotor.setPower(1);
+            conveyorMotor.setPower(lastConveyorPower);
             creamDispenseTimer.reset();
-            isEmergencyStopped = false;
+            machineState = lastMachineState;
             if (creamServo.getPosition() == 0.01) {
                 creamServo.setPosition(CREAM_DISPENSE_ANGLE);
             }
@@ -426,7 +436,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                 // Set start LED to OFF
                 operatorLedStates[0] = LedState.OFF;
             }
-            machineState = MachineState.IDLE;
+            machineState = MachineState.RESETTING;
             // Set abort LED to ON
             conveyorMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             conveyorMotor.setPower(-1);

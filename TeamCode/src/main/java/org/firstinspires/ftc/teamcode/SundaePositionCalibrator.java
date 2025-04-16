@@ -41,9 +41,9 @@ public class SundaePositionCalibrator extends OpMode {
     public void loop() {
 
         if (gamepad1.dpad_up) {
-            servoAngle = Math.min(servoAngle + 0.001, 1);
+            servoAngle = Math.min(servoAngle + 0.002, 1);
         } else if (gamepad1.dpad_down) {
-            servoAngle = Math.max(servoAngle - 0.001, 0);
+            servoAngle = Math.max(servoAngle - 0.002, 0);
         }
 
         if (gamepad1.a) {
@@ -60,9 +60,10 @@ public class SundaePositionCalibrator extends OpMode {
             creamServo.setPosition(0);
         }
 
-        telemetry.addData("Run Time: ", runtime.toString());
-        telemetry.addData("Servo Angle: ", servoAngle);
-        telemetry.addData("Conveyor Position: ", conveyorMotor.getCurrentPosition());
+        telemetry.addData("Run Time", runtime.toString());
+        telemetry.addData("Servo Angle", servoAngle);
+        telemetry.addData("Servo Enabled", !isServoIdling);
+        telemetry.addData("Conveyor Position", conveyorMotor.getCurrentPosition());
         telemetry.update();
     }
 
