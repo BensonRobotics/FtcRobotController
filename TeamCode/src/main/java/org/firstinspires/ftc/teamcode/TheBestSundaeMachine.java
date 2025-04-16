@@ -26,8 +26,8 @@ import java.util.ArrayList;
 public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
 
     // Timers
-    private ElapsedTime toppingFallTimer = new ElapsedTime();
-    private ElapsedTime creamDispenseTimer = new ElapsedTime();
+    private final ElapsedTime toppingFallTimer = new ElapsedTime();
+    private final ElapsedTime creamDispenseTimer = new ElapsedTime();
     private double lastCreamTime = 0;
 
     // Constants
@@ -48,7 +48,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private final int[] SECTORS_PER_DISPENSE = {2, 2, 2, 2, 2, 2, 0}; // Same
     private final int CREAM_DISPENSE_DURATION = 1000;
     private final float CREAM_DISPENSE_ANGLE = 0.175f;
-    private int[] dispenserTally = new int[NUM_OF_TOPPINGS];
+    private final int[] dispenserTally = new int[NUM_OF_TOPPINGS];
 
     // Motors
     private DcMotorEx conveyorMotor;
@@ -57,37 +57,34 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             "topping3Motor", "topping4Motor", "topping5Motor", "T6PLACEHOLDER", "conveyorMotor"};
     // topping6 is a servo
     private final int SERVO_INDEX = 6;
-    private DcMotorEx[] allMotors = new DcMotorEx[allMotorNames.length];
-    private DigitalChannel minEndstop;
-    private DigitalChannel maxEndstop;
+    private final DcMotorEx[] allMotors = new DcMotorEx[allMotorNames.length];
 
     private final String[] operatorButtonNames = {"startButton", "abortButton", "resetButton"};
     private final String[] operatorLedNames = {"startLed", "abortLed", "resetLed"};
-    private DigitalChannel[] operatorButtons = new DigitalChannel[3]; // 3 op buttons
-    private DigitalChannel[] operatorLeds = new DigitalChannel[3]; // 3 op LEDs
+    private final DigitalChannel[] operatorButtons = new DigitalChannel[3]; // 3 op buttons
+    private final DigitalChannel[] operatorLeds = new DigitalChannel[3]; // 3 op LEDs
     // LED states are reversed, so false is on and true is off; digital i/o used as sink
 
     // Topping schedule and current topping
-    private List<List<Integer>> scheduleQueue = new ArrayList<>();
-    private List<String> flavorQueue = new ArrayList<>();
-    private List<Float> costQueue = new ArrayList<>();
+    private final List<List<Integer>> scheduleQueue = new ArrayList<>();
+    private final List<String> flavorQueue = new ArrayList<>();
+    private final List<Float> costQueue = new ArrayList<>();
     private List<Integer> currentSchedule = new ArrayList<>();
     private int currentTopping = 0;
-    private boolean isEmergencyStopped = false;
     private MachineState lastMachineState = MachineState.IDLE;
-    private boolean[] lastButtonStates = new boolean[operatorButtons.length];
+    private final boolean[] lastButtonStates = new boolean[operatorButtons.length];
     // All will be set to true in setup
     private int lastQueueLength = 0;
     private double lastConveyorPower = 0;
     private boolean isConveyorCurrentTripped = false;
-    private LedState[] operatorLedStates = new LedState[] {
+    private final LedState[] operatorLedStates = new LedState[] {
             LedState.OFF,
             LedState.ON,
             LedState.ON
     };
-    private ElapsedTime[] ledBlinkTimers = new ElapsedTime[operatorLeds.length];
-    private ElapsedTime debounceTimer = new ElapsedTime();
-    private ElapsedTime bowlDepositTimer = new ElapsedTime();
+    private final ElapsedTime[] ledBlinkTimers = new ElapsedTime[operatorLeds.length];
+    private final ElapsedTime debounceTimer = new ElapsedTime();
+    private final ElapsedTime bowlDepositTimer = new ElapsedTime();
 
     // State management using enum
     private enum MachineState {
@@ -149,8 +146,8 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         Arrays.fill(lastButtonStates, true); // Set all button states to true
         // This is to ignore any buttons that are pressed during initialization
 
-        minEndstop = hardwareMap.get(DigitalChannel.class, "minEndstop");
-        maxEndstop = hardwareMap.get(DigitalChannel.class, "maxEndstop");
+        DigitalChannel minEndstop = hardwareMap.get(DigitalChannel.class, "minEndstop");
+        DigitalChannel maxEndstop = hardwareMap.get(DigitalChannel.class, "maxEndstop");
         minEndstop.setMode(DigitalChannel.Mode.INPUT);
         maxEndstop.setMode(DigitalChannel.Mode.INPUT);
 
@@ -166,8 +163,6 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         for (ElapsedTime timer : ledBlinkTimers) {
             timer.reset();
         }
-
-        processSelection(993);
 
         while (opModeIsActive()) {
 
@@ -186,6 +181,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             }
 
             // LEDs must be driven using transistors, as digital I/O has insufficient power
+            // Disregard this, we got it working by sinking the leds instead of sourcing them
             for (int i = 0; i < operatorLeds.length; i++) {
                 switch (operatorLedStates[i]) {
                     case ON: operatorLeds[i].setState(false);
@@ -201,6 +197,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
             }
 
             // State machine
+            // I love state machines!!!
             switch (machineState) {
                 case IDLE:
                     break; // Nothing
@@ -272,16 +269,14 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
                     break;
             }
 
-            /*if (conveyorMotor.isOverCurrent()) {
+            if (conveyorMotor.isOverCurrent()) {
                 lastConveyorPower = conveyorMotor.getPower();
                 conveyorMotor.setPower(0);
                 isConveyorCurrentTripped = true;
-                conveyorMotor.setCurrentAlert(CONVEYOR_CURRENT_LIMIT/2.0, CurrentUnit.MILLIAMPS);
             } else if (isConveyorCurrentTripped) {
                 conveyorMotor.setPower(lastConveyorPower);
                 isConveyorCurrentTripped = false;
-                conveyorMotor.setCurrentAlert(CONVEYOR_CURRENT_LIMIT, CurrentUnit.MILLIAMPS);
-            } */
+            }
 
             if (lastQueueLength != scheduleQueue.size()) {
                 clearGoshDarnit();
