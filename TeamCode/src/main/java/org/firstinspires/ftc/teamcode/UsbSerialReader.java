@@ -107,13 +107,6 @@ public class UsbSerialReader {
                 ignoreAfterFullPacketTimer.reset();
                 if (signalReceiver != null) {
                     signalReceiver.confirmSelection(selectionData);
-                    byte[] confirmPacket = new byte[1];
-                    confirmPacket[0] = CONFIRM_HEADER;
-                    try {
-                        port.write(confirmPacket, 1000);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
                 }
             } else {
                 Log.w(TAG, "Incomplete confirm packet received.");
