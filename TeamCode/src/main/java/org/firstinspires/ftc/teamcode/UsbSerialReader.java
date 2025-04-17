@@ -70,7 +70,7 @@ public class UsbSerialReader {
             // Open the port with the same device instance.
             port.open(device);
             // Set the port parameters to match the Arduino (110 baud, 8 data bits, 2 stop bits, no parity)
-            port.setParameters(9600, 8, UsbSerialPort.STOPBITS_2, UsbSerialPort.PARITY_NONE);
+            port.setParameters(2400, 8, UsbSerialPort.STOPBITS_2, UsbSerialPort.PARITY_NONE);
         } catch (IOException e) {
             Log.e(TAG, "Error opening USB port: " + e.getMessage());
             return;
