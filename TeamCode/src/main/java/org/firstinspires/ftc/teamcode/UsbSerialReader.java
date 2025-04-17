@@ -42,7 +42,7 @@ public class UsbSerialReader {
     private SerialInputOutputManager usbIoManager;
     private ExecutorService executor;
     private SignalReader signalReceiver;
-    private ElapsedTime ignoreAfterFullPacketTimer = new ElapsedTime();
+    private final ElapsedTime ignoreAfterFullPacketTimer = new ElapsedTime();
 
     // Call this method from your op mode's init() routine,
     // providing the UsbManager (from the Android context).

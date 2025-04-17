@@ -12,11 +12,11 @@ public class OperatorPanelTest extends OpMode {
 
     private final String[] operatorButtonNames = {"startButton", "abortButton", "resetButton"};
     private final String[] operatorLedNames = {"startLed", "abortLed", "resetLed"};
-    private DigitalChannel[] operatorButtons = new DigitalChannel[3]; // 3 op buttons
-    private DigitalChannel[] operatorLeds = new DigitalChannel[3]; // 3 op LEDs
-    private boolean[] lastButtonStates = new boolean[operatorButtons.length];
+    private final DigitalChannel[] operatorButtons = new DigitalChannel[3]; // 3 op buttons
+    private final DigitalChannel[] operatorLeds = new DigitalChannel[3]; // 3 op LEDs
+    private final boolean[] lastButtonStates = new boolean[operatorButtons.length];
     // All will be set to true in setup
-    private ElapsedTime debounceTimer = new ElapsedTime();
+    private final ElapsedTime debounceTimer = new ElapsedTime();
 
     @Override
     public void init() {

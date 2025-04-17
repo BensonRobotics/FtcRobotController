@@ -44,8 +44,8 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private final int[] OSCILLATION_AMP = {0, 0, 0, 0, 0, 0, 0}; // in ticks
     private final int[] OSCILLATION_FREQ = {1, 1, 1, 1, 1, 1, 1};
     private final int[] BOWL_POSITIONS = {1977, 3615, 5049, 6667, 8313, 9930, 11857};
-    private final int[] DISPENSER_SECTORS = {8, 8, 8, 8, 8, 8, 0}; // -1 is servo, invalid
-    private final int[] SECTORS_PER_DISPENSE = {2, 2, 2, 2, 2, 2, 0}; // Same
+    private final int[] DISPENSER_SECTORS = {4, 4, 8, 8, 8, 8, 0}; // -1 is servo, invalid
+    private final int[] SECTORS_PER_DISPENSE = {3, 3, 2, 2, 2, 2, 0}; // Same
     private final int CREAM_DISPENSE_DURATION = 1000;
     private final float CREAM_DISPENSE_ANGLE = 0.175f;
     private final int[] dispenserTally = new int[NUM_OF_TOPPINGS];
