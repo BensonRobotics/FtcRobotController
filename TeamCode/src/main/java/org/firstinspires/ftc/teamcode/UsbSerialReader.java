@@ -70,7 +70,7 @@ public class UsbSerialReader {
             // Open the port with the same device instance.
             port.open(device);
             // Set the port parameters to match the Arduino (110 baud, 8 data bits, 2 stop bits, no parity)
-            port.setParameters(2400, 8, UsbSerialPort.STOPBITS_2, UsbSerialPort.PARITY_NONE);
+            port.setParameters(9600, 8, UsbSerialPort.STOPBITS_2, UsbSerialPort.PARITY_NONE);
         } catch (IOException e) {
             Log.e(TAG, "Error opening USB port: " + e.getMessage());
             return;
@@ -102,7 +102,7 @@ public class UsbSerialReader {
             if (data.length >= CONFIRM_PACKET_LENGTH && (data[1] != 0 || (data[2] & 0xC0) != 0)) {
                 byte lowByte = data[1];
                 byte highByte = data[2];
-                int selectionData = ((highByte & 0xC0) << 8) | (lowByte & 0xFF);
+                int selectionData = ((highByte & 0xFF) << 8) | (lowByte & 0xFF);
                 Log.d(TAG, "Confirm packet received. Bitmask: " + Integer.toBinaryString(selectionData));
                 ignoreAfterFullPacketTimer.reset();
                 if (signalReceiver != null) {
