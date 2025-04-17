@@ -1,6 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.content.Context;
+import android.hardware.usb.UsbManager;
+
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -8,19 +12,14 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import android.content.Context;
-import android.hardware.usb.UsbManager;
-
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Locale;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Locale;
 
 @TeleOp(name = "Sundae Machine over USB, Hurray!", group = "Off-Season")
 public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
@@ -396,6 +395,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     }
 
     public void emergencyStop() {
+        lastConveyorPower = conveyorMotor.getPower();
         for (DcMotorEx motor : allMotors) {
             if (motor != null) {
                 motor.setPower(0); // Kill power to all motors
