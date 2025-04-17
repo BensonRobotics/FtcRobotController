@@ -37,6 +37,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private static final int TOPPING_FALL_WAIT = 500; // Half second delay
     private static final double DISPENSER_POWER = 0.5;
     private static final int CONVEYOR_CURRENT_LIMIT = 5000;
+    private static final float CONVEYOR_PROPORTIONAL = 2.0f;
 
     // Positions and loads (placeholders, update as needed)
     // Make sure these are all the same length as NUM_OF_TOPPINGS
@@ -132,6 +133,7 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         conveyorMotor = allMotors[allMotors.length-1];
         conveyorMotor.setPower(1);
         conveyorMotor.setCurrentAlert(CONVEYOR_CURRENT_LIMIT, CurrentUnit.MILLIAMPS);
+        conveyorMotor.setPositionPIDFCoefficients(CONVEYOR_PROPORTIONAL);
 
         for (int i = 0; i < operatorButtons.length; i++) {
             operatorButtons[i] = hardwareMap.get(DigitalChannel.class, operatorButtonNames[i]);
