@@ -26,16 +26,17 @@ import com.hoho.android.usbserial.driver.UsbSerialProber;
 import com.hoho.android.usbserial.util.SerialInputOutputManager;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 
 // This class encapsulates the USB serial functionality.
 public class UsbSerialReader {
     // Define your confirm header and the expected packet length.
-    private static final byte CONFIRM_HEADER = 0x20;
-    private static final int CONFIRM_PACKET_LENGTH = 3; // 1 header + 2 bytes
     private static final String TAG = "UsbSerialReader";
 
     private UsbSerialPort port;
@@ -43,6 +44,8 @@ public class UsbSerialReader {
     private ExecutorService executor;
     private SignalReader signalReceiver;
     private final ElapsedTime ignoreAfterFullPacketTimer = new ElapsedTime();
+    private ByteArrayOutputStream recvBuffer = new ByteArrayOutputStream();
+
 
     // Call this method from your op mode's init() routine,
     // providing the UsbManager (from the Android context).
@@ -69,8 +72,8 @@ public class UsbSerialReader {
             }
             // Open the port with the same device instance.
             port.open(device);
-            // Set the port parameters to match the Arduino (110 baud, 8 data bits, 2 stop bits, no parity)
-            port.setParameters(9600, 8, UsbSerialPort.STOPBITS_2, UsbSerialPort.PARITY_NONE);
+            // Set the port parameters to match the Arduino (9600 baud, 8 data bits, 1 stop bit, no parity)
+            port.setParameters(9600, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
         } catch (IOException e) {
             Log.e(TAG, "Error opening USB port: " + e.getMessage());
             return;
@@ -80,7 +83,12 @@ public class UsbSerialReader {
         usbIoManager = new SerialInputOutputManager(port, new SerialInputOutputManager.Listener() {
             @Override
             public void onNewData(final byte[] data) {
-                handleIncomingData(data);
+                try {
+                    recvBuffer.write(data);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                extractFrames();
             }
 
             @Override
@@ -94,24 +102,37 @@ public class UsbSerialReader {
         usbIoManager.start();
     }
 
-    // When processing data:
-    private void handleIncomingData(byte[] data) {
-        if (data == null || data.length < 1) return;
-
-        if (data[0] == CONFIRM_HEADER && ignoreAfterFullPacketTimer.milliseconds() > 1000) {
-            if (data.length >= CONFIRM_PACKET_LENGTH && (data[1] != 0 || (data[2] & 0xC0) != 0)) {
-                byte lowByte = data[1];
-                byte highByte = data[2];
-                int selectionData = ((highByte & 0xFF) << 8) | (lowByte & 0xFF);
-                Log.d(TAG, "Confirm packet received. Bitmask: " + Integer.toBinaryString(selectionData));
-                ignoreAfterFullPacketTimer.reset();
-                if (signalReceiver != null) {
-                    signalReceiver.confirmSelection(selectionData);
-                }
-            } else {
-                Log.w(TAG, "Incomplete confirm packet received.");
+    private void extractFrames(){
+        byte[] all = recvBuffer.toByteArray();
+        int idx;
+        byte[] finalAll = all;
+        while ((idx = IntStream.range(0, all.length)
+                .filter(i -> finalAll[i]==0x00)
+                .findFirst().orElse(-1)) >=0) {
+            byte[] frame = Arrays.copyOf(all, idx);
+            recvBuffer.reset();
+            recvBuffer.write(all, idx+1, all.length-idx-1);
+            try {
+                byte[] payload = decodeCOBS(frame);
+                int order = ((payload[1]&0xFF)<<8)|(payload[0]&0xFF);
+                signalReceiver.confirmSelection(order);
+            } catch (IllegalArgumentException e) {
+                Log.w(TAG, "COBS decode failed");
             }
+            all = recvBuffer.toByteArray();
         }
+    }
+
+    public static byte[] decodeCOBS(byte[] data) throws IllegalArgumentException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int i = 0;
+        while (i < data.length) {
+            int code = data[i++] & 0xFF;
+            if (code == 0 || i + code - 1 > data.length) throw new IllegalArgumentException("Bad COBS");
+            for (int j = 1; j < code; j++) out.write(data[i++]);
+            if (code < 0xFF && i < data.length) out.write(0);
+        }
+        return out.toByteArray();
     }
 
     // Call this when you want to stop reading and close the port.
@@ -133,5 +154,12 @@ public class UsbSerialReader {
 
     public void setReceiver(SignalReader receiver) {
         this.signalReceiver = receiver;
+    }
+
+    private int indexOf(byte[] array, byte value) {
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == value) return i;
+        }
+        return -1;
     }
 }
