@@ -33,10 +33,10 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private static final Locale LOCALE = Locale.US;
     private static final int NUM_OF_TOPPINGS = 7;
     private static final int NUM_OF_FLAVORS = 3;
-    private static final int TOPPING_FALL_WAIT = 500; // Half second delay
-    private static final double DISPENSER_POWER = 0.5;
+    private static final int TOPPING_FALL_WAIT = 1000; // 1 second delay
+    private static final double DISPENSER_POWER = 0.75;
     private static final int CONVEYOR_CURRENT_LIMIT = 5000;
-    private static final float CONVEYOR_PROPORTIONAL = 2.0f;
+    private static final float CONVEYOR_PROPORTIONAL = 4.0f;
 
     // Positions and loads (placeholders, update as needed)
     // Make sure these are all the same length as NUM_OF_TOPPINGS
