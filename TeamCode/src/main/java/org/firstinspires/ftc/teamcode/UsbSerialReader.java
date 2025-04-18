@@ -102,26 +102,47 @@ public class UsbSerialReader {
         usbIoManager.start();
     }
 
-    private void extractFrames(){
-        byte[] all = recvBuffer.toByteArray();
+    private void extractFrames() {
         int idx;
-        byte[] finalAll = all;
-        while ((idx = IntStream.range(0, all.length)
-                .filter(i -> finalAll[i]==0x00)
-                .findFirst().orElse(-1)) >=0) {
-            byte[] frame = Arrays.copyOf(all, idx);
+
+        // Keep extracting as long as we find a 0x00 delimiter
+        while (true) {
+            // 1) Fresh snapshot each iteration (effectively final for lambda)
+            final byte[] finalAll = recvBuffer.toByteArray();
+
+            // 2) Find the COBS delimiter in this snapshot
+            idx = IntStream.range(0, finalAll.length)
+                    .filter(i -> finalAll[i] == 0x00)
+                    .findFirst()
+                    .orElse(-1);
+
+            // 3) No delimiter? we’re done
+            if (idx < 0) break;
+
+            // 4) Extract the frame bytes (everything before the 0x00)
+            byte[] frame = Arrays.copyOf(finalAll, idx);
+
+            // 5) Remove processed data from recvBuffer
             recvBuffer.reset();
-            recvBuffer.write(all, idx+1, all.length-idx-1);
-            try {
-                byte[] payload = decodeCOBS(frame);
-                int order = ((payload[1]&0xFF)<<8)|(payload[0]&0xFF);
-                signalReceiver.confirmSelection(order);
-            } catch (IllegalArgumentException e) {
-                Log.w(TAG, "COBS decode failed");
+            recvBuffer.write(finalAll, idx + 1, finalAll.length - (idx + 1));
+
+            // 6) Decode and verify checksum/mask as before
+            byte[] payload = decodeCOBS(frame);
+            if (payload.length == 3) {
+                int low  = payload[0] & 0xFF;
+                int high = payload[1] & 0xFF;
+                int cs   = payload[2] & 0xFF;
+
+                if (cs == (low ^ high) && ((low | (high & 0xC0)) != 0)) {
+                    int order = (high << 8) | low;
+                    signalReceiver.confirmSelection(order);
+                    break;  // stop after a valid frame
+                }
             }
-            all = recvBuffer.toByteArray();
+            // Loop back to catch any additional frames in the newly updated buffer
         }
     }
+
 
     public static byte[] decodeCOBS(byte[] data) throws IllegalArgumentException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
