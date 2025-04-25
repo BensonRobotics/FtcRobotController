@@ -133,8 +133,9 @@ public class UsbSerialReader {
                 int high = payload[1] & 0xFF;
                 int cs   = payload[2] & 0xFF;
 
-                if (cs == (low ^ high) && ((low | (high & 0xC0)) != 0)) {
-                    int order = (high << 8) | low;
+                int order = ((high << 8) | low) & 0x03FF;
+
+                if (cs == (low ^ high) && order != 0) {
                     signalReceiver.confirmSelection(order);
                     break;  // stop after a valid frame
                 }
