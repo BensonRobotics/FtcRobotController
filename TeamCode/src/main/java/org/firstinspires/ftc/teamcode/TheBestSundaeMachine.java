@@ -34,20 +34,20 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
     private static final int NUM_OF_TOPPINGS = 7;
     private static final int NUM_OF_FLAVORS = 3;
     private static final int TOPPING_FALL_WAIT = 1000; // 1 second delay
-    private static final double DISPENSER_POWER = 0.75;
-    private static final int CONVEYOR_CURRENT_LIMIT = 5000;
-    private static final float CONVEYOR_PROPORTIONAL = 4.0f;
+    private static final double DISPENSER_POWER = 0.5;
+    private static final int CONVEYOR_CURRENT_LIMIT = 8000;
+    private static final float CONVEYOR_PROPORTIONAL = 3.5f;
 
     // Positions and loads (placeholders, update as needed)
     // Make sure these are all the same length as NUM_OF_TOPPINGS
-    private final int[] BUTTON_TO_TOPPING_NUM = {0, 1, 2, 3, 4, 5, 6};
-    private final int[] OSCILLATION_AMP = {0, 0, 0, 0, 0, 0, 0}; // in ticks
-    private final int[] OSCILLATION_FREQ = {1, 1, 1, 1, 1, 1, 1};
-    private final int[] BOWL_POSITIONS = {1977, 3615, 5049, 6667, 8313, 9930, 11857};
+    private final int[] BUTTON_TO_TOPPING_NUM = {4, 0, 1, 5, 6, 3, 2};
+    private final int[] OSCILLATION_AMP = {200, 200, 200, 200, 200, 200, 300}; // in ticks
+    private final int[] OSCILLATION_FREQ = {4, 4, 2, 2, 2, 2, 2};
+    private final int[] BOWL_POSITIONS = {2177, 3800, 5149, 6767, 8413, 10030, 12087};
     private final int[] DISPENSER_SECTORS = {4, 4, 8, 8, 8, 8, 0}; // -1 is servo, invalid
-    private final int[] SECTORS_PER_DISPENSE = {3, 3, 2, 2, 2, 2, 0}; // Same
-    private final int CREAM_DISPENSE_DURATION = 1000;
-    private final float CREAM_DISPENSE_ANGLE = 0.175f;
+    private final int[] SECTORS_PER_DISPENSE = {3, 8, 2, 5, 2, 1, 0}; // Same
+    private final int CREAM_DISPENSE_DURATION = 650;
+    private final float CREAM_DISPENSE_ANGLE = 1.5f;
     private final int[] dispenserTally = new int[NUM_OF_TOPPINGS];
 
     // Motors
@@ -314,9 +314,9 @@ public class TheBestSundaeMachine extends LinearOpMode implements SignalReader {
         for (int i = 0; i < NUM_OF_FLAVORS; i++) {
             if (((selection >> i) & 0x01) == 1) { // If flavor selected
                 switch (i) { // Which one
-                    case 0: newFlavor = "Vanilla"; break;
+                    case 0: newFlavor = "Strawberry"; break;
                     case 1: newFlavor = "Chocolate"; break;
-                    case 2: newFlavor = "Strawberry"; break;
+                    case 2: newFlavor = "Vanilla"; break;
                     default: break; // Still "None"
                 }
                 break; // Breaks the for loop, only one flavor allowed
