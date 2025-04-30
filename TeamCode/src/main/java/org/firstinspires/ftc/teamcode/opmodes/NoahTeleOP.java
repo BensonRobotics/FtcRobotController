@@ -35,8 +35,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Objects;
 
-//This is a test from Desmond of the Github, Git, and Android Studio syncing
-// testtttt
+//This is a demo of how git works! yaaaaaay! : )
 @TeleOp
 public class
 NoahTeleOP extends LinearOpMode {
