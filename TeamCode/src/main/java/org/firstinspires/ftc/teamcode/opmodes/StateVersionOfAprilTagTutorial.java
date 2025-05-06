@@ -85,7 +85,7 @@ import java.util.concurrent.TimeUnit;
  *
  */
 
-@Autonomous(name="April Tage State Version", group = "Concept")
+@Autonomous(name="April Tage State Version 2", group = "Concept")
 //@Disabled
 public class StateVersionOfAprilTagTutorial extends LinearOpMode
 {
@@ -124,6 +124,7 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
     enum movebaby
     {
        MOTOR_TEST,
+        FIND_APRIL,
         MOVE_TO_APRIL,
         STOP_ROBOT
     }
@@ -147,10 +148,10 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // When run, this OpMode should start both motors driving forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
-        leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
         if (USE_WEBCAM)
             setManualExposure(6, 250);  // Use low exposure time to reduce motion blur
@@ -173,6 +174,9 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
                 case STOP_ROBOT:
                     shutDown();
                     break;
+                case FIND_APRIL:
+                    detectApril();
+                    break;
                 case MOTOR_TEST:
                     testMotors();
                     break;
@@ -191,6 +195,9 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
 
  //******************************************************************************
 
+    public void detectApril(){
+
+    }
     public void testMotors() {
         moveRobot(0.5, 0.0, 0.0);
         sleep(2000);
@@ -233,7 +240,9 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
                     desiredTag = detection;
                     break;  // don't look any further.
                 } else {
-                    // This tag is in the library, but we do not want to track it right now.
+                    // This tag is in the library, but we do not want to track it right now
+                    // add in targetFound = false;
+
                     telemetry.addData("Skipping", "Tag ID %d is not desired", detection.id);
                 }
             } else {
@@ -249,8 +258,8 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
             telemetry.addData("Yaw", "%3.0f degrees", desiredTag.ftcPose.yaw);
             // Determine heading, range and Yaw (tag image rotation) error so we can use them to control the robot automatically.
             double  rangeError      = (desiredTag.ftcPose.range - DESIRED_DISTANCE);
-            double  headingError    = desiredTag.ftcPose.bearing +13;
-            double  yawError        = desiredTag.ftcPose.yaw + 12;
+            double  headingError    = desiredTag.ftcPose.bearing;
+            double  yawError        = desiredTag.ftcPose.yaw;
 
             // Use the speed and turn "gains" to calculate how we want the robot to move.
             drive  = Range.clip(rangeError * SPEED_GAIN, -MAX_AUTO_SPEED, MAX_AUTO_SPEED);
@@ -264,9 +273,9 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
             if (Math.abs(rangeError) < 3) myRobotState = movebaby.STOP_ROBOT;
 
             else moveRobot(drive, strafe, turn);
-        } else {
-            myRobotState = movebaby.STOP_ROBOT;
-        }
+        } //else {
+            //myRobotState = movebaby.STOP_ROBOT;
+        //}
         //sleep(10);
 
     }
