@@ -109,15 +109,12 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
     double drive = 0;        // Desired forward power/speed (-1 to +1)
     double strafe = 0;        // Desired strafe power/speed (-1 to +1)
     double turn = 0;        // Desired turning power/speed (-1 to +1)
-    //double rangeError = 0;
-    //double headingError = 0;
-    //double yawError = 0;
 
-    enum movebaby
-    {
-       MOTOR_TEST,
+    enum movebaby {
+        MOTOR_TEST,
         FIND_APRIL,
         MOVE_TO_APRIL,
+        TURN_45,
         STOP_ROBOT
     }
     movebaby myRobotState  = movebaby.MOVE_TO_APRIL;
@@ -169,6 +166,9 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
                 case FIND_APRIL:
                     detectApril();
                     break;
+                case TURN_45:
+                    turn45UsingIMU();
+                    break;
                 case MOTOR_TEST:
                     testMotors();
                     break;
@@ -187,6 +187,13 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
     public void detectApril(){
 
     }
+
+    //******************************************************************************
+
+    public void turn45UsingIMU(){
+
+    }
+
 
 
     //*****************************************************************************
