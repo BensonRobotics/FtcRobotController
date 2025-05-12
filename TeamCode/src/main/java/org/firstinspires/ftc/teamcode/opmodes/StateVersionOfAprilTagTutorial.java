@@ -61,18 +61,10 @@ import java.util.concurrent.TimeUnit;
  * To reduce any motion blur (which will interrupt the detection process) the Camera exposure is reduced to a very low value (5mS)
  * You can determine the best Exposure and Gain values by using the ConceptAprilTagOptimizeExposure OpMode in this Samples folder.
  *
- * The code assumes a Robot Configuration with motors named: leftfront_drive and rightfront_drive, leftback_drive and rightback_drive.
- * The motor directions must be set so a positive power goes forward on all wheels.
  * This sample assumes that the current game AprilTag Library (usually for the current season) is being loaded by default,
  * so you should choose to approach a valid tag ID.
  *
- * Under manual control, the left stick will move forward/back & left/right.  The right stick will rotate the robot.
- * Manually drive the robot until it displays Target data on the Driver Station.
- *
- * Press and hold the *Left Bumper* to enable the automatic "Drive to target" mode.
- * Release the Left Bumper to return to manual driving mode.
- *
- * Under "Drive To Target" mode, the robot has three goals:
+ * The robot has three goals:
  * 1) Turn the robot to always keep the Tag centered on the camera frame. (Use the Target Bearing to turn the robot.)
  * 2) Strafe the robot towards the centerline of the Tag, so it approaches directly in front  of the tag.  (Use the Target Yaw to strafe the robot)
  * 3) Drive towards the Tag to get to the desired distance.  (Use Tag Range to drive the robot forward/backward)
@@ -185,11 +177,8 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
             }
 
             telemetry.update();
-
-            // Apply desired axes motions to the drivetrain.
-            //moveRobot(drive, strafe, turn);
-            //sleep(10);
         }
+        sleep(10);
     }
 
 
@@ -198,6 +187,9 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
     public void detectApril(){
 
     }
+
+
+    //*****************************************************************************
     public void testMotors() {
         moveRobot(0.5, 0.0, 0.0);
         sleep(2000);
@@ -282,34 +274,6 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
 
 
 
-    /*************************************************************************************/
-//    public void driveToAprilTag() {
-//        // Drive to target Automatically .
-//        if (targetFound) {
-//            // Determine heading, range and Yaw (tag image rotation) error so we can use them to control the robot automatically.
-//            rangeError = (desiredTag.ftcPose.range - DESIRED_DISTANCE);
-//            headingError = (desiredTag.ftcPose.bearing - DESIRED_DISTANCE) + 13;
-//            yawError = (desiredTag.ftcPose.yaw - DESIRED_DISTANCE) + 12;
-//
-//            // Use the speed and turn "gains" to calculate how we want the robot to move.
-//            drive = Range.clip(rangeError * SPEED_GAIN, -MAX_AUTO_SPEED, MAX_AUTO_SPEED);
-//            turn = Range.clip(headingError * TURN_GAIN, -MAX_AUTO_TURN, MAX_AUTO_TURN);
-//            strafe = Range.clip(-yawError * STRAFE_GAIN, -MAX_AUTO_STRAFE, MAX_AUTO_STRAFE);
-//
-//            telemetry.addData("Auto", "Drive %5.2f, Strafe %5.2f, Turn %5.2f ", drive, strafe, turn);
-//            telemetry.addData("    ", "rangeError %5.2f, yawError %5.2f, headingError %5.2f ", rangeError, yawError, headingError);
-//        } else {
-//            // stop the 'bot.
-//            drive = -0.0;
-//            strafe = -0.0;
-//            turn = -0.0;
-//            telemetry.addData("Lost Tag", "Drive %5.2f, Strafe %5.2f, Turn %5.2f ", drive, strafe, turn);
-//        }
-//        if ((Math.abs(rangeError) < 0.01) && (Math.abs(headingError) < 0.01) && (Math.abs(yawError) < 0.01))
-//            myRobotState = movebaby.STOP_ROBOT;
-//    }
-
-
 
 // *************************************************************************************
     public void shutDown() {
@@ -319,6 +283,8 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
         leftBackDrive.setPower(0);
         rightBackDrive.setPower(0);
     }
+
+
 
     //*****************************************************************************//
     public void printState() {
@@ -331,6 +297,7 @@ public class StateVersionOfAprilTagTutorial extends LinearOpMode
         }
         sleep(1500);
     }
+
 
 
     /*************************************************************************************
