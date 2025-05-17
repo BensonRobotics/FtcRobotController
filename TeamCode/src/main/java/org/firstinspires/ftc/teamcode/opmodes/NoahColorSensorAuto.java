@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
@@ -48,6 +49,7 @@ import java.util.Hashtable;
 import java.util.Objects;
 
 @Autonomous(name="NoahColorSensorAuto", group="Robot")
+@Disabled
 public class NoahColorSensorAuto extends LinearOpMode {
     private DcMotorEx frontLeftDrive = null;
     private DcMotorEx frontRightDrive = null;

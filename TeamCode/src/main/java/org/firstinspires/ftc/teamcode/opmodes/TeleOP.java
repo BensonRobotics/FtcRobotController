@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import android.util.Size;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -34,6 +35,7 @@ import java.util.Objects;
 
 
 @TeleOp
+//@Disabled
 public class TeleOP extends LinearOpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
@@ -181,7 +183,7 @@ public class TeleOP extends LinearOpMode {
         int liftBottomPosition = 0;
         liftMotor.setTargetPosition(liftBottomPosition);
 
-        ZeroHorizontalSlideEncoder(slideMotorCurrentThreshold);
+//        ZeroHorizontalSlideEncoder(slideMotorCurrentThreshold);
 
         // Run until the end of the match (driver presses STOP)
         boolean grabberPivotHomed = false;

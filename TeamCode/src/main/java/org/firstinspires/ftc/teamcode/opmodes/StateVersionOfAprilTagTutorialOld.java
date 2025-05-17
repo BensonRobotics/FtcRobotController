@@ -31,6 +31,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
 
@@ -86,7 +87,7 @@ import java.util.concurrent.TimeUnit;
  */
 
 @Autonomous(name="April Tage State Version OLD", group = "Concept")
-//@Disabled
+@Disabled
 public class StateVersionOfAprilTagTutorialOld extends LinearOpMode
 {
     // Adjust these numbers to suit your robot.

@@ -3,14 +3,14 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import android.util.Size;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
@@ -19,29 +19,22 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
-
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Objects;
 
-//This is a demo of how git works! yaaaaaay! : )
-@TeleOp
-@Disabled
-//@Disabled
+@TeleOp(name="Sons of Norway Mecanum TeleOp", group="Robot")
 public class
-NoahTeleOP extends LinearOpMode {
+SoNMecanumTeleOP extends LinearOpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotorEx frontLeftDrive = null;
@@ -52,8 +45,6 @@ NoahTeleOP extends LinearOpMode {
     private CRServo grabberServo = null;
 
     private DcMotorEx liftMotor = null;
-
-    private DcMotorEx horizontalSlidemotor = null;
 
     // IMU sensor object
     IMU imu;
@@ -89,7 +80,6 @@ NoahTeleOP extends LinearOpMode {
 
         liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
 
-        horizontalSlidemotor = hardwareMap.get(DcMotorEx.class, "slideMotor");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -101,8 +91,6 @@ NoahTeleOP extends LinearOpMode {
 
         liftMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
-        horizontalSlidemotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-
 
         frontLeftDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         frontRightDrive.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
@@ -113,9 +101,6 @@ NoahTeleOP extends LinearOpMode {
         liftMotor.setTargetPosition(0);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        horizontalSlidemotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-//        horizontalSlidemotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.);
 
         double liftMotorCurrentThreshold = 3000.0;
 
@@ -159,8 +144,6 @@ NoahTeleOP extends LinearOpMode {
 
         int liftBottomPosition = GetLiftBottomPosition(liftMotorCurrentThreshold);
         liftMotor.setTargetPosition(liftBottomPosition);
-
-        int horizontalSlideInPosition = GetSlideInPosition(slideMotorCurrentThreshold);
 
         // Run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -305,23 +288,8 @@ NoahTeleOP extends LinearOpMode {
         } else if (dpadDown) {
             horizontalSlideVelocity = -1;
         }
-
-        if (IsOverloaded(horizontalSlidemotor, slideMotorCurrentThreshold)) {
-            horizontalSlidemotor.setPower(0.0);
-        } else {
-            horizontalSlidemotor.setPower(horizontalSlideVelocity);
-        }
     }
 
-    private int GetSlideInPosition(double slideMotorCurrentThreshold) {
-        while (!IsOverloaded(liftMotor, slideMotorCurrentThreshold)) {
-            horizontalSlidemotor.setPower(-0.05);
-        }
-        horizontalSlidemotor.setPower(0.0);
-
-        telemetry.addData("slide in position: ", horizontalSlidemotor.getCurrentPosition());
-        return horizontalSlidemotor.getCurrentPosition();
-    }
 
     // Vertical Slide
 

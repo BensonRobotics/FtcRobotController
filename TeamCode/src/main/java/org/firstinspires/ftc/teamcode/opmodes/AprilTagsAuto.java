@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -30,6 +31,7 @@ half second, just to make sure all residual momentum is gone.
  */
 
 @Autonomous(name="Robot: April Tags Auto", group="Robot")
+@Disabled
 public class AprilTagsAuto extends LinearOpMode {
 
     final int targetDistance = -2715; // number of clicks to move
