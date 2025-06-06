@@ -11,7 +11,6 @@ public class Vector2 {
 
     // rotate a vector about it's origin using an angle (double) in radians (copy pasted from stack overflow)
     public Vector2 Rotate(double angle) {
-
         double x1 = (x * Math.cos(angle) - y * Math.sin(angle));
 
         double y1 = (x * Math.sin(angle) + y * Math.cos(angle));
