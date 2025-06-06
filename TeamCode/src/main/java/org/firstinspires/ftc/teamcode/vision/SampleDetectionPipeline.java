@@ -5,9 +5,23 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvPipeline;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfInt;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
+import org.opencv.core.RotatedRect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
-class SampleDetectionPipeline extends OpenCvPipeline {
+public class SampleDetectionPipeline extends OpenCvPipeline {
     boolean viewportPaused;
 
     /*
@@ -33,16 +47,22 @@ class SampleDetectionPipeline extends OpenCvPipeline {
         /*
          * Draw a simple box around the middle 1/2 of the entire frame
          */
-        Imgproc.rectangle(
-                input,
-                new Point(
-                        input.cols()/4f,
-                        input.rows()/4f),
-                new Point(
-                        input.cols()*(3f/4f),
-                        input.rows()*(3f/4f)),
-                new Scalar(0, 255, 0), 4);
+//        Imgproc.rectangle(
+//                input,
+//                new Point(
+//                        input.cols()/4f,
+//                        input.rows()/4f),
+//                new Point(
+//                        input.cols()*(3f/4f),
+//                        input.rows()*(3f/4f)),
+//                new Scalar(0, 255, 0), 4);
 
+        Mat YCrCb = new Mat();
+        Mat Y = new Mat();
+
+        Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
+
+        Core.extractChannel(YCrCb, Y, 2);
 
 
         /**
@@ -50,6 +70,6 @@ class SampleDetectionPipeline extends OpenCvPipeline {
          * to change which stage of the pipeline is rendered to the viewport when it is
          * tapped, please see {@link PipelineStageSwitchingExample}
          */
-        return input;
+        return Y;
     }
 }

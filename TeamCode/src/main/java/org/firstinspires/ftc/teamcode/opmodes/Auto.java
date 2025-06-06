@@ -155,7 +155,7 @@ public class Auto extends LinearOpMode {
             telemetry.addData( "backleft position", backLeftMotor.getCurrentPosition());
             telemetry.addData( "backright position", backRightMotor.getCurrentPosition());
             telemetry.addData("slideMotor position", slideMotor.getCurrentPosition());
-            telemetry.addData("liftMotor position", liftMotor.getCurrentPosition()):
+            telemetry.addData("liftMotor position", liftMotor.getCurrentPosition());
             telemetry.update();
 
            // if (frontLeftMotor.getCurrentPosition() >
